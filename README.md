@@ -14,6 +14,7 @@ Biga'da öğrencilerin günlük hayatta ihtiyaç duyduğu bilgileri farklı plat
 
 Bigora ile kullanıcıların;
 
+<<<<<<< HEAD
 - 📍 Biga'daki işletmeleri keşfetmesi
 - 💰 Fiyatları incelemesi
 - 🚻 İşletmelerde tuvalet bulunup bulunmadığını öğrenmesi
@@ -24,6 +25,18 @@ Bigora ile kullanıcıların;
 - 📝 Ders notlarını paylaşması
 - 📄 PDF ve eğitim materyallerine erişmesi
 - 🎓 Öğrenci hayatıyla ilgili bilgi ve içeriklere ulaşması
+=======
+* 📍 Biga'daki işletmeleri keşfetmesi
+* 💰 Fiyatları incelemesi
+* 🚻 İşletmelerde tuvalet bulunup bulunmadığını öğrenmesi
+* 🕐 Çalışma saatlerini görüntülemesi
+* 📞 İletişim bilgilerine ulaşması
+* ⭐ İşletmeleri değerlendirmesi
+* 📚 İkinci el ders kitapları satın alması ve satması
+* 📝 Ders notlarını paylaşması
+* 📄 PDF ve eğitim materyallerine erişmesi
+* 🎓 Öğrenci hayatıyla ilgili bilgi ve içeriklere ulaşması
+>>>>>>> ffce2d75bbff56d7a5b8dabcd12d22333c96e9fc
 
 hedeflenmektedir.
 
@@ -37,6 +50,7 @@ Biga'daki işletmeler hakkında kapsamlı bilgilerin tek bir platformda sunulmas
 
 Kullanıcılar işletmeler hakkında:
 
+<<<<<<< HEAD
 - İşletme adı
 - Kategori
 - Konum
@@ -49,6 +63,20 @@ Kullanıcılar işletmeler hakkında:
 - Öğrenci dostu olup olmadığı
 - Fotoğraflar
 - Kullanıcı değerlendirmeleri
+=======
+* İşletme adı
+* Kategori
+* Konum
+* Fiyat aralığı
+* Çalışma saatleri
+* Telefon
+* Sosyal medya hesapları
+* Menü / hizmet bilgileri
+* Tuvalet durumu
+* Öğrenci dostu olup olmadığı
+* Fotoğraflar
+* Kullanıcı değerlendirmeleri
+>>>>>>> ffce2d75bbff56d7a5b8dabcd12d22333c96e9fc
 
 gibi bilgilere ulaşabilecektir.
 
@@ -76,12 +104,21 @@ Fiyat bilgilerinin güncel tutulması için kullanıcı ve işletme katkısı gi
 
 Kullanıcılar:
 
+<<<<<<< HEAD
 - Kitap ilanı oluşturabilir
 - Fotoğraf ekleyebilir
 - Fiyat belirleyebilir
 - Ders / bölüm bilgisi ekleyebilir
 - Satıcıyla iletişime geçebilir
 - İlanları favorilerine ekleyebilir
+=======
+* Kitap ilanı oluşturabilir
+* Fotoğraf ekleyebilir
+* Fiyat belirleyebilir
+* Ders / bölüm bilgisi ekleyebilir
+* Satıcıyla iletişime geçebilir
+* İlanları favorilerine ekleyebilir
+>>>>>>> ffce2d75bbff56d7a5b8dabcd12d22333c96e9fc
 
 ---
 
@@ -89,6 +126,10 @@ Kullanıcılar:
 
 Öğrencilerin ders notlarını birbirleriyle paylaşabileceği bir içerik alanı.
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> ffce2d75bbff56d7a5b8dabcd12d22333c96e9fc
 İçerikler bölüm, ders ve sınıf bazında kategorize edilebilir.
 
 ---
@@ -99,10 +140,17 @@ Kullanıcılar:
 
 İçerikler:
 
+<<<<<<< HEAD
 - Ders
 - Bölüm
 - Öğretim yılı
 - İçerik türü
+=======
+* Ders
+* Bölüm
+* Öğretim yılı
+* İçerik türü
+>>>>>>> ffce2d75bbff56d7a5b8dabcd12d22333c96e9fc
 
 gibi kriterlere göre kategorize edilebilir.
 
@@ -138,6 +186,7 @@ Bigora yalnızca bir işletme rehberi değil, aynı zamanda öğrenciler arasın
 
 Öğrenciler:
 
+<<<<<<< HEAD
 - Bilgi paylaşabilir
 - Ders materyali paylaşabilir
 - İkinci el ürün satabilir
@@ -146,8 +195,23 @@ Bigora yalnızca bir işletme rehberi değil, aynı zamanda öğrenciler arasın
 
 Böylece platformun temel veri yapısının önemli bir bölümü topluluk tarafından oluşturulabilir.
 
+=======
+* Bilgi paylaşabilir
+* Ders materyali paylaşabilir
+* İkinci el ürün satabilir
+* İşletmeleri değerlendirebilir
+* İçeriklere katkıda bulunabilir
+
+Böylece platformun temel veri yapısının önemli bir bölümü topluluk tarafından oluşturulabilir.
+
+
+>>>>>>> ffce2d75bbff56d7a5b8dabcd12d22333c96e9fc
 # 🌐 Proje
 
 **Bigora**
 
+<<<<<<< HEAD
 Biga'dan başlayan, öğrenciler için geliştirilen yerel dijital yaşam platformu.
+=======
+Biga'dan başlayan, öğrenciler için geliştirilen yerel dijital yaşam platformu.
+>>>>>>> ffce2d75bbff56d7a5b8dabcd12d22333c96e9fc
