@@ -1,0 +1,44 @@
+{
+  "name": "bigova",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "next": "14.2.15",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "three": "0.160.1",
+    "@react-three/fiber": "8.15.19",
+    "@react-three/drei": "9.99.7",
+    "framer-motion": "11.11.1",
+    "@fortawesome/fontawesome-svg-core": "6.6.0",
+    "@fortawesome/free-solid-svg-icons": "6.6.0",
+    "@fortawesome/react-fontawesome": "0.2.2",
+    "@prisma/client": "5.20.0",
+    "bcryptjs": "2.4.3",
+    "jose": "5.9.3",
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "5.6.2",
+    "@types/node": "20.16.10",
+    "@types/react": "18.3.11",
+    "@types/three": "0.160.0",
+    "@types/bcryptjs": "2.4.6",
+    "tailwindcss": "3.4.13",
+    "postcss": "8.4.47",
+    "autoprefixer": "10.4.20",
+    "prisma": "5.20.0",
+    "tsx": "4.19.1"
+  },
+  "engines": {
+    "node": ">=18.18"
+  }
+}

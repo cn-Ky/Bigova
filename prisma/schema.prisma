@@ -1,0 +1,86 @@
+generator client { provider = "prisma-client-js" }
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  studentNo String @unique
+  name String
+  passwordHash String
+  createdAt DateTime @default(now())
+  notes Note[]
+  sent Message[] @relation("sent")
+  received Message[] @relation("received")
+  friendsA Friendship[] @relation("a")
+  friendsB Friendship[] @relation("b")
+  location UserLocation?
+}
+model Business {
+  id String @id @default(cuid())
+  name String
+  category String
+  phone String?
+  priceInfo String?
+  hasToilet Boolean @default(false)
+  opensAt String?
+  closesAt String?
+  address String?
+  lat Float?
+  lng Float?
+}
+model TransportRoute {
+  id String @id @default(cuid())
+  name String
+  type String
+  destination String
+  firstDeparture String
+  lastDeparture String
+  price Float
+  stops String
+}
+model Note {
+  id String @id @default(cuid())
+  title String
+  course String
+  fileUrl String
+  authorId String
+  author User @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+}
+model Friendship {
+  id String @id @default(cuid())
+  aId String
+  bId String
+  status String @default("PENDING")
+  a User @relation("a", fields: [aId], references: [id])
+  b User @relation("b", fields: [bId], references: [id])
+  @@unique([aId, bId])
+}
+model Message {
+  id String @id @default(cuid())
+  fromId String
+  toId String
+  body String
+  createdAt DateTime @default(now())
+  from User @relation("sent", fields: [fromId], references: [id])
+  to User @relation("received", fields: [toId], references: [id])
+}
+model UserLocation {
+  userId String @id
+  lat Float
+  lng Float
+  sharedWithFriends Boolean @default(false)
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id])
+}
+model Magazine {
+  id String @id @default(cuid())
+  title String
+  issue String
+  pdfUrl String
+  coverUrl String?
+}

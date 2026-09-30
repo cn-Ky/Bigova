@@ -1,0 +1,5 @@
+@tailwind base; @tailwind components; @tailwind utilities;
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body { min-height: 100dvh; background: #e8f4f8; color: #0b3d5c; overflow-x: hidden; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+button, a { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+input { font-size: 16px; } /* iOS zoom önleme */
