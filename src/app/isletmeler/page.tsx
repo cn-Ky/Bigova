@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPhone, faClock, faRestroom, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 
-type B = { id: string; name: string; category: string; phone?: string; priceInfo?: string; hasToilet: boolean; opensAt?: string; closesAt?: string };
+type B = { id: string; name: string; category: string; phone?: string; price_info?: string; has_toilet: boolean; opens_at?: string; closes_at?: string };
 
 export default function Isletmeler() {
   const [q, setQ] = useState(""); const [items, setItems] = useState<B[]>([]);
@@ -20,9 +20,9 @@ export default function Isletmeler() {
             <div className="flex justify-between"><b>{b.name}</b><span className="text-sm text-olive">{b.category}</span></div>
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm opacity-80">
               {b.phone && <span><FontAwesomeIcon icon={faPhone} /> {b.phone}</span>}
-              {b.opensAt && <span><FontAwesomeIcon icon={faClock} /> {b.opensAt}–{b.closesAt}</span>}
-              <span><FontAwesomeIcon icon={faRestroom} /> {b.hasToilet ? "Tuvalet var" : "Tuvalet yok"}</span>
-              {b.priceInfo && <span>{b.priceInfo}</span>}
+              {b.opens_at && <span><FontAwesomeIcon icon={faClock} /> {b.opens_at}–{b.closes_at}</span>}
+              <span><FontAwesomeIcon icon={faRestroom} /> {b.has_toilet ? "Tuvalet var" : "Tuvalet yok"}</span>
+              {b.price_info && <span>{b.price_info}</span>}
             </div>
           </li>
         ))}

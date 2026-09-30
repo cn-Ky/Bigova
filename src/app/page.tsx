@@ -20,7 +20,7 @@ export default function Home() {
     <main>
       <header className="fixed top-0 inset-x-0 z-20 flex items-center justify-between px-4 py-3 bg-sea/90 text-white backdrop-blur">
         <span className="font-display text-xl"><FontAwesomeIcon icon={faAnchor} className="mr-2 text-sun" />Bigova</span>
-        <nav className="flex gap-4 text-sm"><a href="#hakkimizda">Hakkımızda</a><a href="#iletisim">İletişim</a></nav>
+        <nav className="flex gap-4 text-sm"><a href="#hakkimizda">Hakkımızda</a><a href="#iletisim">İletişim</a><Link href="/giris">Giriş</Link></nav>
       </header>
       <section className="relative min-h-[100dvh] flex items-center justify-center text-center bg-gradient-to-b from-sea to-[#1f6f8b] text-white px-6">
         <Hero3D />

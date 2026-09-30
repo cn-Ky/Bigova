@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-
+import { supabaseServer } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
-
 export async function GET(req: Request) {
-  const q = new URL(req.url).searchParams.get("q") ?? "";
-  const items = await prisma.business.findMany({ where: { name: { contains: q, mode: "insensitive" } }, orderBy: { name: "asc" }, take: 100 });
-  return NextResponse.json(items);
+  const q = (new URL(req.url).searchParams.get("q") ?? "").replace(/[%,]/g, "");
+  const { data, error } = await supabaseServer().from("businesses").select("*").ilike("name", `%${q}%`).order("name").limit(100);
+  if (error) return NextResponse.json({ error: "Veri alınamadı." }, { status: 500 });
+  return NextResponse.json(data);
 }
