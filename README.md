@@ -1,8 +1,8 @@
-# Bigora
+# Bigova
 
 > **Biga'nın öğrencileri için keşfet, paylaş, öğren ve hayatını kolaylaştır.**
 
-Bigora, **Çanakkale Onsekiz Mart Üniversitesi Biga İktisadi ve İdari Bilimler Fakültesi (Biga İİBF) ve Biga Meslek Yüksekokulu öğrencileri** başta olmak üzere Biga'daki öğrencilerin günlük yaşamını kolaylaştırmak amacıyla geliştirilen öğrenci odaklı bir mobil uygulama ve startup projesidir.
+Bigova, **Çanakkale Onsekiz Mart Üniversitesi Biga İktisadi ve İdari Bilimler Fakültesi (Biga İİBF) ve Biga Meslek Yüksekokulu öğrencileri** başta olmak üzere Biga'daki öğrencilerin günlük yaşamını kolaylaştırmak amacıyla geliştirilen öğrenci odaklı bir mobil uygulama ve startup projesidir.
 
 Uygulama; Biga'da bulunan işletmeler, hizmetler ve öğrenci yaşamına dair bilgileri tek bir platformda bir araya getirirken, öğrencilerin kendi aralarında bilgi, ders materyali ve ikinci el ürün paylaşmasına da olanak sağlamayı hedeflemektedir.
 
@@ -12,7 +12,7 @@ Uygulama; Biga'da bulunan işletmeler, hizmetler ve öğrenci yaşamına dair bi
 
 Biga'da öğrencilerin günlük hayatta ihtiyaç duyduğu bilgileri farklı platformlarda aramak zorunda kalmaması ve öğrenciler arasında bilgi paylaşımının kolaylaştırılması amaçlanmaktadır.
 
-Bigora ile kullanıcıların;
+Bigova ile kullanıcıların;
 
 * 📍 Biga'daki işletmeleri keşfetmesi
 * 💰 Fiyatları incelemesi
@@ -109,7 +109,7 @@ gibi kriterlere göre kategorize edilebilir.
 
 # 🗺️ Keşfet
 
-Bigora'nın temel özelliklerinden biri Biga'yı öğrencilerin gözünden keşfetmeyi sağlamaktır.
+Bigova'nın temel özelliklerinden biri Biga'yı öğrencilerin gözünden keşfetmeyi sağlamaktır.
 
 Kullanıcılar;
 
@@ -131,7 +131,7 @@ gibi kategoriler üzerinden işletmeleri keşfedebilir.
 
 # 👥 Öğrenci Topluluğu
 
-Bigora yalnızca bir işletme rehberi değil, aynı zamanda öğrenciler arasında bir bilgi paylaşım platformu olmayı hedeflemektedir.
+Bigova yalnızca bir işletme rehberi değil, aynı zamanda öğrenciler arasında bir bilgi paylaşım platformu olmayı hedeflemektedir.
 
 Öğrenciler:
 
@@ -146,6 +146,6 @@ Böylece platformun temel veri yapısının önemli bir bölümü topluluk taraf
 
 # 🌐 Proje
 
-**Bigora**
+**Bigova**
 
 Biga'dan başlayan, öğrenciler için geliştirilen yerel dijital yaşam platformu.
