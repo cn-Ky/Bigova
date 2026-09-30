@@ -11,9 +11,6 @@
     "next": "14.2.15",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "three": "0.160.1",
-    "@react-three/fiber": "8.15.19",
-    "@react-three/drei": "9.99.7",
     "framer-motion": "11.11.1",
     "@fortawesome/fontawesome-svg-core": "6.6.0",
     "@fortawesome/free-solid-svg-icons": "6.6.0",
@@ -26,7 +23,6 @@
     "typescript": "5.6.2",
     "@types/node": "20.16.10",
     "@types/react": "18.3.11",
-    "@types/three": "0.160.0",
     "tailwindcss": "3.4.13",
     "postcss": "8.4.47",
     "autoprefixer": "10.4.20"

@@ -1,8 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faGraduationCap } from "@fortawesome/free-solid-svg-icons";
+import Mascot from "@/components/Mascot";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 const SCHOOL_MAIL = /^\d{6,12}@ogr\.comu\.edu\.tr$/i;
@@ -30,17 +29,15 @@ export default function Giris() {
     setBusy(false);
   }
   return (
-    <main className="min-h-[100dvh] grid place-items-center px-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-lg">
-        <div className="text-center"><FontAwesomeIcon icon={faGraduationCap} className="text-3xl text-olive" /><h1 className="font-display text-2xl mt-2">{mode === "login" ? "Giriş Yap" : "Kayıt Ol"}</h1></div>
-        <div className="mt-4 grid gap-3">
-          {mode === "register" && <input value={name} onChange={e => setName(e.target.value)} placeholder="Ad Soyad" className="rounded-xl border p-3" />}
-          <input value={email} onChange={e => setEmail(e.target.value)} type="email" inputMode="email" autoComplete="email" placeholder="123456789@ogr.comu.edu.tr" className="rounded-xl border p-3" />
-          <input value={password} onChange={e => setPassword(e.target.value)} type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} placeholder="Şifre" className="rounded-xl border p-3" />
-          <button onClick={submit} disabled={busy} className="rounded-xl bg-sea p-3 font-semibold text-white disabled:opacity-60">{busy ? "..." : mode === "login" ? "Giriş" : "Kayıt Ol"}</button>
-          {msg && <p className={`text-sm ${msg.ok ? "text-olive" : "text-clay"}`}>{msg.t}</p>}
-          <button onClick={() => { setMode(mode === "login" ? "register" : "login"); setMsg(null); }} className="text-sm underline">{mode === "login" ? "Hesabın yok mu? Kayıt ol" : "Hesabın var mı? Giriş yap"}</button>
-        </div>
+    <main className="px-5 pt-[max(2rem,env(safe-area-inset-top))]">
+      <div className="text-center"><Mascot size={112} className="mx-auto" /><h1 className="font-display text-3xl font-extrabold">{mode === "login" ? "Tekrar hoş geldin" : "Aramıza katıl"}</h1><p className="text-sm text-sea/70">Sadece okul mailiyle giriş yapılır.</p></div>
+      <div className="mt-6 grid gap-3 rounded-[28px] bg-white p-5 shadow-sm">
+        {mode === "register" && <input value={name} onChange={e => setName(e.target.value)} placeholder="Ad Soyad" autoComplete="name" className="rounded-2xl bg-foam p-4 outline-none" />}
+        <input value={email} onChange={e => setEmail(e.target.value)} type="email" inputMode="email" autoComplete="email" placeholder="123456789@ogr.comu.edu.tr" className="rounded-2xl bg-foam p-4 outline-none" />
+        <input value={password} onChange={e => setPassword(e.target.value)} type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} placeholder="Şifre (en az 8 karakter)" className="rounded-2xl bg-foam p-4 outline-none" />
+        <button onClick={submit} disabled={busy} className="rounded-2xl bg-sea p-4 font-display text-lg font-bold text-white active:scale-[.98] disabled:opacity-60">{busy ? "Bekle…" : mode === "login" ? "Giriş yap" : "Kayıt ol"}</button>
+        {msg && <p role="status" className={`text-sm font-bold ${msg.ok ? "text-tide" : "text-coral"}`}>{msg.t}</p>}
+        <button onClick={() => { setMode(mode === "login" ? "register" : "login"); setMsg(null); }} className="text-sm font-bold underline">{mode === "login" ? "Hesabın yok mu? Kayıt ol" : "Hesabın var mı? Giriş yap"}</button>
       </div>
     </main>
   );
