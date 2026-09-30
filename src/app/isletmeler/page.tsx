@@ -10,6 +10,7 @@ type B = { id: string; name: string; category: string; phone?: string; price_inf
 export default function Isletmeler() {
   const [q, setQ] = useState(""); const [cat, setCat] = useState("Tümü");
   const [items, setItems] = useState<B[] | null>(null);
+  useEffect(() => { const v = new URLSearchParams(location.search).get("q"); if (v) setQ(v); }, []);
   useEffect(() => {
     const t = setTimeout(() => fetch(`/api/businesses?q=${encodeURIComponent(q)}`).then((r) => r.json()).then((d) => setItems(Array.isArray(d) ? d : [])).catch(() => setItems([])), 250);
     return () => clearTimeout(t);

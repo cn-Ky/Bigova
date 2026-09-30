@@ -1,55 +1,92 @@
 "use client";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { AnimatePresence, motion, useMotionValue, useSpring } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faStore, faBookOpen, faBus, faUserGroup, faNewspaper, faBook, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import { faStore, faBookOpen, faBus, faUserGroup, faNewspaper, faBook, faMagnifyingGlass, faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import Mascot from "@/components/Mascot";
+import { useUser } from "@/lib/useUser";
 
 const tiles = [
   { icon: faStore, t: "İşletmeler", d: "Fiyat, saat, tuvalet", href: "/isletmeler", c: "bg-tide text-deep" },
-  { icon: faBus, t: "Ulaşım", d: "Otobüs ve servis", href: "/yakinda/ulasim", c: "bg-sun text-deep", soon: 1 },
+  { icon: faBus, t: "Ulaşım", d: "Otobüs ve servis", href: "/ulasim", c: "bg-sun text-deep" },
   { icon: faBookOpen, t: "Notlar", d: "Ders notu, PDF", href: "/yakinda/notlar", c: "bg-sea text-white", soon: 1 },
   { icon: faBook, t: "Kitap pazarı", d: "İkinci el kitap", href: "/yakinda/kitap", c: "bg-coral text-deep", soon: 1 },
   { icon: faUserGroup, t: "Arkadaşlar", d: "Mesaj, konum", href: "/yakinda/arkadaslar", c: "bg-sky text-deep", soon: 1 },
   { icon: faNewspaper, t: "Dergi", d: "Okulun dergisi", href: "/yakinda/dergi", c: "bg-card text-ink", soon: 1 },
 ];
-const list = { show: { transition: { staggerChildren: 0.07, delayChildren: 0.15 } } };
-const item = { hidden: { opacity: 0, y: 18, scale: 0.96 }, show: { opacity: 1, y: 0, scale: 1 } };
+const words = ["Kafe", "Kırtasiye", "Eczane", "Çamaşırhane", "Market"];
+const list = { show: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } } };
+const item = { hidden: { opacity: 0, y: 28, scale: 0.92 }, show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring" as const, stiffness: 260, damping: 20 } } };
+
+function Tile({ x }: { x: (typeof tiles)[number] }) {
+  const ref = useRef<HTMLAnchorElement>(null);
+  const rx = useSpring(useMotionValue(0), { stiffness: 200, damping: 18 });
+  const ry = useSpring(useMotionValue(0), { stiffness: 200, damping: 18 });
+  const move = (e: React.MouseEvent) => {
+    const el = ref.current!, b = el.getBoundingClientRect(), px = (e.clientX - b.left) / b.width, py = (e.clientY - b.top) / b.height;
+    ry.set((px - 0.5) * 16); rx.set(-(py - 0.5) * 16);
+    el.style.setProperty("--gx", `${px * 100}%`); el.style.setProperty("--gy", `${py * 100}%`);
+  };
+  const leave = () => { rx.set(0); ry.set(0); };
+  return (
+    <motion.li variants={item}>
+      <motion.div style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }} whileHover={{ y: -8, scale: 1.03 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 300, damping: 18 }}>
+        <Link ref={ref} href={x.href} onMouseMove={move} onMouseLeave={leave} className={`group relative flex h-36 flex-col justify-between overflow-hidden rounded-[26px] p-4 shadow-sm transition-shadow hover:shadow-[0_18px_40px_rgba(14,58,91,.28)] lg:h-44 ${x.c}`}>
+          <span className="tile-glare pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+          <FontAwesomeIcon icon={x.icon} className="ico self-start text-2xl" />
+          <FontAwesomeIcon icon={faArrowRight} className="absolute bottom-4 right-4 -translate-x-3 opacity-0 transition duration-300 group-hover:translate-x-0 group-hover:opacity-80" />
+          <span><b className="block font-display text-lg leading-tight">{x.t}</b><span className="text-[13px] opacity-75">{x.d}</span></span>
+          {x.soon && <span className="absolute right-3 top-3 rounded-full bg-card/70 px-2 py-0.5 text-[10px] font-bold text-ink">Yakında</span>}
+        </Link>
+      </motion.div>
+    </motion.li>
+  );
+}
 
 export default function Home() {
+  const router = useRouter();
+  const { user, name } = useUser();
+  const [q, setQ] = useState(""); const [i, setI] = useState(0);
+  useEffect(() => { const t = setInterval(() => setI((n) => (n + 1) % words.length), 2200); return () => clearInterval(t); }, []);
+  const go = (e: React.FormEvent) => { e.preventDefault(); router.push(q.trim() ? `/isletmeler?q=${encodeURIComponent(q.trim())}` : "/isletmeler"); };
   return (
     <main>
       <header className="relative overflow-hidden rounded-b-[36px] bg-gradient-to-b from-sea to-sea2 px-5 pb-16 pt-[max(1.5rem,env(safe-area-inset-top))] text-white">
         <span className="cloud left-0 top-8 h-5 w-24" /><span className="cloud left-0 top-20 h-4 w-16 [animation-delay:-16s]" />
         <div className="relative flex items-end justify-between">
           <div className="relative z-10">
-            <p className="text-sm text-sky">Merhaba 👋</p>
-            <h1 className="mt-1 font-display text-[28px] font-extrabold leading-tight lg:text-5xl">Bugün Biga'da<br />ne yapıyoruz?</h1>
+            <motion.p initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} className="text-sm text-sky">Merhaba{user && name ? `, ${name}` : ""} <span className="inline-block origin-[70%_70%] animate-[wig_2.4s_ease_infinite]">👋</span></motion.p>
+            <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.6 }} className="mt-1 font-display text-[28px] font-extrabold leading-tight lg:text-5xl">Bugün Biga'da<br />ne yapıyoruz?</motion.h1>
           </div>
-          <Mascot size={104} className="-mb-2 shrink-0 lg:origin-bottom lg:scale-150" />
+          <motion.div whileHover={{ rotate: -6, scale: 1.08 }} className="shrink-0 lg:origin-bottom lg:scale-150"><Mascot size={104} className="-mb-2" /></motion.div>
         </div>
       </header>
 
-      <Link href="/isletmeler" className="relative z-10 mx-5 -mt-7 flex items-center gap-3 rounded-full bg-card px-5 py-4 text-ink/60 shadow-[0_10px_30px_rgba(14,58,91,.16)]">
-        <FontAwesomeIcon icon={faMagnifyingGlass} /> Kafe, kırtasiye, eczane ara…
-      </Link>
+      <motion.form onSubmit={go} whileHover={{ scale: 1.01 }} whileFocus={{ scale: 1.02 }} className="relative z-10 mx-5 -mt-7 flex items-center gap-3 rounded-full bg-card px-5 py-4 text-ink shadow-[0_10px_30px_rgba(14,58,91,.16)] transition-shadow focus-within:shadow-[0_14px_40px_rgba(44,196,181,.45)] focus-within:ring-2 focus-within:ring-tide">
+        <FontAwesomeIcon icon={faMagnifyingGlass} className="text-ink/60" />
+        <div className="relative flex-1">
+          <input value={q} onChange={(e) => setQ(e.target.value)} aria-label="İşletme ara" className="w-full bg-transparent outline-none" />
+          {!q && <span className="pointer-events-none absolute inset-0 flex items-center gap-1 text-ink/60">
+            <AnimatePresence mode="wait"><motion.b key={i} initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -12, opacity: 0 }} transition={{ duration: 0.25 }} className="font-semibold">{words[i]}</motion.b></AnimatePresence> ara…</span>}
+        </div>
+        <motion.button whileTap={{ scale: 0.88 }} whileHover={{ scale: 1.1 }} aria-label="Ara" className="grid h-9 w-9 place-items-center rounded-full bg-sea text-white"><FontAwesomeIcon icon={faArrowRight} /></motion.button>
+      </motion.form>
 
       <motion.ul variants={list} initial="hidden" animate="show" className="mt-6 grid grid-cols-2 gap-3 px-5 md:grid-cols-3 lg:gap-4">
-        {tiles.map((x) => (
-          <motion.li key={x.t} variants={item} whileTap={{ scale: 0.95 }}>
-            <Link href={x.href} className={`relative flex h-36 flex-col justify-between rounded-[26px] p-4 shadow-sm lg:h-44 ${x.c}`}>
-              <FontAwesomeIcon icon={x.icon} className="self-start text-2xl" />
-              <span><b className="block font-display text-lg leading-tight">{x.t}</b><span className="text-[13px] opacity-75">{x.d}</span></span>
-              {x.soon && <span className="absolute right-3 top-3 rounded-full bg-card/70 px-2 py-0.5 text-[10px] font-bold text-ink">Yakında</span>}
-            </Link>
-          </motion.li>
-        ))}
+        {tiles.map((x) => <Tile key={x.t} x={x} />)}
       </motion.ul>
 
-      <Link href="/giris" className="mx-5 mt-5 flex items-center gap-3 rounded-[26px] bg-card p-4 shadow-sm">
-        <Mascot size={44} />
-        <span className="text-sm"><b className="block font-display text-base">Okul mailinle giriş yap</b>Notlar, arkadaşlar ve mesajlar seni bekliyor.</span>
-      </Link>
+      {user === null && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} whileHover={{ y: -4 }}>
+          <Link href="/giris" className="group mx-5 mt-5 flex items-center gap-3 rounded-[26px] bg-card p-4 shadow-sm transition-shadow hover:shadow-lg">
+            <Mascot size={44} />
+            <span className="flex-1 text-sm"><b className="block font-display text-base">Okul mailinle giriş yap</b>Notlar, arkadaşlar ve mesajlar seni bekliyor.</span>
+            <FontAwesomeIcon icon={faArrowRight} className="mr-2 transition group-hover:translate-x-1.5" />
+          </Link>
+        </motion.div>
+      )}
     </main>
   );
 }

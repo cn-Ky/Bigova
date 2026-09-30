@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 export async function middleware(req: NextRequest) {
   let res = NextResponse.next({ request: req });
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) return res; // env eksikse siteyi çökertme
   const s = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
     cookies: {
       getAll: () => req.cookies.getAll(),
@@ -12,7 +13,7 @@ export async function middleware(req: NextRequest) {
       },
     },
   });
-  await s.auth.getUser(); // oturumu yeniler
+  try { await s.auth.getUser(); } catch {} // oturumu yeniler
   return res;
 }
 export const config = { matcher: ["/((?!_next/static|_next/image|favicon.ico|api/health).*)"] };
