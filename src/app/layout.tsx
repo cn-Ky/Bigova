@@ -4,6 +4,7 @@ import { config } from "@fortawesome/fontawesome-svg-core";
 import { Baloo_2, Nunito } from "next/font/google";
 import type { Metadata, Viewport } from "next";
 import BottomNav from "@/components/BottomNav";
+import SideNav from "@/components/SideNav";
 import Splash from "@/components/Splash";
 config.autoAddCss = false;
 
@@ -15,10 +16,12 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, view
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr" className={`${display.variable} ${body.variable}`}>
+    <html lang="tr" suppressHydrationWarning className={`${display.variable} ${body.variable}`}>
+      <head><script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem("bigova-theme");if(!t)t=matchMedia("(prefers-color-scheme: dark)").matches?"gece":"sabah";document.documentElement.dataset.theme=t}catch(e){}` }} /></head>
       <body>
         <Splash />
-        <div className="shell pb-28">{children}</div>
+        <SideNav />
+        <div className="shell pb-28 lg:pb-10">{children}</div>
         <BottomNav />
       </body>
     </html>

@@ -30,8 +30,8 @@ export default function Giris() {
   }
   return (
     <main className="px-5 pt-[max(2rem,env(safe-area-inset-top))]">
-      <div className="text-center"><Mascot size={112} className="mx-auto" /><h1 className="font-display text-3xl font-extrabold">{mode === "login" ? "Tekrar hoş geldin" : "Aramıza katıl"}</h1><p className="text-sm text-sea/70">Sadece okul mailiyle giriş yapılır.</p></div>
-      <div className="mt-6 grid gap-3 rounded-[28px] bg-white p-5 shadow-sm">
+      <div className="mx-auto max-w-md text-center"><Mascot size={112} className="mx-auto" /><h1 className="font-display text-3xl font-extrabold">{mode === "login" ? "Tekrar hoş geldin" : "Aramıza katıl"}</h1><p className="text-sm text-ink/70">Sadece okul mailiyle giriş yapılır.</p></div>
+      <div className="mx-auto mt-6 grid max-w-md gap-3 rounded-[28px] bg-card p-5 shadow-sm">
         {mode === "register" && <input value={name} onChange={e => setName(e.target.value)} placeholder="Ad Soyad" autoComplete="name" className="rounded-2xl bg-foam p-4 outline-none" />}
         <input value={email} onChange={e => setEmail(e.target.value)} type="email" inputMode="email" autoComplete="email" placeholder="123456789@ogr.comu.edu.tr" className="rounded-2xl bg-foam p-4 outline-none" />
         <input value={password} onChange={e => setPassword(e.target.value)} type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} placeholder="Şifre (en az 8 karakter)" className="rounded-2xl bg-foam p-4 outline-none" />

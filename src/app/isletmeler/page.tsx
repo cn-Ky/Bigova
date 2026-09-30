@@ -20,7 +20,7 @@ export default function Isletmeler() {
     <main>
       <header className="sticky top-0 z-20 rounded-b-[28px] bg-sea px-5 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))] text-white shadow-lg">
         <h1 className="font-display text-2xl font-extrabold">İşletmeler</h1>
-        <label className="mt-3 flex items-center gap-2 rounded-full bg-white px-4 py-3 text-sea">
+        <label className="mt-3 flex items-center gap-2 rounded-full bg-card px-4 py-3 text-ink">
           <FontAwesomeIcon icon={faMagnifyingGlass} className="opacity-50" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="İşletme ara" aria-label="İşletme ara" className="w-full bg-transparent outline-none" />
         </label>
@@ -30,16 +30,16 @@ export default function Isletmeler() {
           ))}
         </div>
       </header>
-      <ul className="grid gap-3 px-5 pt-5">
+      <ul className="grid gap-3 px-5 pt-5 md:grid-cols-2 xl:grid-cols-3">
         {items === null && [0, 1, 2].map((i) => <li key={i} className="shimmer h-28 rounded-[24px]" />)}
         <AnimatePresence initial={false}>
           {shown.map((b) => (
-            <motion.li key={b.id} layout initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-[24px] bg-white p-4 shadow-sm">
+            <motion.li key={b.id} layout initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-[24px] bg-card p-4 shadow-sm">
               <div className="flex items-start justify-between gap-2">
                 <b className="font-display text-lg leading-tight">{b.name}</b>
                 <span className="rounded-full bg-tide/20 px-3 py-0.5 text-xs font-bold">{b.category}</span>
               </div>
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-sea/80">
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink/80">
                 {b.opens_at && <span><FontAwesomeIcon icon={faClock} /> {b.opens_at}–{b.closes_at}</span>}
                 <span><FontAwesomeIcon icon={faRestroom} /> {b.has_toilet ? "Tuvalet var" : "Tuvalet yok"}</span>
                 {b.price_info && <span className="font-bold text-coral">{b.price_info}</span>}
@@ -50,7 +50,7 @@ export default function Isletmeler() {
         </AnimatePresence>
       </ul>
       {items && shown.length === 0 && (
-        <div className="px-5 py-12 text-center"><Mascot size={96} className="mx-auto" /><p className="mt-2 font-display text-lg font-bold">Sonuç bulunamadı</p><p className="text-sm text-sea/70">Başka bir kelimeyle ara ya da kategoriyi "Tümü" yap.</p></div>
+        <div className="px-5 py-12 text-center"><Mascot size={96} className="mx-auto" /><p className="mt-2 font-display text-lg font-bold">Sonuç bulunamadı</p><p className="text-sm text-ink/70">Başka bir kelimeyle ara ya da kategoriyi "Tümü" yap.</p></div>
       )}
     </main>
   );

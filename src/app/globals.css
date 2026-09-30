@@ -1,16 +1,25 @@
+:root,html[data-theme="sabah"]{color-scheme:light;--foam:243 248 250;--card:255 255 255;--ink:14 58 91;--sea:14 58 91;--sea2:29 106 147;--deep:7 38 56;--tide:44 196 181;--sun:255 184 77;--coral:255 107 87;--sky:191 230 242;--page:7 38 56;}
+html[data-theme="gece"]{color-scheme:dark;--foam:15 27 38;--card:24 42 57;--ink:230 241 247;--sea:47 127 184;--sea2:31 92 138;--deep:6 18 27;--tide:61 214 196;--sun:255 199 102;--coral:255 127 107;--sky:124 196 221;--page:5 13 19;}
+html[data-theme="komur"]{color-scheme:dark;--foam:0 0 0;--card:20 20 20;--ink:242 242 242;--sea:194 65 12;--sea2:124 45 18;--deep:0 0 0;--tide:34 211 238;--sun:250 204 21;--coral:251 113 133;--sky:253 186 116;--page:0 0 0;}
+html[data-theme="gunbatimi"]{color-scheme:light;--foam:255 244 234;--card:255 255 255;--ink:74 30 46;--sea:217 72 107;--sea2:242 136 75;--deep:58 18 34;--tide:47 181 155;--sun:255 179 71;--coral:255 107 87;--sky:255 211 184;--page:42 14 26;}
+html[data-theme="orman"]{color-scheme:light;--foam:238 245 236;--card:255 255 255;--ink:23 58 42;--sea:46 125 79;--sea2:79 163 107;--deep:12 42 27;--tide:44 196 181;--sun:233 196 106;--coral:231 111 81;--sky:205 232 200;--page:10 32 22;}
+html[data-theme="lavanta"]{color-scheme:light;--foam:244 240 251;--card:255 255 255;--ink:43 27 77;--sea:107 79 209;--sea2:142 116 232;--deep:26 15 58;--tide:53 197 192;--sun:255 200 87;--coral:255 111 145;--sky:221 210 247;--page:21 11 46;}
 @tailwind base; @tailwind components; @tailwind utilities;
 html { -webkit-text-size-adjust: 100%; }
-body { font-family: var(--f-body), sans-serif; background: #072638; color: #0E3A5B; overflow-x: hidden; }
+body { font-family: var(--f-body), sans-serif; background: rgb(var(--page)); color: rgb(var(--ink)); overflow-x: hidden; transition: background-color .3s, color .3s; }
 button, a { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 input { font-size: 16px; }
 :focus-visible { outline: 3px solid #FFB84D; outline-offset: 2px; }
-.shell { position: relative; max-width: 440px; margin: 0 auto; min-height: 100dvh; background: #F3F8FA; overflow: hidden; box-shadow: 0 0 80px rgba(0,0,0,.4); }
+.shell { position: relative; max-width: 440px; margin: 0 auto; min-height: 100dvh; background: rgb(var(--foam)); overflow: hidden; box-shadow: 0 0 80px rgba(0,0,0,.4); transition: background-color .3s; }
+.shell > main { max-width: 1120px; margin-inline: auto; }
+@media (min-width: 768px) { .shell { max-width: 760px; } }
+@media (min-width: 1024px) { .shell { max-width: none; margin: 0 0 0 264px; box-shadow: none; } .shell > main > header { margin: 1.5rem 1.25rem 0; border-radius: 32px; } }
 .m-bob { animation: bob 3.2s ease-in-out infinite; }
 .m-wing { transform-origin: 52px 68px; animation: flap 3.2s ease-in-out infinite; }
 .m-eye { transform-origin: 82px 44px; animation: blink 5s infinite; }
-.cloud { position: absolute; background: #fff; border-radius: 999px; opacity: .7; animation: drift 38s linear infinite; }
+.cloud { position: absolute; background: #fff; border-radius: 999px; opacity: .14; animation: drift 38s linear infinite; }
 .fly-in { animation: flyin 1.3s cubic-bezier(.2,.8,.2,1) both; }
-.shimmer { background: linear-gradient(90deg,#e3eef2 25%,#f3f8fa 50%,#e3eef2 75%); background-size: 200% 100%; animation: sh 1.3s infinite; }
+.shimmer { background: linear-gradient(90deg,rgb(var(--sky)/.35) 25%,rgb(var(--card)) 50%,rgb(var(--sky)/.35) 75%); background-size: 200% 100%; animation: sh 1.3s infinite; }
 @keyframes bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
 @keyframes flap { 0%,70%,100% { transform: rotate(0) } 80% { transform: rotate(-16deg) } 90% { transform: rotate(6deg) } }
 @keyframes blink { 0%,94%,100% { transform: scaleY(1) } 97% { transform: scaleY(.1) } }
