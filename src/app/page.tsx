@@ -4,13 +4,9 @@ import Weather from "@/components/Weather";
 import { useUser } from "@/lib/useUser";
 import {
     faArrowRight,
-    faBook,
-    faBookOpen,
-    faBus,
+    faCalendarDays,
+    faLocationDot,
     faMagnifyingGlass,
-    faNewspaper,
-    faStore,
-    faUserGroup,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -27,42 +23,42 @@ import { useEffect, useRef, useState } from "react";
 
 const tiles = [
   {
-    icon: faStore,
+    kind: "business",
     t: "İşletmeler",
     d: "Fiyat, saat, tuvalet",
     href: "/isletmeler",
     c: "bg-tide text-deep",
   },
   {
-    icon: faBus,
+    kind: "transport",
     t: "Ulaşım",
     d: "Otobüs ve servis",
     href: "/ulasim",
     c: "bg-sun text-deep",
   },
   {
-    icon: faBookOpen,
+    kind: "notes",
     t: "Notlar",
     d: "Ders notu, PDF",
     href: "/notlar",
     c: "bg-sea text-white",
   },
   {
-    icon: faBook,
+    kind: "market",
     t: "Kitap pazarı",
     d: "İkinci el kitap",
     href: "/kitap-pazari",
     c: "bg-coral text-deep",
   },
   {
-    icon: faUserGroup,
+    kind: "friends",
     t: "Arkadaşlar",
     d: "Arkadaş ekle, bire bir sohbet",
     href: "/arkadaslar",
     c: "bg-sky text-deep",
   },
   {
-    icon: faNewspaper,
+    kind: "magazine",
     t: "Dergi",
     d: "Okulun dergisi",
     href: "/yakinda/dergi",
@@ -83,6 +79,222 @@ const item = {
     transition: { type: "spring" as const, stiffness: 260, damping: 20 },
   },
 };
+
+function TileArt({ kind }: { kind: string }) {
+  const shared = {
+    className: `tile-art tile-art--${kind}`,
+    viewBox: "0 0 112 84",
+    "aria-hidden": true as const,
+  };
+  switch (kind) {
+    case "business":
+      return (
+        <svg {...shared}>
+          <path d="M25 35h62v39H25z" fill="currentColor" opacity=".14" />
+          <path d="M20 35h72l-7-18H27z" fill="currentColor" opacity=".24" />
+          <path
+            d="M20 35h72l-7-18H27z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M25 35v39h62V35M37 35v-5a8 8 0 0 1 16 0v5m11 0v-5a8 8 0 0 1 16 0v5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <path
+            d="M34 46h17v14H34zm34 0h11v28H68z"
+            fill="currentColor"
+            opacity=".3"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
+          <path
+            d="M18 75h78"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
+    case "transport":
+      return (
+        <svg {...shared}>
+          <path
+            d="M21 54V28q0-8 9-8h47q9 0 9 8v26"
+            fill="currentColor"
+            opacity=".2"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <path
+            d="M24 30h59v25H24z"
+            fill="currentColor"
+            opacity=".13"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <path
+            d="M29 34h16v13H29zm22 0h15v13H51zm21 0h7v13h-7z"
+            fill="currentColor"
+            opacity=".38"
+          />
+          <path d="M25 55h58v8H25z" fill="currentColor" opacity=".32" />
+          <circle cx="36" cy="64" r="7" fill="currentColor" />
+          <circle cx="73" cy="64" r="7" fill="currentColor" />
+          <circle cx="36" cy="64" r="2.5" fill="rgb(var(--card))" />
+          <circle cx="73" cy="64" r="2.5" fill="rgb(var(--card))" />
+          <path
+            d="M17 74h75"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeDasharray="5 7"
+          />
+        </svg>
+      );
+    case "notes":
+      return (
+        <svg {...shared}>
+          <path
+            d="M56 27c-12-9-25-10-39-6v43c14-4 27-3 39 6 12-9 25-10 39-6V21c-14-4-27-3-39 6z"
+            fill="currentColor"
+            opacity=".18"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M56 27v43M27 32c8-2 15-1 22 2m-22 8c8-2 15-1 22 2m36-12c-8-2-15-1-22 2m22 8c-8-2-15-1-22 2"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <path
+            d="m77 14 3 5 6 1-4 4 1 6-6-3-5 3 1-6-4-4 6-1z"
+            fill="currentColor"
+          />
+        </svg>
+      );
+    case "market":
+      return (
+        <svg {...shared}>
+          <path
+            d="M25 24q0-5 5-5h43q5 0 5 5v49q0 5-5 5H30q-5 0-5-5z"
+            fill="currentColor"
+            opacity=".16"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <path
+            d="M34 29h35v4H34zm0 11h27v3H34zm0 9h31v3H34z"
+            fill="currentColor"
+            opacity=".55"
+          />
+          <path
+            d="M80 43h12v27a6 6 0 0 1-12 0z"
+            fill="currentColor"
+            opacity=".28"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <path
+            d="M86 48v18m-5-9h10"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <path
+            d="M20 78h74"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
+    case "friends":
+      return (
+        <svg {...shared}>
+          <path
+            d="M15 69c1-13 9-20 20-20s19 7 20 20"
+            fill="currentColor"
+            opacity=".23"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <circle
+            cx="35"
+            cy="34"
+            r="12"
+            fill="currentColor"
+            opacity=".28"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <path
+            d="M56 71c1-12 8-19 18-19s18 7 19 19"
+            fill="currentColor"
+            opacity=".18"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <circle
+            cx="74"
+            cy="38"
+            r="11"
+            fill="currentColor"
+            opacity=".25"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <path
+            d="M45 17h31q6 0 6 6v8q0 6-6 6H63l-8 7v-7h-3q-7 0-7-6v-8q0-6 6-6z"
+            fill="rgb(var(--card))"
+            opacity=".7"
+          />
+          <path
+            d="M56 27h20"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
+    default:
+      return (
+        <svg {...shared}>
+          <path
+            d="M25 18h52q7 0 7 7v47q0 6-7 6H25z"
+            fill="currentColor"
+            opacity=".17"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <path
+            d="M25 18v60q-10-3-10-11V27q0-8 10-9z"
+            fill="currentColor"
+            opacity=".32"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <path
+            d="M38 33h33M38 43h27M38 53h33M38 63h22"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <path
+            d="m88 14 2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5 6-2.5z"
+            fill="currentColor"
+          />
+        </svg>
+      );
+  }
+}
 
 function Tile({ x }: { x: (typeof tiles)[number] }) {
   const ref = useRef<HTMLAnchorElement>(null);
@@ -126,9 +338,16 @@ function Tile({ x }: { x: (typeof tiles)[number] }) {
           onMouseMove={move}
           onMouseLeave={leave}
           onPointerDown={press}
-          className={`group relative flex h-36 flex-col justify-between overflow-hidden rounded-[26px] p-4 shadow-sm transition-shadow hover:shadow-[0_18px_40px_rgba(14,58,91,.28)] lg:h-44 ${x.c}`}
+          className={`group relative flex h-36 flex-col justify-between overflow-hidden rounded-[22px] p-4 shadow-sm transition-shadow hover:shadow-[0_18px_40px_rgba(14,58,91,.28)] lg:h-44 ${x.c}`}
         >
           <span className="tile-glare pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+          <span className="tile-number relative z-10">
+            {String(tiles.findIndex((tile) => tile.t === x.t) + 1).padStart(
+              2,
+              "0",
+            )}
+          </span>
+          <TileArt kind={x.kind} />
           {rip.map((r) => (
             <span
               key={r.id}
@@ -141,7 +360,6 @@ function Tile({ x }: { x: (typeof tiles)[number] }) {
               }}
             />
           ))}
-          <FontAwesomeIcon icon={x.icon} className="ico self-start text-2xl" />
           <FontAwesomeIcon
             icon={faArrowRight}
             className="absolute bottom-4 right-4 -translate-x-3 opacity-0 transition duration-300 group-hover:translate-x-0 group-hover:opacity-80"
@@ -263,6 +481,99 @@ export default function Home() {
           <FontAwesomeIcon icon={faArrowRight} />
         </motion.button>
       </motion.form>
+
+      <motion.section
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.12, duration: 0.45 }}
+        aria-labelledby="event-heading"
+        className="event-banner relative mx-5 mt-5 grid min-h-40 grid-cols-[minmax(0,1fr)_92px] items-center overflow-hidden rounded-[22px] px-5 py-5 text-white shadow-[0_12px_28px_rgba(7,38,56,.2)] md:grid-cols-[minmax(0,1fr)_180px] md:px-7"
+      >
+        <div className="relative z-10 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 text-[10px] font-extrabold uppercase tracking-[.12em] text-sun">
+            <FontAwesomeIcon icon={faCalendarDays} /> Etkinlik duyurusu{" "}
+            <span className="rounded-full bg-white/15 px-2 py-1 text-white/85">
+              Örnek
+            </span>
+          </div>
+          <h2
+            id="event-heading"
+            className="mt-2 max-w-2xl font-display text-xl font-extrabold leading-tight md:text-2xl"
+          >
+            Biga'da kampüs buluşması
+          </h2>
+          <p className="mt-1 max-w-xl text-sm text-white/75">
+            Yeni dönem, kulüpler ve kampüs etkinlikleri için duyurular burada.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs font-bold text-white/85">
+            <span>
+              <FontAwesomeIcon
+                icon={faCalendarDays}
+                className="mr-1.5 text-sun"
+              />
+              10 Ekim · 13.00
+            </span>
+            <span>
+              <FontAwesomeIcon
+                icon={faLocationDot}
+                className="mr-1.5 text-sun"
+              />
+              Kampüs meydanı
+            </span>
+          </div>
+        </div>
+        <svg
+          className="event-art relative z-10 ml-auto h-24 w-24 md:h-32 md:w-36"
+          viewBox="0 0 144 128"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M22 106h100"
+            stroke="white"
+            strokeOpacity=".4"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <path
+            d="M39 101V55l34-24 34 24v46"
+            fill="rgb(var(--sun))"
+            fillOpacity=".9"
+            stroke="white"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M53 101V70q0-7 7-7h26q7 0 7 7v31"
+            fill="rgb(var(--sea))"
+            stroke="white"
+            strokeWidth="3"
+          />
+          <path
+            d="M49 54h48M73 31v18"
+            stroke="white"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <path
+            d="m110 20 3 7 7 3-7 3-3 7-3-7-7-3 7-3zM27 39l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"
+            fill="white"
+          />
+          <path
+            d="M109 75h12v26h-12z"
+            fill="rgb(var(--coral))"
+            stroke="white"
+            strokeWidth="2"
+          />
+          <path
+            d="M115 75V57m0 0 11 5-11 5"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </motion.section>
 
       <motion.ul
         variants={list}
