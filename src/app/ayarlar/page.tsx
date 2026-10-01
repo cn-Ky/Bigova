@@ -17,7 +17,7 @@ export default function Ayarlar() {
         <p className="text-sm text-white/75">Uygulamayı sana göre ayarla.</p>
       </header>
       <section className="px-5 pt-6">
-        <Link href="/giris" className="flex items-center gap-3 rounded-[22px] bg-card p-4 shadow-sm">
+        <Link href="/giris" className="flex items-center gap-3 rounded-[22px] bg-card p-4 shadow-sm transition active:scale-[.97]">
           <span className="grid h-10 w-10 place-items-center rounded-full bg-sea text-white"><FontAwesomeIcon icon={faUser} /></span>
           <span className="flex-1"><b className="block">Hesap</b><span className="text-sm opacity-70">Giriş yap veya kayıt ol</span></span>
           <FontAwesomeIcon icon={faChevronRight} className="opacity-40" />
@@ -28,7 +28,7 @@ export default function Ayarlar() {
           {THEMES.map((t) => {
             const on = cur === t.id;
             return (
-              <li key={t.id}>
+              <motion.li key={t.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: THEMES.indexOf(t) * 0.05 }}>
                 <button role="radio" aria-checked={on} onClick={() => pick(t.id)} className="relative w-full rounded-[22px] bg-card p-2 text-left shadow-sm active:scale-[.97]">
                   {on && <motion.span layoutId="ring" className="absolute inset-0 rounded-[22px] ring-[3px] ring-sun" transition={{ type: "spring", stiffness: 500, damping: 35 }} />}
                   <div className="rounded-2xl p-3" style={{ background: t.foam }}>
@@ -38,7 +38,7 @@ export default function Ayarlar() {
                   </div>
                   <div className="flex items-center justify-between px-2 pb-1 pt-2 text-sm font-bold">{t.name}{on && <FontAwesomeIcon icon={faCheck} className="text-tide" />}</div>
                 </button>
-              </li>
+              </motion.li>
             );
           })}
         </ul>

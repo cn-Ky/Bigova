@@ -27,7 +27,7 @@ export default function Isletmeler() {
         </label>
         <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
           {cats.map((c) => (
-            <button key={c} onClick={() => setCat(c)} className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${cat === c ? "bg-sun text-deep" : "bg-white/15 text-white"}`}>{c}</button>
+            <motion.button whileTap={{ scale: 0.9 }} key={c} onClick={() => setCat(c)} className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${cat === c ? "bg-sun text-deep" : "bg-white/15 text-white"}`}>{c}</motion.button>
           ))}
         </div>
       </header>
@@ -35,7 +35,7 @@ export default function Isletmeler() {
         {items === null && [0, 1, 2].map((i) => <li key={i} className="shimmer h-28 rounded-[24px]" />)}
         <AnimatePresence initial={false}>
           {shown.map((b) => (
-            <motion.li key={b.id} layout initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-[24px] bg-card p-4 shadow-sm">
+            <motion.li key={b.id} layout initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} whileTap={{ scale: 0.97 }} whileHover={{ y: -3 }} transition={{ type: "spring", stiffness: 300, damping: 24 }} className="rounded-[24px] bg-card p-4 shadow-sm">
               <div className="flex items-start justify-between gap-2">
                 <b className="font-display text-lg leading-tight">{b.name}</b>
                 <span className="rounded-full bg-tide/20 px-3 py-0.5 text-xs font-bold">{b.category}</span>
@@ -45,7 +45,7 @@ export default function Isletmeler() {
                 <span><FontAwesomeIcon icon={faRestroom} /> {b.has_toilet ? "Tuvalet var" : "Tuvalet yok"}</span>
                 {b.price_info && <span className="font-bold text-coral">{b.price_info}</span>}
               </div>
-              {b.phone && <a href={`tel:${b.phone.replace(/\s/g, "")}`} className="mt-3 inline-flex items-center gap-2 rounded-full bg-sea px-4 py-2 text-sm font-bold text-white"><FontAwesomeIcon icon={faPhone} /> Ara</a>}
+              {b.phone && <motion.a whileTap={{ scale: 0.9 }} href={`tel:${b.phone.replace(/\s/g, "")}`} className="mt-3 inline-flex items-center gap-2 rounded-full bg-sea px-4 py-2 text-sm font-bold text-white"><FontAwesomeIcon icon={faPhone} /> Ara</motion.a>}
             </motion.li>
           ))}
         </AnimatePresence>
