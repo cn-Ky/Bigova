@@ -43,3 +43,5 @@ input { font-size: 16px; }
 .tile-glare { background: radial-gradient(circle at var(--gx,50%) var(--gy,0%), rgb(255 255 255 / .42), transparent 55%); }
 .group:hover .ico { animation: wig .6s ease; }
 @keyframes wig { 30% { transform: rotate(-14deg) scale(1.2) } 60% { transform: rotate(10deg) scale(1.2) } }
+
+:root { --f-display: "Baloo 2"; --f-body: "Nunito"; }
