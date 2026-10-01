@@ -1,9 +1,47 @@
-import { faCompass, faStore, faBus, faBookOpen, faGear } from "@fortawesome/free-solid-svg-icons";
+import {
+    faBook,
+    faBookOpen,
+    faBus,
+    faCompass,
+    faGear,
+    faNewspaper,
+    faStore,
+    faUserGroup,
+} from "@fortawesome/free-solid-svg-icons";
 export const tabs = [
   { href: "/", l: "Keşfet", i: faCompass, hint: "Ana sayfa" },
-  { href: "/isletmeler", l: "İşletmeler", i: faStore, hint: "Fiyat • saat • tuvalet" },
+  {
+    href: "/isletmeler",
+    l: "İşletmeler",
+    i: faStore,
+    hint: "Fiyat • saat • tuvalet",
+  },
   { href: "/ulasim", l: "Ulaşım", i: faBus, hint: "Otobüs ve servis" },
   { href: "/notlar", l: "Notlar", i: faBookOpen, hint: "Ders notu, PDF" },
   { href: "/ayarlar", l: "Ayarlar", i: faGear, hint: "Tema ve hesap" },
 ];
-export const isOn = (p: string, h: string) => (h === "/" ? p === "/" : p.startsWith(h));
+export const sideTabs = [
+  ...tabs.slice(0, 4),
+  {
+    href: "/kitap-pazari",
+    l: "Kitap pazarı",
+    i: faBook,
+    hint: "İkinci el kitaplar",
+  },
+  {
+    href: "/arkadaslar",
+    l: "Arkadaşlar",
+    i: faUserGroup,
+    hint: "Arkadaş ve sohbetler",
+  },
+  {
+    href: "/yakinda/dergi",
+    l: "Dergi",
+    i: faNewspaper,
+    hint: "Okulun dergisi",
+  },
+];
+export type SideTab = (typeof sideTabs)[number];
+export const settingsTab = tabs[4];
+export const isOn = (p: string, h: string) =>
+  h === "/" ? p === "/" : p.startsWith(h);
