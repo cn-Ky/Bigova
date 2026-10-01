@@ -97,6 +97,12 @@ Kullanıcılar:
 
 İçerikler bölüm, ders ve sınıf bazında kategorize edilebilir.
 
+## Uygulama Veritabanı Kurulumu
+
+Supabase SQL Editor'de ilk kurulumda `supabase/schema.sql` dosyasını çalıştırın. Mevcut kurulumda not alanları eksikse `supabase/notes_upgrade.sql` dosyasını, kitap pazarı/arkadaşlık serileri için `supabase/social_marketplace_upgrade.sql` dosyasını çalıştırın. İşletme ve ulaşım için temsili örnek kayıt eklemek üzere son olarak `supabase/sample_data.sql` dosyasını çalıştırabilirsiniz. Bu dosyadaki fiyat, telefon, adres, güzergâh ve saatler gerçek bilgi değildir; yayından önce doğrulanmış bilgilerle değiştirin.
+
+Notlar sayfasındaki iki örnek PDF ile kitap pazarı örnek ilanları uygulama içi demo içeriğidir. Kitap ilanı yayınlama, arkadaş arama/istek gönderme ve bire bir sohbet için öğrencinin giriş yapmış olması gerekir. Seri, iki arkadaşın aynı gün birbirine en az birer mesaj göndermesiyle başlar ve ardışık karşılıklı mesaj günlerinde artar.
+
 ---
 
 ## 📄 PDF ve Eğitim Materyalleri
