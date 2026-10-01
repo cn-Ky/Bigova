@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStore, faBookOpen, faBus, faUserGroup, faNewspaper, faBook, faMagnifyingGlass, faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import Mascot from "@/components/Mascot";
 import { useUser } from "@/lib/useUser";
+import Weather from "@/components/Weather";
 
 const tiles = [
   { icon: faStore, t: "İşletmeler", d: "Fiyat, saat, tuvalet", href: "/isletmeler", c: "bg-tide text-deep" },
@@ -66,7 +67,8 @@ export default function Home() {
     <main>
       <header className="relative overflow-hidden rounded-b-[36px] bg-gradient-to-b from-sea to-sea2 px-5 pb-16 pt-[max(1.5rem,env(safe-area-inset-top))] text-white">
         <span className="cloud left-0 top-8 h-5 w-24" /><span className="cloud left-0 top-20 h-4 w-16 [animation-delay:-16s]" />
-        <div className="relative flex items-end justify-between">
+        <Weather />
+        <div className="relative z-10 flex items-end justify-between">
           <motion.div style={{ y: hy }} className="relative z-10">
             <motion.p initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} className="text-sm text-sky">Merhaba{user && name ? `, ${name}` : ""} <span className="inline-block origin-[70%_70%] animate-[wig_2.4s_ease_infinite]">👋</span></motion.p>
             <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.6 }} className="mt-1 font-display text-[28px] font-extrabold leading-tight lg:text-5xl">Bugün Biga'da<br />ne yapıyoruz?</motion.h1>
