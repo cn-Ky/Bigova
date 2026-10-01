@@ -62,9 +62,10 @@ function Item({ t, on }: { t: SideTab; on: boolean }) {
             <motion.span
               layoutId="gull"
               transition={{ type: "spring", stiffness: 300, damping: 22 }}
-              className="pointer-events-none absolute -right-3 -top-7 z-10"
+              aria-hidden="true"
+              className="pointer-events-none absolute right-2 top-1 z-10"
             >
-              <Mascot size={44} />
+              <Mascot size={30} />
             </motion.span>
           </>
         )}
