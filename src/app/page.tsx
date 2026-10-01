@@ -12,7 +12,7 @@ import Weather from "@/components/Weather";
 const tiles = [
   { icon: faStore, t: "İşletmeler", d: "Fiyat, saat, tuvalet", href: "/isletmeler", c: "bg-tide text-deep" },
   { icon: faBus, t: "Ulaşım", d: "Otobüs ve servis", href: "/ulasim", c: "bg-sun text-deep" },
-  { icon: faBookOpen, t: "Notlar", d: "Ders notu, PDF", href: "/yakinda/notlar", c: "bg-sea text-white", soon: 1 },
+  { icon: faBookOpen, t: "Notlar", d: "Ders notu, PDF", href: "/notlar", c: "bg-sea text-white" },
   { icon: faBook, t: "Kitap pazarı", d: "İkinci el kitap", href: "/yakinda/kitap", c: "bg-coral text-deep", soon: 1 },
   { icon: faUserGroup, t: "Arkadaşlar", d: "Mesaj, konum", href: "/yakinda/arkadaslar", c: "bg-sky text-deep", soon: 1 },
   { icon: faNewspaper, t: "Dergi", d: "Okulun dergisi", href: "/yakinda/dergi", c: "bg-card text-ink", soon: 1 },
@@ -65,7 +65,7 @@ export default function Home() {
   const go = (e: React.FormEvent) => { e.preventDefault(); router.push(q.trim() ? `/isletmeler?q=${encodeURIComponent(q.trim())}` : "/isletmeler"); };
   return (
     <main>
-      <header className="relative overflow-hidden rounded-b-[36px] bg-gradient-to-b from-sea to-sea2 px-5 pb-16 pt-[max(1.5rem,env(safe-area-inset-top))] text-white">
+      <header className="relative overflow-hidden rounded-b-[36px] bg-gradient-to-b from-sea to-sea2 px-5 pb-16 pt-[max(4rem,calc(env(safe-area-inset-top)+3.25rem))] text-white lg:pt-6">
         <span className="cloud left-0 top-8 h-5 w-24" /><span className="cloud left-0 top-20 h-4 w-16 [animation-delay:-16s]" />
         <Weather />
         <div className="relative z-10 flex items-end justify-between">
@@ -73,7 +73,7 @@ export default function Home() {
             <motion.p initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} className="text-sm text-sky">Merhaba{user && name ? `, ${name}` : ""} <span className="inline-block origin-[70%_70%] animate-[wig_2.4s_ease_infinite]">👋</span></motion.p>
             <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.6 }} className="mt-1 font-display text-[28px] font-extrabold leading-tight lg:text-5xl">Bugün Biga'da<br />ne yapıyoruz?</motion.h1>
           </motion.div>
-          <div className="shrink-0 lg:origin-bottom lg:scale-150"><motion.div style={{ y: my }} whileHover={{ rotate: -6, scale: 1.08 }} whileTap={{ rotate: [0, -14, 10, 0], y: -14 }}><Mascot size={104} className="-mb-2" /></motion.div></div>
+          <div className="shrink-0 lg:origin-bottom lg:scale-[1.25]"><motion.div style={{ y: my }} whileHover={{ rotate: -6, scale: 1.08 }} whileTap={{ rotate: [0, -14, 10, 0], y: -14 }}><Mascot size={104} className="-mb-2" /></motion.div></div>
         </div>
       </header>
 
