@@ -2,6 +2,14 @@
 
 > **Biga'nın öğrencileri için keşfet, paylaş, öğren ve hayatını kolaylaştır.**
 
+## Kimlik Doğrulama Ayarları
+
+Uygulama Supabase Auth kullanır. Yerel ortamda `NEXT_PUBLIC_SUPABASE_URL` ve `NEXT_PUBLIC_SUPABASE_ANON_KEY` veya mevcut `EXPO_PUBLIC_SUPABASE_URL` ve `EXPO_PUBLIC_SUPABASE_ANON_KEY` değişkenlerini tanımlayın. Vercel'de bu değerleri Project Settings > Environment Variables bölümüne ekleyip yeniden dağıtın.
+
+E-posta doğrulamasının çalışması için Supabase Dashboard'da Authentication > URL Configuration altında Site URL'yi `https://bigova.vercel.app` olarak ayarlayın; Redirect URLs listesine `https://bigova.vercel.app/auth/callback` ve yerel geliştirme için `http://localhost:3000/auth/callback` ekleyin. Farklı bir alan adı kullanılıyorsa production adreslerini ona göre değiştirin.
+
+Supabase'in varsayılan e-posta servisi genel öğrenci adreslerine gönderim için kısıtlıdır. Gerçek kullanıcılara doğrulama bağlantısı göndermek için Authentication > SMTP Settings altında bir SMTP sağlayıcısı yapılandırın. Uygulama e-posta kodu değil, doğrulama bağlantısı gönderir.
+
 Bigova, **Çanakkale Onsekiz Mart Üniversitesi Biga İktisadi ve İdari Bilimler Fakültesi (Biga İİBF) ve Biga Meslek Yüksekokulu öğrencileri** başta olmak üzere Biga'daki öğrencilerin günlük yaşamını kolaylaştırmak amacıyla geliştirilen öğrenci odaklı bir mobil uygulama ve startup projesidir.
 
 Uygulama; Biga'da bulunan işletmeler, hizmetler ve öğrenci yaşamına dair bilgileri tek bir platformda bir araya getirirken, öğrencilerin kendi aralarında bilgi, ders materyali ve ikinci el ürün paylaşmasına da olanak sağlamayı hedeflemektedir.
@@ -14,16 +22,16 @@ Biga'da öğrencilerin günlük hayatta ihtiyaç duyduğu bilgileri farklı plat
 
 Bigova ile kullanıcıların;
 
-* 📍 Biga'daki işletmeleri keşfetmesi
-* 💰 Fiyatları incelemesi
-* 🚻 İşletmelerde tuvalet bulunup bulunmadığını öğrenmesi
-* 🕐 Çalışma saatlerini görüntülemesi
-* 📞 İletişim bilgilerine ulaşması
-* ⭐ İşletmeleri değerlendirmesi
-* 📚 İkinci el ders kitapları satın alması ve satması
-* 📝 Ders notlarını paylaşması
-* 📄 PDF ve eğitim materyallerine erişmesi
-* 🎓 Öğrenci hayatıyla ilgili bilgi ve içeriklere ulaşması
+- 📍 Biga'daki işletmeleri keşfetmesi
+- 💰 Fiyatları incelemesi
+- 🚻 İşletmelerde tuvalet bulunup bulunmadığını öğrenmesi
+- 🕐 Çalışma saatlerini görüntülemesi
+- 📞 İletişim bilgilerine ulaşması
+- ⭐ İşletmeleri değerlendirmesi
+- 📚 İkinci el ders kitapları satın alması ve satması
+- 📝 Ders notlarını paylaşması
+- 📄 PDF ve eğitim materyallerine erişmesi
+- 🎓 Öğrenci hayatıyla ilgili bilgi ve içeriklere ulaşması
 
 hedeflenmektedir.
 
@@ -35,18 +43,18 @@ Biga'daki işletmeler hakkında kapsamlı bilgilerin tek bir platformda sunulmas
 
 Kullanıcılar işletmeler hakkında:
 
-* İşletme adı
-* Kategori
-* Konum
-* Fiyat aralığı
-* Çalışma saatleri
-* Telefon
-* Sosyal medya hesapları
-* Menü / hizmet bilgileri
-* Tuvalet durumu
-* Öğrenci dostu olup olmadığı
-* Fotoğraflar
-* Kullanıcı değerlendirmeleri
+- İşletme adı
+- Kategori
+- Konum
+- Fiyat aralığı
+- Çalışma saatleri
+- Telefon
+- Sosyal medya hesapları
+- Menü / hizmet bilgileri
+- Tuvalet durumu
+- Öğrenci dostu olup olmadığı
+- Fotoğraflar
+- Kullanıcı değerlendirmeleri
 
 gibi bilgilere ulaşabilecektir.
 
@@ -74,12 +82,12 @@ Fiyat bilgilerinin güncel tutulması için kullanıcı ve işletme katkısı gi
 
 Kullanıcılar:
 
-* Kitap ilanı oluşturabilir
-* Fotoğraf ekleyebilir
-* Fiyat belirleyebilir
-* Ders / bölüm bilgisi ekleyebilir
-* Satıcıyla iletişime geçebilir
-* İlanları favorilerine ekleyebilir
+- Kitap ilanı oluşturabilir
+- Fotoğraf ekleyebilir
+- Fiyat belirleyebilir
+- Ders / bölüm bilgisi ekleyebilir
+- Satıcıyla iletişime geçebilir
+- İlanları favorilerine ekleyebilir
 
 ---
 
@@ -97,13 +105,12 @@ Kullanıcılar:
 
 İçerikler:
 
-* Ders
-* Bölüm
-* Öğretim yılı
-* İçerik türü
+- Ders
+- Bölüm
+- Öğretim yılı
+- İçerik türü
 
 gibi kriterlere göre kategorize edilebilir.
-
 
 ---
 
@@ -135,14 +142,13 @@ Bigova yalnızca bir işletme rehberi değil, aynı zamanda öğrenciler arasın
 
 Öğrenciler:
 
-* Bilgi paylaşabilir
-* Ders materyali paylaşabilir
-* İkinci el ürün satabilir
-* İşletmeleri değerlendirebilir
-* İçeriklere katkıda bulunabilir
+- Bilgi paylaşabilir
+- Ders materyali paylaşabilir
+- İkinci el ürün satabilir
+- İşletmeleri değerlendirebilir
+- İçeriklere katkıda bulunabilir
 
 Böylece platformun temel veri yapısının önemli bir bölümü topluluk tarafından oluşturulabilir.
-
 
 # 🌐 Proje
 
