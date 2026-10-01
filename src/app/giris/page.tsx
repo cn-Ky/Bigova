@@ -1,6 +1,7 @@
 "use client";
 import Mascot from "@/components/Mascot";
 import { supabaseBrowser } from "@/lib/supabase/client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -46,7 +47,13 @@ export default function Giris() {
           password,
         });
         if (error)
-          setMsg({ t: `Giriş yapılamadı: ${error.message}`, ok: false });
+          setMsg({
+            t:
+              error.code === "email_not_confirmed"
+                ? "E-posta adresin henüz doğrulanmamış. Deneme sürümüne giriş yapmadan devam edebilirsin."
+                : `Giriş yapılamadı: ${error.message}`,
+            ok: false,
+          });
         else {
           router.push("/");
           router.refresh();
@@ -153,6 +160,14 @@ export default function Giris() {
             : "Hesabın var mı? Giriş yap"}
         </button>
       </form>
+      <div className="mx-auto mt-4 max-w-md text-center">
+        <Link
+          href="/"
+          className="inline-block rounded-full bg-sun px-6 py-3 font-display font-bold text-deep"
+        >
+          Deneme sürümüne giriş yapmadan devam et
+        </Link>
+      </div>
     </main>
   );
 }

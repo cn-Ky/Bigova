@@ -1,4 +1,5 @@
 "use client";
+import { demoFriends } from "@/lib/demoData";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useUser } from "@/lib/useUser";
 import {
@@ -162,21 +163,7 @@ export default function Arkadaslar() {
         <div className="shimmer h-24 rounded-2xl" />
       </main>
     );
-  if (!user)
-    return (
-      <main className="px-5 py-14 text-center">
-        <h1 className="font-display text-2xl font-extrabold">Arkadaşlar</h1>
-        <p className="mt-2 text-sm text-ink/70">
-          Öğrenci ara ve bire bir sohbet et.
-        </p>
-        <Link
-          href="/giris"
-          className="mt-5 inline-block rounded-full bg-sea px-6 py-3 font-bold text-white"
-        >
-          Giriş yap
-        </Link>
-      </main>
-    );
+  if (!user) return <DemoFriends />;
 
   const incoming = people.filter((person) => person.direction === "incoming");
   const friends = people.filter((person) => person.direction === "friend");
@@ -338,6 +325,129 @@ export default function Arkadaslar() {
             Seri, iki tarafın aynı gün en az bir mesaj göndermesiyle ilerler.
           </p>
         )}
+      </div>
+    </main>
+  );
+}
+
+function DemoFriends() {
+  const [query, setQuery] = useState("");
+  const [friendIds, setFriendIds] = useState<string[]>([demoFriends[0].id]);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("bigova-demo-friends");
+      if (saved) setFriendIds(JSON.parse(saved));
+      else
+        localStorage.setItem(
+          "bigova-demo-friends",
+          JSON.stringify([demoFriends[0].id]),
+        );
+    } catch {}
+  }, []);
+  const friends = demoFriends.filter((person) => friendIds.includes(person.id));
+  const results = demoFriends.filter(
+    (person) =>
+      !friendIds.includes(person.id) &&
+      `${person.name} ${person.student_no}`
+        .toLocaleLowerCase("tr-TR")
+        .includes(query.trim().toLocaleLowerCase("tr-TR")),
+  );
+  function addFriend(id: string) {
+    const updated = [...friendIds, id];
+    setFriendIds(updated);
+    try {
+      localStorage.setItem("bigova-demo-friends", JSON.stringify(updated));
+    } catch {}
+  }
+  return (
+    <main>
+      <header className="rounded-b-[24px] bg-sea px-5 pb-5 pt-[max(1.25rem,env(safe-area-inset-top))] text-white shadow-lg">
+        <h1 className="font-display text-2xl font-extrabold">Arkadaşlar</h1>
+        <p className="text-sm text-white/75">
+          Deneme modu · örnek profiller bu tarayıcıda çalışır.
+        </p>
+        <label className="mt-4 flex items-center gap-2 rounded-full bg-card px-4 py-3 text-ink">
+          <FontAwesomeIcon icon={faMagnifyingGlass} className="opacity-50" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Örnek ad veya okul numarası ara"
+            aria-label="Demo arkadaş ara"
+            className="w-full bg-transparent outline-none"
+          />
+        </label>
+      </header>
+      <div className="grid gap-6 px-5 py-5">
+        {friends.length > 0 && (
+          <section>
+            <h2 className="mb-3 font-display text-lg font-extrabold">
+              Bire bir sohbetler
+            </h2>
+            <ul className="grid gap-2 md:grid-cols-2">
+              {friends.map((person) => (
+                <li
+                  key={person.id}
+                  className="flex items-center gap-3 rounded-2xl bg-card p-3"
+                >
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-sky font-display font-extrabold text-deep">
+                    {person.name[0]}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <b className="block truncate">{person.name}</b>
+                    <small className="text-ink/60">Örnek öğrenci</small>
+                    <span className="mt-1 flex items-center gap-1 text-xs font-bold text-coral">
+                      <FontAwesomeIcon icon={faFire} /> Demo seri: 2 gün
+                    </span>
+                  </span>
+                  <Link
+                    href={`/arkadaslar/${person.id}`}
+                    aria-label={`${person.name} demo sohbetini aç`}
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sea text-white"
+                  >
+                    <FontAwesomeIcon icon={faMessage} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {query.trim() && (
+          <section>
+            <h2 className="mb-3 font-display text-lg font-extrabold">
+              Örnek profiller
+            </h2>
+            {results.length ? (
+              <ul className="grid gap-2">
+                {results.map((person) => (
+                  <li
+                    key={person.id}
+                    className="flex items-center gap-3 rounded-2xl bg-card p-3"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <b className="block">{person.name}</b>
+                      <small className="text-ink/60">
+                        Örnek profil · {person.student_no}
+                      </small>
+                    </span>
+                    <button
+                      onClick={() => addFriend(person.id)}
+                      aria-label={`${person.name} demo arkadaş olarak ekle`}
+                      className="grid h-10 w-10 place-items-center rounded-full bg-sea text-white"
+                    >
+                      <FontAwesomeIcon icon={faUserPlus} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-ink/60">Eşleşen örnek profil yok.</p>
+            )}
+          </section>
+        )}
+        <p className="text-xs text-ink/55">
+          Demo arkadaşlar, istekler ve sohbetler gerçek öğrencilere gönderilmez;
+          bu tarayıcıda saklanır.
+        </p>
       </div>
     </main>
   );

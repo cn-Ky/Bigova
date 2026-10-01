@@ -6,15 +6,13 @@ import {
     faArrowUpRightFromSquare,
     faCloudArrowUp,
     faFilePdf,
-    faLock,
     faMagnifyingGlass,
     faPlus,
     faTrash,
-    faXmark,
+    faXmark
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { AnimatePresence, motion } from "framer-motion";
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 type N = {
@@ -30,6 +28,21 @@ type N = {
   profiles: { name: string } | null;
 };
 const MAX = 10 * 1024 * 1024;
+const demoNotes = [
+  {
+    id: "mikroekonomi",
+    title: "Mikroekonomi Vize Özeti",
+    course: "Mikroekonomi",
+    description:
+      "Arz-talep, esneklik ve tüketici dengesi için kısa tekrar notu.",
+  },
+  {
+    id: "pazarlama",
+    title: "Pazarlama İlkeleri Ders Notu",
+    course: "Pazarlama İlkeleri",
+    description: "Pazarlama karması, segmentasyon ve hedef kitle başlıkları.",
+  },
+];
 const size = (b?: number | null) =>
   !b
     ? ""
@@ -65,13 +78,28 @@ export default function Notlar() {
   }, [user, load]);
 
   const courses = useMemo(
-    () => ["Tümü", ...Array.from(new Set((items ?? []).map((n) => n.course)))],
+    () => [
+      "Tümü",
+      ...Array.from(
+        new Set([
+          ...demoNotes.map((n) => n.course),
+          ...(items ?? []).map((n) => n.course),
+        ]),
+      ),
+    ],
     [items],
   );
   const shown = (items ?? []).filter(
     (n) =>
       (course === "Tümü" || n.course === course) &&
       `${n.title} ${n.course}`.toLowerCase().includes(q.trim().toLowerCase()),
+  );
+  const shownDemo = demoNotes.filter(
+    (note) =>
+      (course === "Tümü" || note.course === course) &&
+      `${note.title} ${note.course}`
+        .toLocaleLowerCase("tr-TR")
+        .includes(q.trim().toLocaleLowerCase("tr-TR")),
   );
 
   async function open(n: N) {
@@ -114,35 +142,30 @@ export default function Notlar() {
             </motion.button>
           )}
         </div>
-        {user && (
-          <>
-            <label className="mt-3 flex items-center gap-2 rounded-full bg-card px-4 py-3 text-ink">
-              <FontAwesomeIcon
-                icon={faMagnifyingGlass}
-                className="opacity-50"
-              />
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Not veya ders ara"
-                aria-label="Not ara"
-                className="w-full bg-transparent outline-none"
-              />
-            </label>
-            <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
-              {courses.map((c) => (
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
-                  key={c}
-                  onClick={() => setCourse(c)}
-                  className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${course === c ? "bg-sun text-deep" : "bg-white/15"}`}
-                >
-                  {c}
-                </motion.button>
-              ))}
-            </div>
-          </>
-        )}
+        <>
+          <label className="mt-3 flex items-center gap-2 rounded-full bg-card px-4 py-3 text-ink">
+            <FontAwesomeIcon icon={faMagnifyingGlass} className="opacity-50" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Not veya ders ara"
+              aria-label="Not ara"
+              className="w-full bg-transparent outline-none"
+            />
+          </label>
+          <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
+            {courses.map((c) => (
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                key={c}
+                onClick={() => setCourse(c)}
+                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${course === c ? "bg-sun text-deep" : "bg-white/15"}`}
+              >
+                {c}
+              </motion.button>
+            ))}
+          </div>
+        </>
       </header>
 
       <section className="px-5 pt-5" aria-labelledby="sample-pdfs">
@@ -160,22 +183,7 @@ export default function Notlar() {
           </div>
         </div>
         <ul className="grid gap-3 md:grid-cols-2">
-          {[
-            {
-              id: "mikroekonomi",
-              title: "Mikroekonomi Vize Özeti",
-              course: "Mikroekonomi",
-              description:
-                "Arz-talep, esneklik ve tüketici dengesi için kısa tekrar notu.",
-            },
-            {
-              id: "pazarlama",
-              title: "Pazarlama İlkeleri Ders Notu",
-              course: "Pazarlama İlkeleri",
-              description:
-                "Pazarlama karması, segmentasyon ve hedef kitle başlıkları.",
-            },
-          ].map((note) => (
+          {shownDemo.map((note) => (
             <li
               key={note.id}
               className="flex items-start gap-3 rounded-[20px] bg-card p-4 shadow-sm"
@@ -208,22 +216,10 @@ export default function Notlar() {
       </section>
 
       {user === null && (
-        <div className="px-5 py-14 text-center">
-          <Mascot size={110} className="mx-auto" />
-          <p className="mt-2 font-display text-xl font-bold">
-            <FontAwesomeIcon icon={faLock} className="mr-2 text-coral" />
-            Notlar sadece öğrencilere açık
-          </p>
-          <p className="mt-1 text-sm text-ink/70">
-            Okul mailinle giriş yapınca notları görebilir ve paylaşabilirsin.
-          </p>
-          <Link
-            href="/giris"
-            className="mt-5 inline-block rounded-full bg-sea px-6 py-3 font-bold text-white"
-          >
-            Giriş yap
-          </Link>
-        </div>
+        <p className="px-5 pt-4 text-center text-xs text-ink/55">
+          Deneme modu: örnek PDF'leri giriş yapmadan açabilirsin. Kendi notunu
+          yüklemek için doğrulanmış öğrenci hesabı gerekir.
+        </p>
       )}
       {err && (
         <p role="alert" className="px-5 pt-4 text-sm font-bold text-coral">
@@ -364,16 +360,14 @@ function UploadSheet({
       setBusy(false);
       return setMsg("Yükleme başarısız: " + up.error.message);
     }
-    const ins = await sb
-      .from("notes")
-      .insert({
-        title: title.trim(),
-        course: course.trim(),
-        description: desc.trim() || null,
-        file_path: path,
-        file_name: file.name,
-        size_bytes: file.size,
-      });
+    const ins = await sb.from("notes").insert({
+      title: title.trim(),
+      course: course.trim(),
+      description: desc.trim() || null,
+      file_path: path,
+      file_name: file.name,
+      size_bytes: file.size,
+    });
     if (ins.error) {
       await sb.storage.from("notes").remove([path]);
       setBusy(false);

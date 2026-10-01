@@ -48,8 +48,17 @@ export default function KitapPazari() {
       .select("*, profiles(name)")
       .eq("status", "available")
       .order("created_at", { ascending: false });
-    if (!error && data?.length) setBooks([...(data as Book[]), ...demoBooks]);
-    else setBooks(demoBooks);
+    let localBooks: Book[] = [];
+    try {
+      localBooks = JSON.parse(
+        localStorage.getItem("bigova-demo-books") || "[]",
+      ) as Book[];
+    } catch {}
+    setBooks([
+      ...(error ? [] : ((data as Book[]) ?? [])),
+      ...localBooks,
+      ...demoBooks,
+    ]);
   }, [sb]);
   useEffect(() => {
     load();
@@ -62,21 +71,52 @@ export default function KitapPazari() {
   );
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!user) return setNotice("İlan vermek için okul hesabınla giriş yap.");
     if (!title.trim() || !price || Number(price) < 0)
       return setNotice("Kitap adı ve geçerli fiyat gerekli.");
-    setBusy(true);
-    setNotice("");
-    const { error } = await sb
-      .from("book_listings")
-      .insert({
+    if (!user) {
+      const listing: Book = {
+        id: `demo-book-${crypto.randomUUID()}`,
         title: title.trim(),
         author: author.trim() || null,
         course: course.trim() || null,
         condition,
         price: Number(price),
         description: description.trim() || null,
-      });
+        seller_id: null,
+        profiles: { name: "Demo kullanıcısı" },
+      };
+      let saved: Book[] = [];
+      try {
+        saved = JSON.parse(
+          localStorage.getItem("bigova-demo-books") || "[]",
+        ) as Book[];
+        localStorage.setItem(
+          "bigova-demo-books",
+          JSON.stringify([listing, ...saved]),
+        );
+      } catch {}
+      setBooks((current) => [listing, ...current]);
+      setTitle("");
+      setAuthor("");
+      setCourse("");
+      setPrice("");
+      setDescription("");
+      setShowForm(false);
+      setNotice(
+        "Demo ilanı bu tarayıcıda saklandı; gerçek pazarda yayınlanmadı.",
+      );
+      return;
+    }
+    setBusy(true);
+    setNotice("");
+    const { error } = await sb.from("book_listings").insert({
+      title: title.trim(),
+      author: author.trim() || null,
+      course: course.trim() || null,
+      condition,
+      price: Number(price),
+      description: description.trim() || null,
+    });
     setBusy(false);
     if (error) return setNotice(`İlan eklenemedi: ${error.message}`);
     setTitle("");
@@ -129,8 +169,8 @@ export default function KitapPazari() {
         </p>
       )}
       <p className="px-5 pt-4 text-xs text-ink/60">
-        Örnek ilanlar temsili verilerdir; gerçek ilanlar giriş yapan öğrenciler
-        tarafından eklenir.
+        Deneme ilanları bu tarayıcıda saklanır. Gerçek pazarda ilan yayınlamak
+        ve satıcılarla iletişim kurmak için doğrulanmış öğrenci hesabı gerekir.
       </p>
       <ul className="grid gap-3 px-5 pt-3 md:grid-cols-2 xl:grid-cols-3">
         {shown.map((book) => (
@@ -208,12 +248,8 @@ export default function KitapPazari() {
               </button>
             </div>
             {!user && (
-              <p className="text-sm text-coral">
-                İlan vermek için{" "}
-                <Link href="/giris" className="font-bold underline">
-                  giriş yap
-                </Link>
-                .
+              <p className="text-sm text-ink/65">
+                Deneme ilanı sadece bu tarayıcıya kaydedilir.
               </p>
             )}
             <input
@@ -272,7 +308,7 @@ export default function KitapPazari() {
               </p>
             )}
             <button
-              disabled={busy || !user}
+              disabled={busy}
               className="rounded-xl bg-sea p-3 font-bold text-white disabled:opacity-50"
             >
               {busy ? "Ekleniyor…" : "İlanı yayınla"}

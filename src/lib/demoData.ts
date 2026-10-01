@@ -113,3 +113,9 @@ export const demoBooks = [
     profiles: { name: "Örnek öğrenci" },
   },
 ];
+
+export const demoFriends = [
+  { id: "demo-friend-1", name: "Ece Yılmaz", student_no: "00000001" },
+  { id: "demo-friend-2", name: "Mert Kaya", student_no: "00000002" },
+  { id: "demo-friend-3", name: "Deniz Arslan", student_no: "00000003" },
+];

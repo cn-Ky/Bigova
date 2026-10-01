@@ -1,4 +1,5 @@
 "use client";
+import { demoFriends } from "@/lib/demoData";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useUser } from "@/lib/useUser";
 import {
@@ -32,7 +33,9 @@ export default function DirectMessage() {
   const [message, setMessage] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
-  const validId = /^[0-9a-f-]{36}$/i.test(friendId);
+  const validId =
+    /^[0-9a-f-]{36}$/i.test(friendId) ||
+    demoFriends.some((person) => person.id === friendId);
 
   const load = useCallback(async () => {
     if (!user || !validId) return;
@@ -96,6 +99,35 @@ export default function DirectMessage() {
 
   useEffect(() => {
     if (user) load();
+    else if (user === null && validId) {
+      const person = demoFriends.find((entry) => entry.id === friendId);
+      if (!person) return;
+      setFriend({ ...person });
+      setIsFriend(true);
+      setStreak(2);
+      try {
+        const saved = localStorage.getItem(`bigova-demo-chat-${friendId}`);
+        if (saved) setMessages(JSON.parse(saved));
+        else {
+          const initial: Message[] = [
+            {
+              id: `${friendId}-welcome-1`,
+              from_id: friendId,
+              to_id: "demo-self",
+              body: "Merhaba! Bu örnek bir bire bir sohbet. Yazdığın mesajlar sadece bu tarayıcıda saklanır.",
+              created_at: new Date(Date.now() - 60000).toISOString(),
+            },
+          ];
+          setMessages(initial);
+          localStorage.setItem(
+            `bigova-demo-chat-${friendId}`,
+            JSON.stringify(initial),
+          );
+        }
+      } catch {
+        setMessages([]);
+      }
+    }
   }, [load, user]);
   useEffect(() => {
     if (!user) return;
@@ -122,7 +154,36 @@ export default function DirectMessage() {
   async function send(e: React.FormEvent) {
     e.preventDefault();
     const body = message.trim();
-    if (!body || !user || !friend) return;
+    if (!body || !friend) return;
+    if (!user && friendId.startsWith("demo-friend-")) {
+      const now = new Date();
+      const own: Message = {
+        id: crypto.randomUUID(),
+        from_id: "demo-self",
+        to_id: friendId,
+        body,
+        created_at: now.toISOString(),
+      };
+      const reply: Message = {
+        id: crypto.randomUUID(),
+        from_id: friendId,
+        to_id: "demo-self",
+        body: "Yanıt, deneme sohbetini göstermek için otomatik oluşturuldu; gerçek bir kullanıcıya iletilmedi.",
+        created_at: new Date(now.getTime() + 1000).toISOString(),
+      };
+      const updated = [...messages, own, reply];
+      setMessages(updated);
+      setMessage("");
+      setStreak((current) => current + 1);
+      try {
+        localStorage.setItem(
+          `bigova-demo-chat-${friendId}`,
+          JSON.stringify(updated),
+        );
+      } catch {}
+      return;
+    }
+    if (!user) return;
     setBusy(true);
     setNotice("");
     const { error } = await sb
@@ -155,14 +216,6 @@ export default function DirectMessage() {
     return (
       <main className="p-5">
         <div className="shimmer h-20 rounded-2xl" />
-      </main>
-    );
-  if (!user)
-    return (
-      <main className="p-5">
-        <Link href="/giris" className="font-bold text-sea">
-          Giriş yap
-        </Link>
       </main>
     );
   if (!validId || !friend)
@@ -222,7 +275,9 @@ export default function DirectMessage() {
             <h1 className="truncate font-display text-lg font-extrabold">
               {friend.name || friend.student_no}
             </h1>
-            <p className="text-xs text-white/70">Bire bir sohbet</p>
+            <p className="text-xs text-white/70">
+              {user ? "Bire bir sohbet" : "Deneme sohbeti · bu tarayıcıda"}
+            </p>
           </div>
           <span className="flex items-center gap-1 rounded-full bg-white/15 px-3 py-2 text-sm font-bold">
             <FontAwesomeIcon icon={faFire} className="text-sun" />
@@ -237,13 +292,13 @@ export default function DirectMessage() {
         {messages.map((entry) => (
           <li
             key={entry.id}
-            className={`max-w-[82%] rounded-2xl px-3 py-2 ${entry.from_id === user.id ? "self-end rounded-br-sm bg-sea text-white" : "self-start rounded-bl-sm bg-card text-ink"}`}
+            className={`max-w-[82%] rounded-2xl px-3 py-2 ${entry.from_id === (user?.id ?? "demo-self") ? "self-end rounded-br-sm bg-sea text-white" : "self-start rounded-bl-sm bg-card text-ink"}`}
           >
             <p className="whitespace-pre-wrap break-words text-sm">
               {entry.body}
             </p>
             <time
-              className={`mt-1 block text-right text-[10px] ${entry.from_id === user.id ? "text-white/65" : "text-ink/50"}`}
+              className={`mt-1 block text-right text-[10px] ${entry.from_id === (user?.id ?? "demo-self") ? "text-white/65" : "text-ink/50"}`}
             >
               {new Date(entry.created_at).toLocaleTimeString("tr-TR", {
                 hour: "2-digit",
