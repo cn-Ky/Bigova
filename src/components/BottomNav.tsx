@@ -23,7 +23,7 @@ export default function BottomNav() {
   });
   return (
     <motion.nav aria-label="Ana menü" initial={{ y: 120 }} animate={{ y: hide ? 120 : 0 }} transition={{ type: "spring", stiffness: 260, damping: 26 }}
-      className="fixed bottom-0 left-1/2 z-40 w-full max-w-[440px] -translate-x-1/2 px-3 pb-[max(.75rem,env(safe-area-inset-bottom))] md:max-w-[520px] lg:hidden">
+      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[440px] px-3 pb-[max(.75rem,env(safe-area-inset-bottom))] md:max-w-[520px] lg:hidden">
       <ul className="flex items-end rounded-[30px] bg-card/90 p-1.5 shadow-[0_12px_38px_rgba(14,58,91,.28)] ring-1 ring-ink/5 backdrop-blur-xl">
         {tabs.map((t) => {
           const on = isOn(p, t.href);
@@ -35,7 +35,7 @@ export default function BottomNav() {
                     <motion.span layoutId="pill" transition={{ type: "spring", stiffness: 480, damping: 32 }} className="absolute inset-0 overflow-hidden rounded-[24px] bg-sea shadow-[0_6px_18px_rgb(var(--sea)/.45)]">
                       <Wave c="rgba(255,255,255,.14)" cls="wave-a" /><Wave c="rgba(255,255,255,.10)" cls="wave-b" />
                     </motion.span>
-                    <motion.span layoutId="gull-m" transition={{ type: "spring", stiffness: 300, damping: 20 }} className="pointer-events-none absolute -top-5 left-1/2 z-10 -translate-x-1/2"><Mascot size={34} /></motion.span>
+                    <motion.span layoutId="gull-m" transition={{ type: "spring", stiffness: 300, damping: 20 }} className="pointer-events-none absolute inset-x-0 -top-5 z-10 mx-auto w-fit"><Mascot size={34} /></motion.span>
                   </>
                 )}
                 <motion.span whileTap={{ scale: 0.6, rotate: -12 }} animate={on ? { y: [0, -7, 0], scale: [1, 1.3, 1] } : { y: 0, scale: 1 }} transition={{ duration: 0.45 }}
