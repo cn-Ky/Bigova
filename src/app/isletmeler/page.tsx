@@ -62,14 +62,14 @@ export default function Isletmeler() {
     <main>
       <header className="sticky top-0 z-20 rounded-b-[28px] bg-sea px-5 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))] text-white shadow-lg">
         <h1 className="font-display text-2xl font-extrabold">İşletmeler</h1>
-        <label className="mt-3 flex items-center gap-2 rounded-full bg-card px-4 py-3 text-ink">
+        <label className="mt-3 flex items-center gap-2 rounded-full bg-card px-4 py-3 text-ink transition-shadow focus-within:ring-2 focus-within:ring-tide focus-within:ring-offset-2 focus-within:ring-offset-sea">
           <FontAwesomeIcon icon={faMagnifyingGlass} className="opacity-50" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="İşletme ara"
             aria-label="İşletme ara"
-            className="w-full bg-transparent outline-none"
+            className="w-full bg-transparent outline-none focus-visible:outline-none focus-visible:ring-0"
           />
         </label>
         <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">

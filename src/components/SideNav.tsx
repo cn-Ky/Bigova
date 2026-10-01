@@ -44,6 +44,8 @@ function Item({ t, on }: { t: SideTab; on: boolean }) {
       <Link
         ref={ref}
         href={t.href}
+        target={t.external ? "_blank" : undefined}
+        rel={t.external ? "noopener noreferrer" : undefined}
         aria-current={on ? "page" : undefined}
         className="group relative block rounded-2xl px-4 py-3"
       >

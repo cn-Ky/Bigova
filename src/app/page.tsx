@@ -65,6 +65,35 @@ const tiles = [
     c: "bg-card text-ink",
     soon: 1,
   },
+  {
+    kind: "schedule",
+    t: "Ders Programı",
+    d: "Bölümüne göre haftalık çizelge",
+    href: "/ders-programi",
+    c: "bg-sky text-deep",
+  },
+  {
+    kind: "poll",
+    t: "Anketler",
+    d: "Haftanın sorusuna oy ver",
+    href: "/anketler",
+    c: "bg-sun text-deep",
+  },
+  {
+    kind: "about",
+    t: "Hakkımızda",
+    d: "Misyon, ekip ve kulübümüz",
+    href: "/hakkimizda",
+    c: "bg-coral text-deep",
+  },
+  {
+    kind: "ubys",
+    t: "ÜBYS",
+    d: "ÇOMÜ öğrenci bilgi sistemi",
+    href: "https://ubys.comu.edu.tr/",
+    c: "bg-card text-ink",
+    external: true,
+  },
 ];
 const words = ["Kafe", "Kırtasiye", "Eczane", "Çamaşırhane", "Market"];
 const list = {
@@ -264,6 +293,118 @@ function TileArt({ kind }: { kind: string }) {
           />
         </svg>
       );
+    case "schedule":
+      return (
+        <svg {...shared}>
+          <rect
+            x="22"
+            y="18"
+            width="68"
+            height="54"
+            rx="7"
+            fill="currentColor"
+            opacity=".16"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <path
+            d="M22 33h68M39 14v10m34-10v10M36 44h10m9 0h10m9 0h10m-38 13h10m9 0h10"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <path
+            d="M40 73h32m-25 6h18"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
+    case "poll":
+      return (
+        <svg {...shared}>
+          <path
+            d="M26 20h52q8 0 8 8v43q0 7-8 7H26q-8 0-8-7V28q0-8 8-8z"
+            fill="currentColor"
+            opacity=".15"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <path
+            d="M34 35h35M34 48h27"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <circle cx="38" cy="64" r="7" fill="currentColor" opacity=".4" />
+          <circle cx="58" cy="64" r="7" fill="currentColor" opacity=".25" />
+          <circle cx="78" cy="64" r="7" fill="currentColor" opacity=".15" />
+          <path
+            d="m74 18 5 5 10-11"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case "about":
+      return (
+        <svg {...shared}>
+          <circle
+            cx="56"
+            cy="42"
+            r="28"
+            fill="currentColor"
+            opacity=".14"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <path
+            d="M42 45q1-14 14-14t14 14q0 7-7 12-4 3-4 8h-7q0-9 7-14 4-3 4-6a7 7 0 0 0-14 0zm10 24h8"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <path
+            d="m24 18 2 5 5 2-5 2-2 5-2-5-5-2 5-2zm64 39 2 5 5 2-5 2-2 5-2-5-5-2 5-2z"
+            fill="currentColor"
+          />
+        </svg>
+      );
+    case "ubys":
+      return (
+        <svg {...shared}>
+          <rect
+            x="20"
+            y="20"
+            width="72"
+            height="48"
+            rx="6"
+            fill="currentColor"
+            opacity=".15"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <path
+            d="M37 79h38m-19-11v11M31 31h39M31 42h25M31 53h15"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <path
+            d="M72 48h14m-6-6 6 6-6 6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
     default:
       return (
         <svg {...shared}>
@@ -335,6 +476,8 @@ function Tile({ x }: { x: (typeof tiles)[number] }) {
         <Link
           ref={ref}
           href={x.href}
+          target={x.external ? "_blank" : undefined}
+          rel={x.external ? "noopener noreferrer" : undefined}
           onMouseMove={move}
           onMouseLeave={leave}
           onPointerDown={press}

@@ -1,10 +1,14 @@
 import {
+    faArrowUpRightFromSquare,
     faBook,
     faBookOpen,
     faBus,
+    faCalendarWeek,
+    faCircleInfo,
     faCompass,
     faGear,
     faNewspaper,
+    faPoll,
     faStore,
     faUserGroup,
 } from "@fortawesome/free-solid-svg-icons";
@@ -40,8 +44,33 @@ export const sideTabs = [
     i: faNewspaper,
     hint: "Okulun dergisi",
   },
+  {
+    href: "/ders-programi",
+    l: "Ders Programı",
+    i: faCalendarWeek,
+    hint: "Bölüm ve sınıf çizelgeleri",
+  },
+  {
+    href: "/anketler",
+    l: "Anketler",
+    i: faPoll,
+    hint: "Haftalık öğrenci anketi",
+  },
+  {
+    href: "/hakkimizda",
+    l: "Hakkımızda",
+    i: faCircleInfo,
+    hint: "Bigova ve ekibi",
+  },
+  {
+    href: "https://ubys.comu.edu.tr/",
+    l: "ÜBYS",
+    i: faArrowUpRightFromSquare,
+    hint: "ÇOMÜ öğrenci bilgi sistemi",
+    external: true,
+  },
 ];
-export type SideTab = (typeof sideTabs)[number];
+export type SideTab = (typeof sideTabs)[number] & { external?: boolean };
 export const settingsTab = tabs[4];
 export const isOn = (p: string, h: string) =>
   h === "/" ? p === "/" : p.startsWith(h);
