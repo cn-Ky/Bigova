@@ -4,6 +4,13 @@ import {
     CLICK_SOUND_STYLE_KEY,
     CLICK_SOUNDS,
 } from "@/lib/clickSound";
+import {
+    applyNavigationLayout,
+    DESKTOP_NAV_KEY,
+    DESKTOP_NAVS,
+    MOBILE_NAV_KEY,
+    MOBILE_NAVS,
+} from "@/lib/navigationLayouts";
 import { applyTheme, THEMES } from "@/lib/themes";
 import {
     faCheck,
@@ -19,10 +26,14 @@ export default function Ayarlar() {
   const [cur, setCur] = useState("sabah");
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [soundStyle, setSoundStyle] = useState("soft");
+  const [mobileNav, setMobileNav] = useState("bottom");
+  const [desktopNav, setDesktopNav] = useState("sidebar");
   useEffect(() => {
     setCur(document.documentElement.dataset.theme || "sabah");
     setSoundEnabled(localStorage.getItem(CLICK_SOUND_ENABLED_KEY) !== "false");
     setSoundStyle(localStorage.getItem(CLICK_SOUND_STYLE_KEY) || "soft");
+    setMobileNav(localStorage.getItem(MOBILE_NAV_KEY) || "bottom");
+    setDesktopNav(localStorage.getItem(DESKTOP_NAV_KEY) || "sidebar");
   }, []);
   const pick = (id: string) => {
     setCur(id);
@@ -36,6 +47,15 @@ export default function Ayarlar() {
   const pickSound = (id: string) => {
     setSoundStyle(id);
     localStorage.setItem(CLICK_SOUND_STYLE_KEY, id);
+  };
+  const pickNavigation = (device: "mobile" | "desktop", id: string) => {
+    const nextMobile = device === "mobile" ? id : mobileNav;
+    const nextDesktop = device === "desktop" ? id : desktopNav;
+    if (device === "mobile") setMobileNav(id);
+    else setDesktopNav(id);
+    localStorage.setItem(MOBILE_NAV_KEY, nextMobile);
+    localStorage.setItem(DESKTOP_NAV_KEY, nextDesktop);
+    applyNavigationLayout(nextMobile, nextDesktop);
   };
   return (
     <main>
@@ -100,6 +120,80 @@ export default function Ayarlar() {
               </button>
             ))}
           </div>
+        </section>
+        <section className="mt-7 border-b border-ink/10 pb-6">
+          <h2 className="font-display text-xl font-bold">Mobil gezinme</h2>
+          <p className="mt-1 text-sm opacity-70">
+            Telefon ve dar ekranlarda kullanılacak düzen.
+          </p>
+          <ul
+            role="radiogroup"
+            aria-label="Mobil gezinme düzeni"
+            className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3"
+          >
+            {MOBILE_NAVS.map((layout) => (
+              <li key={layout.id}>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={mobileNav === layout.id}
+                  onClick={() => pickNavigation("mobile", layout.id)}
+                  className={`layout-choice ${mobileNav === layout.id ? "is-selected" : ""}`}
+                >
+                  <span
+                    className={`layout-preview layout-preview--${layout.id}`}
+                    aria-hidden="true"
+                  >
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  <span className="layout-choice-copy">
+                    <b>{layout.name}</b>
+                    <small>{layout.detail}</small>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+        <section className="mt-7 border-b border-ink/10 pb-6">
+          <h2 className="font-display text-xl font-bold">
+            Geniş ekran gezinme
+          </h2>
+          <p className="mt-1 text-sm opacity-70">
+            Tablet ve masaüstündeki düzen.
+          </p>
+          <ul
+            role="radiogroup"
+            aria-label="Geniş ekran gezinme düzeni"
+            className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3"
+          >
+            {DESKTOP_NAVS.map((layout) => (
+              <li key={layout.id}>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={desktopNav === layout.id}
+                  onClick={() => pickNavigation("desktop", layout.id)}
+                  className={`layout-choice ${desktopNav === layout.id ? "is-selected" : ""}`}
+                >
+                  <span
+                    className={`layout-preview layout-preview--${layout.id}`}
+                    aria-hidden="true"
+                  >
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  <span className="layout-choice-copy">
+                    <b>{layout.name}</b>
+                    <small>{layout.detail}</small>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
         </section>
         <h2 className="mb-1 mt-7 font-display text-xl font-bold">Tema</h2>
         <p className="mb-3 text-sm opacity-70">

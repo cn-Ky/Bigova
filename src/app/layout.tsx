@@ -1,6 +1,5 @@
-import BottomNav from "@/components/BottomNav";
+import AdaptiveNavigation from "@/components/AdaptiveNavigation";
 import ClickSounds from "@/components/ClickSounds";
-import SideNav from "@/components/SideNav";
 import Splash from "@/components/Splash";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
@@ -40,16 +39,15 @@ export default function RootLayout({
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem("bigova-theme");if(!t)t=matchMedia("(prefers-color-scheme: dark)").matches?"gece":"sabah";document.documentElement.dataset.theme=t}catch(e){}`,
+            __html: `try{var d=document.documentElement;var t=localStorage.getItem("bigova-theme");if(!t)t=matchMedia("(prefers-color-scheme: dark)").matches?"gece":"sabah";d.dataset.theme=t;var m=localStorage.getItem("bigova-mobile-nav");d.dataset.mobileNav=["bottom","drawer","top"].includes(m)?m:"bottom";var x=localStorage.getItem("bigova-desktop-nav");d.dataset.desktopNav=["sidebar","top","rail"].includes(x)?x:"sidebar"}catch(e){}`,
           }}
         />
       </head>
       <body>
         <ClickSounds />
         <Splash />
-        <SideNav />
+        <AdaptiveNavigation />
         <div className="shell pb-28 lg:pb-10">{children}</div>
-        <BottomNav />
       </body>
     </html>
   );

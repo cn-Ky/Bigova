@@ -63,7 +63,7 @@ function Item({ t, on }: { t: SideTab; on: boolean }) {
               layoutId="gull"
               transition={{ type: "spring", stiffness: 300, damping: 22 }}
               aria-hidden="true"
-              className="pointer-events-none absolute right-2 top-1 z-10"
+              className="side-active-mascot pointer-events-none absolute right-2 top-1 z-10"
             >
               <Mascot size={30} />
             </motion.span>
@@ -78,7 +78,7 @@ function Item({ t, on }: { t: SideTab; on: boolean }) {
           >
             <FontAwesomeIcon icon={t.i} />
           </motion.span>
-          <span className="leading-tight">
+          <span className="side-item-label leading-tight">
             <b className="block font-display text-[17px]">{t.l}</b>
             <span className="block max-h-0 overflow-hidden text-[11px] text-white/70 opacity-0 transition-all duration-300 group-hover:max-h-5 group-hover:opacity-100">
               {t.hint}
@@ -113,7 +113,7 @@ export default function SideNav() {
       </div>
       <Link href="/" className="relative z-10 flex items-center gap-1">
         <Mascot size={58} />
-        <span className="font-display text-3xl font-extrabold">
+        <span className="side-brand-word font-display text-3xl font-extrabold">
           {"Bigova".split("").map((c, i) => (
             <motion.span
               key={i}
@@ -126,7 +126,7 @@ export default function SideNav() {
           ))}
         </span>
       </Link>
-      <p className="relative z-10 text-sm text-white/70">
+      <p className="side-tagline relative z-10 text-sm text-white/70">
         Biga'da öğrenci olmak kolay
       </p>
 
@@ -147,12 +147,12 @@ export default function SideNav() {
         {user ? (
           <motion.div
             whileHover={{ scale: 1.02 }}
-            className="flex items-center gap-3 rounded-2xl bg-white/15 p-3 backdrop-blur"
+            className="side-user-card flex items-center gap-3 rounded-2xl bg-white/15 p-3 backdrop-blur"
           >
             <span className="grid h-10 w-10 place-items-center rounded-full bg-sun font-display text-lg font-extrabold text-deep">
               {(name ?? "?")[0].toUpperCase()}
             </span>
-            <span className="min-w-0 flex-1 leading-tight">
+            <span className="side-user-text min-w-0 flex-1 leading-tight">
               <b className="block truncate">{name}</b>
               <span className="text-xs text-white/70">{no}</span>
             </span>
@@ -161,7 +161,7 @@ export default function SideNav() {
               whileHover={{ rotate: -10 }}
               onClick={signOut}
               aria-label="Çıkış yap"
-              className="grid h-9 w-9 place-items-center rounded-full bg-white/15"
+              className="side-account-action grid h-9 w-9 place-items-center rounded-full bg-white/15"
             >
               <FontAwesomeIcon icon={faRightFromBracket} />
             </motion.button>
@@ -170,9 +170,10 @@ export default function SideNav() {
           <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
             <Link
               href="/giris"
-              className="shine group flex items-center justify-between rounded-2xl bg-sun p-4 font-display text-lg font-bold text-deep"
+              aria-label="Giriş yap / Kayıt ol"
+              className="side-login-link shine group flex items-center justify-between rounded-2xl bg-sun p-4 font-display text-lg font-bold text-deep"
             >
-              Giriş yap / Kayıt ol{" "}
+              <span className="side-login-label">Giriş yap / Kayıt ol</span>{" "}
               <FontAwesomeIcon
                 icon={faArrowRight}
                 className="transition group-hover:translate-x-1.5"
