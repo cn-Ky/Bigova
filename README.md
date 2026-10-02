@@ -2,18 +2,6 @@
 
 > **Biga'nın öğrencileri için keşfet, paylaş, öğren ve hayatını kolaylaştır.**
 
-## Kimlik Doğrulama Ayarları
-
-Uygulama Supabase Auth kullanır. Yerel ortamda `NEXT_PUBLIC_SUPABASE_URL` ve `NEXT_PUBLIC_SUPABASE_ANON_KEY` veya mevcut `EXPO_PUBLIC_SUPABASE_URL` ve `EXPO_PUBLIC_SUPABASE_ANON_KEY` değişkenlerini tanımlayın. Vercel'de bu değerleri Project Settings > Environment Variables bölümüne ekleyip yeniden dağıtın.
-
-E-posta doğrulamasının çalışması için Supabase Dashboard'da Authentication > URL Configuration altında Site URL'yi `https://bigova.vercel.app` olarak ayarlayın; Redirect URLs listesine `https://bigova.vercel.app/auth/callback` ve yerel geliştirme için `http://localhost:3000/auth/callback` ekleyin. Farklı bir alan adı kullanılıyorsa production adreslerini ona göre değiştirin.
-
-Supabase'in varsayılan e-posta servisi genel öğrenci adreslerine gönderim için kısıtlıdır. Gerçek kullanıcılara doğrulama bağlantısı göndermek için Authentication > SMTP Settings altında bir SMTP sağlayıcısı yapılandırın. Uygulama e-posta kodu değil, doğrulama bağlantısı gönderir.
-
-Bigova, **Çanakkale Onsekiz Mart Üniversitesi Biga İktisadi ve İdari Bilimler Fakültesi (Biga İİBF) ve Biga Meslek Yüksekokulu öğrencileri** başta olmak üzere Biga'daki öğrencilerin günlük yaşamını kolaylaştırmak amacıyla geliştirilen öğrenci odaklı bir mobil uygulama ve startup projesidir.
-
-Uygulama; Biga'da bulunan işletmeler, hizmetler ve öğrenci yaşamına dair bilgileri tek bir platformda bir araya getirirken, öğrencilerin kendi aralarında bilgi, ders materyali ve ikinci el ürün paylaşmasına da olanak sağlamayı hedeflemektedir.
-
 ---
 
 ## 🚀 Projenin Amacı
