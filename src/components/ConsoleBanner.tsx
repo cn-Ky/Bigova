@@ -4,16 +4,13 @@ import { useEffect } from "react";
 
 /**
  * Tarayıcı konsolu açıldığında görünen Bigova imzası.
- * İletişim e-postası eklemek için CONTACT_EMAIL sabitini doldur.
  */
 const CONTACT_EMAIL = "cnkybs@gmail.com";
-const REPO_URL = "";
 const SITE_URL = "https://bigova.vercel.app";
 
 const LETTERS = {"B": [" ____  ", "|  _ \\ ", "| |_) |", "|  _ < ", "| |_) |", "|____/ "], "I": [" _____ ", "|_   _|", "  | |  ", "  | |  ", " _| |_ ", "|_____|"], "G": ["  _____ ", " / ____|", "| |  __ ", "| | |_ |", "| |__| |", " \\_____|"], "O": ["  ____  ", " / __ \\ ", "| |  | |", "| |  | |", "| |__| |", " \\____/ "], "V": ["__      __", "\\ \\    / /", " \\ \\  / / ", "  \\ \\/ /  ", "   \\  /   ", "    \\/    "], "A": ["          ", "    /\\    ", "   /  \\   ", "  / /\\ \\  ", " / ____ \\ ", "/_/    \\_\\"]} as const;
 const COLORS: Record<string, string> = {"B": "#1d6a93", "I": "#2cc4b5", "G": "#ffb84d", "O": "#ff6b57", "V": "#2f7fb8", "A": "#2cc4b5"};
 const WORD = "BIGOVA";
-
 
 let printed = false;
 
@@ -37,10 +34,6 @@ export default function ConsoleBanner() {
       console.log("\n" + rows.join("\n"), ...styles);
 
       console.log(
-        "%c ",
-        `font-size:1px;padding:70px 80px;background:url(${LOGO}) no-repeat center/contain;`,
-      );
-      console.log(
         "%cBiga'da öğrenci olmak kolay.",
         "color:#1d6a93;font-size:15px;font-weight:800;font-family:system-ui,sans-serif",
       );
@@ -50,7 +43,6 @@ export default function ConsoleBanner() {
       );
       const contact = [
         CONTACT_EMAIL ? `✉️  ${CONTACT_EMAIL}` : "",
-        `🐙 ${REPO_URL}`,
         `🌐 ${SITE_URL}`,
       ]
         .filter(Boolean)
