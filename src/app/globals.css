@@ -685,6 +685,314 @@ input {
   font-size: 0.85rem;
   font-weight: 800;
 }
+.atat-album {
+  --album-green: #1c302c;
+  --album-gold: #d7a75b;
+  padding: clamp(2.5rem, 6vw, 5rem) clamp(1.25rem, 5vw, 4rem);
+  border-bottom: 1px solid var(--atat-line);
+  background:
+    radial-gradient(
+      ellipse at 96% 0%,
+      rgba(215, 167, 91, 0.12),
+      transparent 34rem
+    ),
+    #e9e4d8;
+  scroll-margin-top: 1rem;
+}
+.atat-album-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: end;
+}
+.atat-album-eyebrow {
+  color: var(--atat-red);
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+.atat-album-heading h2 {
+  margin-top: 0.45rem;
+  font-family: var(--f-display), serif;
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.atat-album-heading p:not(.atat-album-eyebrow) {
+  margin-top: 0.5rem;
+  color: var(--atat-muted);
+  line-height: 1.65;
+}
+.atat-album-total {
+  flex: 0 0 auto;
+  padding-bottom: 0.35rem;
+  color: var(--atat-red);
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+.atat-album-tools {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-block: 1.7rem 1.2rem;
+  border-block: 1px solid var(--atat-line);
+  padding-block: 0.7rem;
+}
+.atat-album-filters {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.atat-album-filters button {
+  min-height: 2.4rem;
+  border: 1px solid transparent;
+  padding: 0.4rem 0.75rem;
+  color: var(--atat-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+.atat-album-filters button:hover {
+  border-color: var(--atat-line);
+  color: var(--atat-ink);
+}
+.atat-album-filters button.is-active {
+  background: var(--album-green);
+  color: #f5f0e5;
+}
+.atat-album-search {
+  display: flex;
+  flex: 0 1 220px;
+  gap: 0.55rem;
+  align-items: center;
+  border-bottom: 1px solid rgba(33, 51, 47, 0.32);
+  padding: 0.5rem 0.2rem;
+  color: var(--atat-red);
+}
+.atat-album-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--atat-ink);
+  font-size: 0.78rem;
+}
+.atat-album-search input::placeholder {
+  color: var(--atat-muted);
+  opacity: 0.8;
+}
+.atat-gallery-grid {
+  display: grid;
+  grid-auto-flow: dense;
+  grid-auto-rows: 94px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+.atat-gallery-card {
+  position: relative;
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  background: #c8c3b6;
+  text-align: left;
+  isolation: isolate;
+  transform: translateZ(0);
+}
+.atat-gallery-card--portrait {
+  grid-row: span 3;
+}
+.atat-gallery-card--landscape {
+  grid-row: span 2;
+}
+.atat-gallery-card--square {
+  grid-row: span 2;
+}
+.atat-gallery-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(0.84) sepia(0.14) contrast(1.04);
+  transition:
+    filter 0.45s ease,
+    transform 0.8s cubic-bezier(0.2, 0.7, 0.1, 1);
+}
+.atat-gallery-card:hover img,
+.atat-gallery-card:focus-visible img {
+  filter: grayscale(0.12) sepia(0.04) contrast(1.03);
+  transform: scale(1.055);
+}
+.atat-gallery-shade {
+  position: absolute;
+  inset: 25% 0 0;
+  background: linear-gradient(transparent, rgba(12, 24, 21, 0.82));
+  opacity: 0.78;
+  transition: opacity 0.35s ease;
+}
+.atat-gallery-card:hover .atat-gallery-shade,
+.atat-gallery-card:focus-visible .atat-gallery-shade {
+  opacity: 1;
+}
+.atat-gallery-caption {
+  position: absolute;
+  right: 0.85rem;
+  bottom: 0.8rem;
+  left: 0.85rem;
+  display: grid;
+  gap: 0.24rem;
+  color: #fff;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
+}
+.atat-gallery-caption > span {
+  color: #edc47a;
+  font-size: 0.63rem;
+  font-weight: 900;
+}
+.atat-gallery-caption strong {
+  font-family: var(--f-display), serif;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+.atat-gallery-open {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.65rem;
+  display: grid;
+  width: 1.8rem;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.85rem;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+.atat-gallery-card:hover .atat-gallery-open,
+.atat-gallery-card:focus-visible .atat-gallery-open {
+  opacity: 1;
+  transform: translateY(0);
+}
+.atat-gallery-empty {
+  grid-column: 1 / -1;
+  padding: 4rem 1rem;
+  color: var(--atat-muted);
+  text-align: center;
+}
+.atat-album-note {
+  margin-top: 1rem;
+  color: var(--atat-muted);
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+.atat-lightbox {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(9, 19, 17, 0.88);
+  backdrop-filter: blur(12px);
+}
+.atat-lightbox-panel {
+  position: relative;
+  display: grid;
+  width: min(100%, 980px);
+  max-height: min(92dvh, 920px);
+  grid-template-rows: minmax(0, 1fr) auto;
+  background: #162723;
+  color: #f5f0e5;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.45);
+}
+.atat-lightbox-image {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  background: #101b18;
+}
+.atat-lightbox-close,
+.atat-lightbox-arrow {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  width: 2.75rem;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  border-radius: 50%;
+  background: rgba(14, 28, 24, 0.78);
+  color: #fff;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+.atat-lightbox-close:hover,
+.atat-lightbox-arrow:hover {
+  background: #a74638;
+  transform: scale(1.05);
+}
+.atat-lightbox-close {
+  top: 0.9rem;
+  right: 0.9rem;
+}
+.atat-lightbox-arrow {
+  top: 50%;
+  transform: translateY(-50%);
+}
+.atat-lightbox-arrow:hover {
+  transform: translateY(-50%) scale(1.05);
+}
+.atat-lightbox-arrow--left {
+  left: 0.9rem;
+}
+.atat-lightbox-arrow--right {
+  right: 0.9rem;
+}
+.atat-lightbox-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: end;
+  padding: 1rem 1.25rem 1.2rem;
+}
+.atat-lightbox-info p {
+  color: var(--album-gold);
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+.atat-lightbox-info h3 {
+  margin-top: 0.2rem;
+  font-family: var(--f-display), serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+.atat-lightbox-info > div > span {
+  display: block;
+  margin-top: 0.25rem;
+  color: rgba(245, 240, 229, 0.72);
+  font-size: 0.82rem;
+}
+.atat-lightbox-info > a {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.6rem 0.75rem;
+  color: var(--album-gold);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
 @media (max-width: 640px) {
   .atat-hero {
     min-height: 530px;
@@ -713,6 +1021,72 @@ input {
   .atat-index {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     padding-inline: 0.9rem;
+  }
+  .atat-album-heading {
+    display: block;
+  }
+  .atat-album-heading h2 {
+    font-size: 2.3rem;
+  }
+  .atat-album-total {
+    display: inline-block;
+    margin-top: 0.75rem;
+  }
+  .atat-album-tools {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .atat-album-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .atat-album-filters::-webkit-scrollbar {
+    display: none;
+  }
+  .atat-album-filters button {
+    flex: 0 0 auto;
+  }
+  .atat-album-search {
+    flex-basis: auto;
+    max-width: none;
+  }
+  .atat-gallery-grid {
+    grid-auto-rows: 74px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+  .atat-gallery-card--portrait {
+    grid-row: span 3;
+  }
+  .atat-gallery-card--landscape,
+  .atat-gallery-card--square {
+    grid-row: span 2;
+  }
+  .atat-gallery-caption {
+    right: 0.6rem;
+    bottom: 0.6rem;
+    left: 0.6rem;
+  }
+  .atat-gallery-caption strong {
+    font-size: 0.88rem;
+  }
+  .atat-lightbox {
+    padding: 0.5rem;
+  }
+  .atat-lightbox-panel {
+    max-height: 94dvh;
+  }
+  .atat-lightbox-info {
+    align-items: start;
+    flex-direction: column;
+    padding: 0.9rem 1rem 1rem;
+  }
+  .atat-lightbox-info h3 {
+    font-size: 1.3rem;
+  }
+  .atat-lightbox-info > a {
+    padding-inline: 0;
   }
   .atat-index a {
     font-size: 0.73rem;

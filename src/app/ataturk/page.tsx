@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AtaturkAlbum from "./AtaturkAlbum";
 
 const images = {
   portrait: {
@@ -162,6 +163,9 @@ export default function AtaturkPage() {
       </header>
 
       <nav className="atat-index" aria-label="Atatürk Köşesi içerikleri">
+        <a href="#fotoğraf-albümü">
+          <span>00</span> Fotoğraf Albümü
+        </a>
         <a href="#genclige-hitabe">
           <span>01</span> Gençliğe Hitabe
         </a>
@@ -175,6 +179,8 @@ export default function AtaturkPage() {
           <span>04</span> İstiklâl Marşı
         </a>
       </nav>
+
+      <AtaturkAlbum />
 
       <section
         className="atat-reading atat-reading--hitabe"
