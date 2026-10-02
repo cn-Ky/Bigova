@@ -1,17 +1,18 @@
 import {
-    faArrowUpRightFromSquare,
-    faBook,
-    faBookOpen,
-    faBus,
-    faCalendarWeek,
-    faCircleInfo,
-    faCompass,
-    faGear,
-    faLandmark,
-    faNewspaper,
-    faPoll,
-    faStore,
-    faUserGroup,
+  faArrowUpRightFromSquare,
+  faBook,
+  faBookOpen,
+  faBus,
+  faCalendarWeek,
+  faCircleInfo,
+  faCompass,
+  faGear,
+  faLandmark,
+  faMapLocationDot,
+  faNewspaper,
+  faPoll,
+  faStore,
+  faUserGroup,
 } from "@fortawesome/free-solid-svg-icons";
 export const tabs = [
   { href: "/", l: "Keşfet", i: faCompass, hint: "Ana sayfa" },
@@ -27,6 +28,12 @@ export const tabs = [
 ];
 export const sideTabs = [
   ...tabs.slice(0, 4),
+  {
+    href: "/harita",
+    l: "Biga Haritası",
+    i: faMapLocationDot,
+    hint: "Biga'da keşfet",
+  },
   {
     href: "/kitap-pazari",
     l: "Kitap pazarı",

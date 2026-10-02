@@ -3,6 +3,7 @@ import ClickSounds from "@/components/ClickSounds";
 import Splash from "@/components/Splash";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
+import "leaflet/dist/leaflet.css";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 config.autoAddCss = false;

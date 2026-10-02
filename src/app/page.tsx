@@ -37,6 +37,13 @@ const tiles = [
     c: "bg-sun text-deep",
   },
   {
+    kind: "map",
+    t: "Biga Haritası",
+    d: "Şehri keşfet, yakınını bul",
+    href: "/harita",
+    c: "bg-sky text-deep",
+  },
+  {
     kind: "notes",
     t: "Notlar",
     d: "Ders notu, PDF",
@@ -189,6 +196,30 @@ function TileArt({ kind }: { kind: string }) {
             strokeLinecap="round"
             strokeDasharray="5 7"
           />
+        </svg>
+      );
+    case "map":
+      return (
+        <svg {...shared}>
+          <path
+            d="m18 30 25-11 25 11 26-11v43L68 73 43 62 18 73z"
+            fill="currentColor"
+            opacity=".15"
+          />
+          <path
+            d="M43 19v43m25-32v43M18 30l25-11 25 11 26-11M18 73l25-11 25 11 26-11"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M56 31c-8 0-14 6-14 14 0 11 14 25 14 25s14-14 14-25c0-8-6-14-14-14Z"
+            fill="rgb(var(--coral))"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <circle cx="56" cy="45" r="5" fill="rgb(var(--card))" />
         </svg>
       );
     case "notes":
