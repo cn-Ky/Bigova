@@ -14,7 +14,6 @@ const LETTERS = {"B": [" ____  ", "|  _ \\ ", "| |_) |", "|  _ < ", "| |_) |", "
 const COLORS: Record<string, string> = {"B": "#1d6a93", "I": "#2cc4b5", "G": "#ffb84d", "O": "#ff6b57", "V": "#2f7fb8", "A": "#2cc4b5"};
 const WORD = "BIGOVA";
 
-// Chrome/Brave/Edge konsolu arka plan görseli gösterir; Firefox/Safari yalnızca metni gösterir.
 
 let printed = false;
 
