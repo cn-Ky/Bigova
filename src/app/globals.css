@@ -1444,6 +1444,126 @@ input {
 .biga-map-filters button.is-active svg {
   color: rgb(var(--sun));
 }
+.biga-route-planner {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.72fr) minmax(0, 1.6fr);
+  gap: 0.9rem 1.2rem;
+  align-items: center;
+  margin: 0 0 1rem;
+  border: 1px solid rgb(var(--ink) / 0.08);
+  border-radius: 8px;
+  background: rgb(var(--card));
+  padding: 0.9rem 1rem;
+  box-shadow: 0 7px 24px rgb(var(--deep) / 0.06);
+}
+.biga-route-heading {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+.biga-route-icon {
+  display: grid;
+  width: 2.6rem;
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 8px;
+  background: rgb(var(--sun) / 0.32);
+  color: rgb(var(--deep));
+}
+.biga-route-heading h2 {
+  font-family: var(--f-display), sans-serif;
+  font-size: 1.02rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.biga-route-heading p {
+  margin-top: 0.2rem;
+  color: rgb(var(--ink) / 0.62);
+  font-size: 0.69rem;
+  line-height: 1.35;
+}
+.biga-route-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  align-items: end;
+}
+.biga-route-fields label {
+  display: grid;
+  min-width: 0;
+  gap: 0.28rem;
+}
+.biga-route-fields label > span {
+  color: rgb(var(--ink) / 0.58);
+  font-size: 0.64rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.biga-route-fields select {
+  width: 100%;
+  min-width: 0;
+  height: 2.55rem;
+  border: 1px solid rgb(var(--ink) / 0.12);
+  border-radius: 6px;
+  background: rgb(var(--foam));
+  padding: 0 0.65rem;
+  color: rgb(var(--ink));
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+}
+.biga-route-submit {
+  display: inline-flex;
+  height: 2.55rem;
+  gap: 0.45rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgb(var(--sea));
+  padding: 0 0.8rem;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 900;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+.biga-route-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgb(var(--sea2));
+}
+.biga-route-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.biga-route-result {
+  display: flex;
+  grid-column: 2;
+  gap: 0.75rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+  border-top: 1px solid rgb(var(--ink) / 0.08);
+  padding-top: 0.65rem;
+  color: rgb(var(--ink));
+  font-size: 0.76rem;
+}
+.biga-route-result strong {
+  color: rgb(var(--coral));
+  font-family: var(--f-display), sans-serif;
+  font-size: 1rem;
+}
+.biga-route-result small {
+  flex-basis: 100%;
+  color: rgb(var(--ink) / 0.58);
+  font-size: 0.65rem;
+}
+.biga-route-error {
+  grid-column: 2;
+  color: rgb(var(--coral));
+  font-size: 0.75rem;
+  font-weight: 800;
+}
 .biga-map-frame {
   position: relative;
   height: clamp(460px, 66dvh, 740px);
@@ -1474,22 +1594,17 @@ input {
   font-family: var(--f-body), sans-serif;
 }
 .biga-leaflet .leaflet-tile {
-  filter: saturate(0.82) contrast(0.97);
+  filter: saturate(0.68) contrast(0.96) brightness(1.035);
 }
 .biga-leaflet .leaflet-control-attribution {
-  display: none;
+  border-top-left-radius: 5px;
+  background: rgb(var(--card) / 0.82);
+  color: rgb(var(--ink) / 0.72);
+  font-size: 0.56rem;
+  backdrop-filter: blur(6px);
 }
-.biga-map-attribution {
-  position: absolute;
-  z-index: 500;
-  right: 0.55rem;
-  bottom: 0.45rem;
-  border-radius: 0.3rem;
-  background: rgb(255 255 255 / 0.86);
-  padding: 0.22rem 0.4rem;
-  color: #334;
-  font-size: 0.58rem;
-  pointer-events: none;
+.biga-leaflet .leaflet-control-attribution a {
+  color: rgb(var(--sea2));
 }
 .biga-map-locate {
   position: absolute;
@@ -1570,6 +1685,64 @@ input {
   background: #2777a8;
   color: #fff;
 }
+.biga-map-pin--school {
+  background: #316caa;
+  color: #fff;
+}
+.biga-map-pin--municipality {
+  background: #a94443;
+  color: #fff;
+}
+.biga-map-pin--fuel {
+  background: #e58a36;
+  color: #fff;
+}
+.biga-map-pin--cafe {
+  background: #8a573d;
+  color: #fff;
+}
+.biga-map-pin--restaurant {
+  background: #d65c48;
+  color: #fff;
+}
+.biga-map-pin--market {
+  background: #4c8c69;
+  color: #fff;
+}
+.biga-map-pin--pharmacy {
+  background: #258a76;
+  color: #fff;
+}
+.biga-map-pin--ziraat {
+  background: #3d9a57;
+  color: #fff;
+}
+.biga-map-pin--garanti {
+  background: #218d6d;
+  color: #fff;
+}
+.biga-map-pin--isbank {
+  background: #2779b5;
+  color: #fff;
+}
+.biga-map-pin--vakifbank {
+  background: #efb531;
+  color: #14324a;
+}
+.biga-map-pin--bank {
+  background: #47668a;
+  color: #fff;
+}
+.biga-map-pin--culture {
+  background: #775d9a;
+  color: #fff;
+}
+.biga-map-bank-logo {
+  font-family: var(--f-display), sans-serif;
+  font-size: 1rem;
+  font-weight: 900;
+  transform: rotate(45deg);
+}
 .biga-map-user-pin {
   display: grid;
   width: 1.3rem;
@@ -1641,12 +1814,6 @@ input {
   border-radius: 50%;
   background: rgb(var(--foam));
 }
-.biga-map-status {
-  min-height: 1.4rem;
-  padding: 0.55rem 0.15rem 0;
-  color: rgb(var(--ink) / 0.58);
-  font-size: 0.7rem;
-}
 @keyframes biga-pin-drop {
   from {
     opacity: 0;
@@ -1673,6 +1840,24 @@ input {
   }
   .biga-map-heading h1 {
     font-size: 1.75rem;
+  }
+  .biga-route-planner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.7rem;
+    padding: 0.8rem;
+  }
+  .biga-route-fields {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .biga-route-fields label select {
+    font-size: 0.7rem;
+  }
+  .biga-route-submit {
+    grid-column: 1 / -1;
+  }
+  .biga-route-result,
+  .biga-route-error {
+    grid-column: 1;
   }
   .biga-map-frame {
     height: max(480px, 62dvh);
