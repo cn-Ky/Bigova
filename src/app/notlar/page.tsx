@@ -1,5 +1,6 @@
 "use client";
 import Mascot from "@/components/Mascot";
+import { openPdfReader, pdfReaderHref } from "@/lib/pdfReader";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useUser } from "@/lib/useUser";
 import {
@@ -9,7 +10,7 @@ import {
     faMagnifyingGlass,
     faPlus,
     faTrash,
-    faXmark
+    faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { AnimatePresence, motion } from "framer-motion";
@@ -107,11 +108,8 @@ export default function Notlar() {
       .from("notes")
       .createSignedUrl(n.file_path, 120);
     if (error || !data) return setErr("Dosya açılamadı.");
-    const a = document.createElement("a");
-    a.href = data.signedUrl;
-    a.target = "_blank";
-    a.rel = "noopener";
-    a.click();
+    if (!openPdfReader(data.signedUrl, n.title))
+      setErr("PDF okuyucu açılamadı.");
   }
   async function remove(n: N) {
     if (!confirm(`"${n.title}" silinsin mi?`)) return;
@@ -202,9 +200,7 @@ export default function Notlar() {
                 </p>
               </div>
               <a
-                href={`/api/sample-notes/${note.id}`}
-                target="_blank"
-                rel="noopener"
+                href={pdfReaderHref(`/api/sample-notes/${note.id}`, note.title)}
                 aria-label={`${note.title} PDF aç`}
                 className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sea text-white"
               >

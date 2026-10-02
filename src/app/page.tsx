@@ -61,9 +61,8 @@ const tiles = [
     kind: "magazine",
     t: "Dergi",
     d: "Okulun dergisi",
-    href: "/yakinda/dergi",
+    href: "/dergi",
     c: "bg-card text-ink",
-    soon: 1,
   },
   {
     kind: "schedule",
@@ -511,11 +510,6 @@ function Tile({ x }: { x: (typeof tiles)[number] }) {
             <b className="block font-display text-lg leading-tight">{x.t}</b>
             <span className="text-[13px] opacity-75">{x.d}</span>
           </span>
-          {x.soon && (
-            <span className="absolute right-3 top-3 rounded-full bg-card/70 px-2 py-0.5 text-[10px] font-bold text-ink">
-              Yakında
-            </span>
-          )}
         </Link>
       </motion.div>
     </motion.li>

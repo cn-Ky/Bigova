@@ -39,7 +39,7 @@ export const sideTabs = [
     hint: "Arkadaş ve sohbetler",
   },
   {
-    href: "/yakinda/dergi",
+    href: "/dergi",
     l: "Dergi",
     i: faNewspaper,
     hint: "Okulun dergisi",

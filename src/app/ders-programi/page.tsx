@@ -1,4 +1,5 @@
 "use client";
+import { pdfReaderHref } from "@/lib/pdfReader";
 import { iibfPrograms, scheduleSources } from "@/lib/scheduleData";
 import {
     faArrowUpRightFromSquare,
@@ -142,9 +143,7 @@ export default function DersProgrami() {
               </span>
               <div className="flex flex-wrap gap-2">
                 <a
-                  href={scheduleUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={pdfReaderHref(scheduleUrl, `${program} · ${year}`)}
                   className="inline-flex items-center gap-2 rounded-full bg-sea px-4 py-2.5 text-sm font-bold text-white"
                 >
                   Çizelge PDF'si{" "}
@@ -153,9 +152,7 @@ export default function DersProgrami() {
                 {additionalSchedules.map((item) => (
                   <a
                     key={item.href}
-                    href={item.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={pdfReaderHref(item.href, item.label)}
                     className="inline-flex items-center gap-2 rounded-full bg-tide/20 px-4 py-2.5 text-sm font-bold text-ink"
                   >
                     {item.label}{" "}
@@ -198,9 +195,10 @@ export default function DersProgrami() {
               Kaynak güncellemesi: {scheduleSources.myo.updated}
             </p>
             <a
-              href={scheduleSources.myo.href}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={pdfReaderHref(
+                scheduleSources.myo.href,
+                "Biga MYO ders programı",
+              )}
               className="mt-4 inline-flex items-center gap-2 rounded-full bg-sea px-4 py-3 text-sm font-bold text-white"
             >
               Tüm sınıfların PDF programını aç{" "}
