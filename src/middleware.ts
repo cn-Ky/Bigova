@@ -16,4 +16,4 @@ export async function middleware(req: NextRequest) {
   try { await s.auth.getUser(); } catch {} // oturumu yeniler
   return res;
 }
-export const config = { matcher: ["/((?!_next/static|_next/image|favicon.ico|api/health|api/weather).*)"] };
+export const config = { matcher: ["/((?!_next/static|_next/image|favicon.ico|api/health|api/weather|api/map-places).*)"] };

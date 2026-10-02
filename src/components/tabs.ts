@@ -74,7 +74,7 @@ export const sideTabs = [
     href: "/ataturk",
     l: "Atatürk Köşesi",
     i: faLandmark,
-    hint: "Cumhuriyetin mirası",
+    hint: "Cumhuriyetin metinleri ve mirası",
   },
   {
     href: "https://ubys.comu.edu.tr/",
