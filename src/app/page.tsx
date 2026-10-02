@@ -3,19 +3,19 @@ import Mascot from "@/components/Mascot";
 import Weather from "@/components/Weather";
 import { useUser } from "@/lib/useUser";
 import {
-    faArrowRight,
-    faCalendarDays,
-    faLocationDot,
-    faMagnifyingGlass,
+  faArrowRight,
+  faCalendarDays,
+  faLocationDot,
+  faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-    AnimatePresence,
-    motion,
-    useMotionValue,
-    useScroll,
-    useSpring,
-    useTransform,
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useScroll,
+  useSpring,
+  useTransform,
 } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -84,6 +84,13 @@ const tiles = [
     d: "Misyon, ekip ve kulübümüz",
     href: "/hakkimizda",
     c: "bg-coral text-deep",
+  },
+  {
+    kind: "ataturk",
+    t: "Atatürk Köşesi",
+    d: "Gençliğe Hitabe, Nutuk ve marşlar",
+    href: "/ataturk",
+    c: "bg-tide text-deep",
   },
   {
     kind: "ubys",
@@ -371,6 +378,19 @@ function TileArt({ kind }: { kind: string }) {
           <path
             d="m24 18 2 5 5 2-5 2-2 5-2-5-5-2 5-2zm64 39 2 5 5 2-5 2-2 5-2-5-5-2 5-2z"
             fill="currentColor"
+          />
+        </svg>
+      );
+    case "ataturk":
+      return (
+        <svg {...shared}>
+          <image
+            href="https://upload.wikimedia.org/wikipedia/commons/8/8e/Ataturk_imza_01_tam35blog.png"
+            x="12"
+            y="8"
+            width="94"
+            height="30"
+            preserveAspectRatio="xMidYMid meet"
           />
         </svg>
       );

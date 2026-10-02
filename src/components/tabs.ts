@@ -7,6 +7,7 @@ import {
     faCircleInfo,
     faCompass,
     faGear,
+    faLandmark,
     faNewspaper,
     faPoll,
     faStore,
@@ -61,6 +62,12 @@ export const sideTabs = [
     l: "Hakkımızda",
     i: faCircleInfo,
     hint: "Bigova ve ekibi",
+  },
+  {
+    href: "/ataturk",
+    l: "Atatürk Köşesi",
+    i: faLandmark,
+    hint: "Cumhuriyetin metinleri ve mirası",
   },
   {
     href: "https://ubys.comu.edu.tr/",
