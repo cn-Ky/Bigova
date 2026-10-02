@@ -252,6 +252,22 @@ const paths: Record<PlaceKind, string> = {
   municipality:
     '<path d="M3 20h18M5 17h14M6 17V9m4 8V9m4 8V9m4 8V9M3 7l9-4 9 4v2H3z"/>',
   health: '<path d="M12 4v16M4 12h16"/><rect x="3" y="3" width="18" height="18" rx="4"/>',
+  public: '<path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/>',
+  books: '<path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4Zm0 13a3 3 0 0 1 3-3h10M9 8h5"/>',
+  charging: '<path d="M13 3 6 13h5l-1 8 7-10h-5l1-8Z"/>',
+  parking:
+    '<rect x="4" y="3" width="16" height="18" rx="3"/><path d="M10 17V8h3a3 3 0 0 1 0 6h-3"/>',
+  toilet:
+    '<circle cx="8" cy="5" r="1.5"/><circle cx="16" cy="5" r="1.5"/><path d="M5 20v-6l1.5-5h3L11 14v6M8 14v6M13 20v-5h-1l2-6h4l2 6h-1v5"/>',
+  post: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="m3 8 9 6 9-6"/>',
+  mall: '<path d="M3 21h18M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6M9 11h6"/>',
+  shop: '<path d="M5 8h14l-1 12H6L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+  hotel: '<path d="M3 18V7M3 14h18v4M21 14v-2a3 3 0 0 0-3-3h-7v5M7 11h.01"/>',
+  taxi: '<path d="M5 16v-4l2-5h10l2 5v4M3 16h18v3H3zM7 12h10M8 19v1m8-1v1M10 4h4"/>',
+  sport:
+    '<circle cx="12" cy="12" r="9"/><path d="M12 3c-3 3-3 15 0 18M12 3c3 3 3 15 0 18M3 12h18"/>',
+  worship:
+    '<path d="M5 21v-8a7 7 0 0 1 14 0v8M3 21h18M12 3v3M10 21v-5h4v5"/>',
   fuel: '<path d="M5 21V4h10v17M5 9h10m4-2 2 2v8a2 2 0 0 1-4 0v-4h-2M8 6h4"/>',
   cafe: '<path d="M5 8h12v7a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5V8Zm12 2h2a2 2 0 1 1 0 4h-2M8 3v2m4-2v2"/>',
   restaurant:

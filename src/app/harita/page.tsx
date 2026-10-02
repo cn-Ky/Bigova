@@ -10,6 +10,7 @@ import {
   faBus,
   faClock,
   faGlobe,
+  faGraduationCap,
   faLandmark,
   faLocationDot,
   faMagnifyingGlass,
@@ -19,6 +20,7 @@ import {
   faPhone,
   faRestroom,
   faRotateRight,
+  faSquareParking,
   faStore,
   faTag,
   faTree,
@@ -58,11 +60,21 @@ const filters: {
   { id: "landmark", label: "Kültür", icon: faLandmark },
   { id: "park", label: "Parklar", icon: faTree },
   { id: "business", label: "İşletmeler", icon: faStore },
+  { id: "education", label: "Eğitim", icon: faGraduationCap },
+  { id: "service", label: "Hizmetler", icon: faSquareParking },
   { id: "bus", label: "Duraklar", icon: faBus },
   { id: "atm", label: "ATM", icon: faMoneyBillWave },
 ];
 
-const groupOrder: PlaceCategory[] = ["bus", "landmark", "park", "business", "atm"];
+const groupOrder: PlaceCategory[] = [
+  "bus",
+  "education",
+  "landmark",
+  "service",
+  "park",
+  "business",
+  "atm",
+];
 const trCollator = new Intl.Collator("tr");
 
 export default function BigaMapPage() {

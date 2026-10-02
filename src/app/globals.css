@@ -1753,6 +1753,58 @@ input {
   background: #775d9a;
   color: #fff;
 }
+.biga-map-pin--health {
+  background: #cf3f4f;
+  color: #fff;
+}
+.biga-map-pin--public {
+  background: #345c85;
+  color: #fff;
+}
+.biga-map-pin--books {
+  background: #7a5a2f;
+  color: #fff;
+}
+.biga-map-pin--charging {
+  background: #1f9d6b;
+  color: #fff;
+}
+.biga-map-pin--parking {
+  background: #3a5f8f;
+  color: #fff;
+}
+.biga-map-pin--toilet {
+  background: #5b7a8c;
+  color: #fff;
+}
+.biga-map-pin--post {
+  background: #c4452f;
+  color: #fff;
+}
+.biga-map-pin--mall {
+  background: #c0457c;
+  color: #fff;
+}
+.biga-map-pin--shop {
+  background: #b8693a;
+  color: #fff;
+}
+.biga-map-pin--hotel {
+  background: #6a4fa0;
+  color: #fff;
+}
+.biga-map-pin--taxi {
+  background: #f2b72a;
+  color: #14324a;
+}
+.biga-map-pin--sport {
+  background: #2e8b57;
+  color: #fff;
+}
+.biga-map-pin--worship {
+  background: #4d7c5a;
+  color: #fff;
+}
 .biga-map-bank-logo {
   font-family: var(--f-display), sans-serif;
   font-size: 1rem;

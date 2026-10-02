@@ -1,15 +1,31 @@
 // Harita için ortak tipler ve OSM (Overpass) -> MapPlace dönüştürme mantığı.
 // Hem /api/map-places (sunucu) hem de /harita (istemci) tarafından kullanılır.
 
-export type PlaceCategory = "landmark" | "park" | "business" | "bus" | "atm";
+export type PlaceCategory =
+  | "landmark"
+  | "park"
+  | "business"
+  | "bus"
+  | "atm"
+  | "service"
+  | "education";
 export type PlaceKind =
   | "school"
+  | "books"
   | "municipality"
+  | "public"
   | "health"
   | "fuel"
+  | "charging"
+  | "parking"
+  | "toilet"
+  | "post"
   | "cafe"
   | "restaurant"
   | "market"
+  | "mall"
+  | "shop"
+  | "hotel"
   | "pharmacy"
   | "ziraat"
   | "garanti"
@@ -18,7 +34,10 @@ export type PlaceKind =
   | "bank"
   | "atm"
   | "bus"
+  | "taxi"
   | "park"
+  | "sport"
+  | "worship"
   | "culture"
   | "business";
 
@@ -65,21 +84,32 @@ export const OVERPASS_ENDPOINTS = [
 export function buildOverpassQuery() {
   const [s, w, n, e] = BIGA_BBOX;
   const a = `(${s},${w},${n},${e})`;
+  const amenities =
+    "atm|bank|bus_station|taxi|cafe|restaurant|fast_food|food_court|ice_cream|bar|pub|marketplace|fuel|charging_station|toilets|pharmacy|hospital|clinic|doctors|dentist|veterinary|school|kindergarten|university|college|library|place_of_worship|community_centre|cinema|theatre|arts_centre|post_office|townhall|courthouse|police|fire_station";
   return (
-    `[out:json][timeout:25];(` +
-    `nwr["amenity"~"^(atm|bank|bus_station|cafe|restaurant|fast_food|fuel|pharmacy|hospital|clinic|school|university|college|library|place_of_worship|community_centre|post_office|townhall)$"]${a};` +
+    `[out:json][timeout:30];(` +
+    `nwr["amenity"~"^(${amenities})$"]${a};` +
+    `nwr["amenity"="parking"]["access"!~"^(private|customers|permit|no)$"]${a};` +
     `nwr["office"="government"]${a};` +
     `nwr["shop"]${a};` +
-    `nwr["leisure"~"^(park|garden|playground)$"]${a};` +
+    `nwr["tourism"~"^(museum|attraction|hotel|guest_house|hostel|apartment)$"]${a};` +
+    `nwr["leisure"~"^(park|garden|playground|pitch|stadium|sports_centre|fitness_centre|swimming_pool)$"]${a};` +
     `nwr["historic"]${a};` +
-    `nwr["tourism"~"^(museum|attraction)$"]${a};` +
     `node["highway"="bus_stop"]${a};` +
-    `);out center 2500;`
+    `);out center 6000;`
   );
 }
 
 /** Adı olmasa da haritada kalması anlamlı olan türler */
-const KEEP_UNNAMED = new Set(["atm", "bus_station", "fuel"]);
+const KEEP_UNNAMED = new Set([
+  "atm",
+  "bus_station",
+  "fuel",
+  "parking",
+  "toilets",
+  "charging_station",
+  "taxi",
+]);
 
 export function elementToPlace(element: OverpassElement): MapPlace | null {
   const tags = element.tags ?? {};
@@ -96,13 +126,15 @@ export function elementToPlace(element: OverpassElement): MapPlace | null {
   const detailRaw =
     tags.amenity ??
     tags.shop ??
+    tags.tourism ??
     tags.leisure ??
     tags.historic ??
-    tags.tourism ??
     tags.highway ??
     (tags.office ? "government" : "Biga");
-  const detail = humanize(detailRaw);
-  const name = rawName ?? detail;
+  const fee =
+    tags.fee === "yes" ? " · Ücretli" : tags.fee === "no" ? " · Ücretsiz" : "";
+  const detail = humanize(detailRaw) + (isFeeType(tags.amenity) ? fee : "");
+  const name = rawName ?? humanize(detailRaw);
   const address = [tags["addr:street"], tags["addr:housenumber"]]
     .filter(Boolean)
     .join(" ");
@@ -124,6 +156,10 @@ export function elementToPlace(element: OverpassElement): MapPlace | null {
   };
 }
 
+function isFeeType(amenity?: string) {
+  return amenity === "parking" || amenity === "toilets";
+}
+
 function safeUrl(value?: string) {
   if (!value) return undefined;
   const url = /^https?:\/\//i.test(value) ? value : `https://${value}`;
@@ -138,26 +174,49 @@ function safeUrl(value?: string) {
 }
 
 export function classify(tags: Record<string, string>): PlaceCategory {
-  if (tags.amenity === "atm" || tags.amenity === "bank") return "atm";
-  if (tags.amenity === "bus_station" || tags.highway === "bus_stop")
+  const amenity = tags.amenity ?? "";
+  if (amenity === "atm" || amenity === "bank") return "atm";
+  if (amenity === "bus_station" || amenity === "taxi" || tags.highway === "bus_stop")
     return "bus";
-  if (tags.leisure) return "park";
   if (
-    tags.historic ||
-    tags.tourism ||
-    tags.office === "government" ||
+    ["school", "kindergarten", "university", "college", "library"].includes(
+      amenity,
+    )
+  )
+    return "education";
+  if (
     [
-      "school",
-      "university",
-      "college",
-      "library",
-      "place_of_worship",
-      "community_centre",
-      "townhall",
+      "parking",
+      "toilets",
+      "fuel",
+      "charging_station",
+      "pharmacy",
       "hospital",
       "clinic",
+      "doctors",
+      "dentist",
+      "veterinary",
       "post_office",
-    ].includes(tags.amenity ?? "")
+      "townhall",
+      "courthouse",
+      "police",
+      "fire_station",
+    ].includes(amenity) ||
+    tags.office === "government"
+  )
+    return "service";
+  if (
+    tags.leisure &&
+    tags.leisure !== "fitness_centre" &&
+    tags.leisure !== "swimming_pool"
+  )
+    return "park";
+  if (
+    tags.historic ||
+    ["museum", "attraction"].includes(tags.tourism ?? "") ||
+    ["place_of_worship", "community_centre", "cinema", "theatre", "arts_centre"].includes(
+      amenity,
+    )
   )
     return "landmark";
   return "business";
@@ -176,27 +235,46 @@ export function classifyKind(tags: Record<string, string>): PlaceKind {
     if (/vak[ıi]fbank/.test(text)) return "vakifbank";
     return amenity === "atm" ? "atm" : "bank";
   }
+  if (amenity === "parking") return "parking";
+  if (amenity === "toilets") return "toilet";
+  if (amenity === "post_office") return "post";
+  if (amenity === "taxi") return "taxi";
+  if (amenity === "charging_station") return "charging";
+  if (amenity === "fuel") return "fuel";
+  if (amenity === "pharmacy") return "pharmacy";
+  if (["hospital", "clinic", "doctors", "dentist", "veterinary"].includes(amenity))
+    return "health";
+  if (["police", "fire_station", "courthouse"].includes(amenity)) return "public";
   if (
     amenity === "townhall" ||
     tags.office === "government" ||
     /belediye/.test(text)
   )
     return "municipality";
-  if (["school", "university", "college"].includes(amenity)) return "school";
-  if (["hospital", "clinic"].includes(amenity)) return "health";
-  if (amenity === "fuel") return "fuel";
-  if (amenity === "cafe") return "cafe";
-  if (["restaurant", "fast_food", "food_court"].includes(amenity))
+  if (["school", "kindergarten", "university", "college"].includes(amenity))
+    return "school";
+  if (amenity === "library" || tags.shop === "books" || tags.shop === "stationery")
+    return "books";
+  if (amenity === "cafe" || amenity === "ice_cream") return "cafe";
+  if (["restaurant", "fast_food", "food_court", "bar", "pub"].includes(amenity))
     return "restaurant";
-  if (amenity === "pharmacy") return "pharmacy";
-  if (
-    ["community_centre", "library", "place_of_worship"].includes(amenity) ||
-    tags.historic ||
-    tags.tourism
-  )
+  if (amenity === "marketplace") return "market";
+  if (amenity === "place_of_worship") return "worship";
+  if (["community_centre", "cinema", "theatre", "arts_centre"].includes(amenity))
     return "culture";
+  if (tags.historic || ["museum", "attraction"].includes(tags.tourism ?? ""))
+    return "culture";
+  if (["hotel", "guest_house", "hostel", "apartment"].includes(tags.tourism ?? ""))
+    return "hotel";
   if (amenity === "bus_station" || tags.highway === "bus_stop") return "bus";
+  if (
+    ["pitch", "stadium", "sports_centre", "fitness_centre", "swimming_pool"].includes(
+      tags.leisure ?? "",
+    )
+  )
+    return "sport";
   if (tags.leisure) return "park";
+  if (["mall", "department_store"].includes(tags.shop ?? "")) return "mall";
   if (
     [
       "supermarket",
@@ -205,21 +283,25 @@ export function classifyKind(tags: Record<string, string>): PlaceKind {
       "bakery",
       "butcher",
       "kiosk",
-      "mall",
-      "department_store",
+      "pastry",
+      "deli",
     ].includes(tags.shop ?? "")
   )
     return "market";
+  if (tags.shop) return "shop";
   return "business";
 }
 
-/** Rozet/rota listesinde daha önemli yerler düşük sayı alır. */
+/** Düşük sayı = daha önemli; uzaklaştıkça yalnızca önemli yerler çizilir. */
 export function kindTier(kind: PlaceKind): 1 | 2 | 3 {
   switch (kind) {
     case "school":
     case "municipality":
+    case "public":
     case "health":
     case "culture":
+    case "mall":
+    case "books":
     case "ziraat":
     case "garanti":
     case "isbank":
@@ -227,6 +309,9 @@ export function kindTier(kind: PlaceKind): 1 | 2 | 3 {
     case "bank":
       return 1;
     case "business":
+    case "shop":
+    case "hotel":
+    case "worship":
       return 3;
     default:
       return 2;
@@ -248,10 +333,12 @@ export function kindFromBusinessCategory(category: string): PlaceKind {
 export function categoryName(category: PlaceCategory) {
   return {
     landmark: "Kültür & önemli yer",
-    park: "Park & açık alan",
+    park: "Park & spor alanı",
     business: "İşletme",
-    bus: "Otobüs durağı",
+    bus: "Ulaşım & durak",
     atm: "Banka & ATM",
+    service: "Hizmet & kamu",
+    education: "Eğitim",
   }[category];
 }
 
@@ -300,6 +387,37 @@ const TRANSLATIONS: Record<string, string> = {
   archaeological_site: "Arkeolojik alan",
   ruins: "Kalıntı",
   yes: "Tarihî yapı",
+  parking: "Otopark",
+  toilets: "Tuvalet",
+  charging_station: "Şarj istasyonu",
+  taxi: "Taksi durağı",
+  doctors: "Doktor",
+  dentist: "Diş hekimi",
+  veterinary: "Veteriner",
+  kindergarten: "Anaokulu",
+  courthouse: "Adliye",
+  police: "Polis",
+  fire_station: "İtfaiye",
+  cinema: "Sinema",
+  theatre: "Tiyatro",
+  arts_centre: "Sanat merkezi",
+  marketplace: "Pazar yeri",
+  food_court: "Yemek katı",
+  ice_cream: "Dondurmacı",
+  bar: "Bar",
+  pub: "Pub",
+  department_store: "Mağaza",
+  pastry: "Pastane",
+  deli: "Şarküteri",
+  pitch: "Spor sahası",
+  stadium: "Stadyum",
+  sports_centre: "Spor merkezi",
+  fitness_centre: "Spor salonu",
+  swimming_pool: "Yüzme havuzu",
+  hotel: "Otel",
+  guest_house: "Pansiyon",
+  hostel: "Hostel",
+  apartment: "Apart",
 };
 
 export function humanize(value: string) {

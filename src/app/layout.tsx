@@ -1,5 +1,6 @@
 import AdaptiveNavigation from "@/components/AdaptiveNavigation";
 import ClickSounds from "@/components/ClickSounds";
+import ConsoleBanner from "@/components/ConsoleBanner";
 import Splash from "@/components/Splash";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
@@ -12,6 +13,14 @@ export const metadata: Metadata = {
   title: "Bigova | Biga Öğrenci Uygulaması",
   description:
     "Biga'da işletmeler, ulaşım, notlar ve arkadaşların tek uygulamada.",
+  applicationName: "Bigova",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180" }],
+  },
 };
 export const viewport: Viewport = {
   width: "device-width",
@@ -45,6 +54,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <ConsoleBanner />
         <ClickSounds />
         <Splash />
         <AdaptiveNavigation />
