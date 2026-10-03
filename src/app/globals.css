@@ -2890,3 +2890,1057 @@ html[data-mobile-nav="bottom"] .adaptive-drawer-bar {
     animation: none;
   }
 }
+
+/* ───────── Hava paneli (wx-*) ─────────
+   Kompakt kart: şimdiki hava + önümüzdeki 3 gün. Dokununca aşağı doğru açılır (grid-template-rows 0fr → 1fr). */
+.wx {
+  position: relative;
+  z-index: 20;
+  isolation: isolate;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto 1.1rem;
+  overflow: hidden;
+  color: #fff;
+  border-radius: 26px;
+  border: 1px solid rgb(255 255 255 / 0.28);
+  background:
+    linear-gradient(155deg, rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.06) 60%),
+    rgb(var(--deep) / 0.4);
+  box-shadow:
+    0 18px 40px rgb(0 0 0 / 0.22),
+    inset 0 1px 0 rgb(255 255 255 / 0.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  transition: box-shadow 0.5s ease, border-color 0.5s ease;
+  animation: wx-enter 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+@media (min-width: 1024px) {
+  .wx {
+    margin-left: auto;
+    margin-right: 0;
+  }
+}
+.wx.is-open {
+  border-color: rgb(255 255 255 / 0.4);
+  box-shadow:
+    0 26px 60px rgb(0 0 0 / 0.32),
+    inset 0 1px 0 rgb(255 255 255 / 0.4);
+}
+/* Arkada süzülen ışık küresi (gündüz güneş, gece mor) */
+.wx::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -70px;
+  top: -100px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(var(--sun) / 0.55), transparent 66%);
+  filter: blur(8px);
+  animation: wx-aurora 13s ease-in-out infinite alternate;
+}
+.wx[data-day="0"]::before {
+  background: radial-gradient(circle, rgb(150 160 255 / 0.5), transparent 66%);
+}
+.wx[data-kind="rain"]::before,
+.wx[data-kind="storm"]::before,
+.wx[data-kind="cloudy"]::before {
+  background: radial-gradient(circle, rgb(var(--sky) / 0.42), transparent 66%);
+}
+.wx::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: -90px;
+  bottom: -120px;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(var(--tide) / 0.35), transparent 66%);
+  filter: blur(10px);
+  animation: wx-aurora 17s ease-in-out infinite alternate-reverse;
+}
+
+/* Üst kart (tıklanabilir) */
+.wx-head {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "now chev" "days days";
+  gap: 12px 8px;
+  width: 100%;
+  padding: 14px 14px 14px 16px;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.wx-head:focus-visible {
+  outline: 3px solid rgb(var(--sun));
+  outline-offset: -3px;
+  border-radius: 26px;
+}
+/* Parlak ışık süpürmesi */
+.wx-head::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgb(255 255 255 / 0.18) 50%, transparent 60%);
+  transform: translateX(-120%);
+  animation: wx-sheen 7s ease-in-out 1.2s infinite;
+  pointer-events: none;
+}
+.wx-now {
+  grid-area: now;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.wx-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  font-size: 32px;
+  color: rgb(var(--sun));
+  background: rgb(255 255 255 / 0.14);
+  border-radius: 20px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3);
+}
+.wx-icon svg {
+  filter: drop-shadow(0 4px 10px rgb(0 0 0 / 0.25));
+  animation: wx-float 3.4s ease-in-out infinite;
+}
+.wx[data-kind="clear"][data-day="1"] .wx-icon svg {
+  animation: wx-spin 26s linear infinite;
+}
+.wx[data-kind="rain"] .wx-icon,
+.wx[data-kind="storm"] .wx-icon,
+.wx[data-kind="cloudy"] .wx-icon {
+  color: rgb(var(--sky));
+}
+.wx[data-kind="storm"] .wx-icon svg {
+  color: #ffe98a;
+  animation: wx-zap 2.6s ease-in-out infinite;
+}
+.wx[data-kind="snow"] .wx-icon,
+.wx[data-kind="fog"] .wx-icon {
+  color: #fff;
+}
+.wx[data-day="0"] .wx-icon {
+  color: #dfe5ff;
+}
+.wx-temp {
+  display: flex;
+  align-items: flex-start;
+  line-height: 1;
+}
+.wx-temp b {
+  font-family: var(--f-display), sans-serif;
+  font-size: 48px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  text-shadow: 0 4px 14px rgb(0 0 0 / 0.25);
+}
+.wx-temp sup {
+  margin: 6px 0 0 2px;
+  font-size: 16px;
+  font-weight: 800;
+  opacity: 0.75;
+}
+.wx-meta {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.wx-meta strong {
+  font-family: var(--f-display), sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+.wx-meta small {
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: rgb(255 255 255 / 0.78);
+}
+.wx-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.wx-live i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 0 0 rgb(74 222 128 / 0.7);
+  animation: wx-live 2s ease-out infinite;
+}
+.wx-live i.is-off {
+  background: #fbbf24;
+  animation: none;
+}
+.wx-chev {
+  grid-area: chev;
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-self: start;
+  width: 36px;
+  height: 36px;
+  font-size: 14px;
+  background: rgb(255 255 255 / 0.18);
+  border-radius: 50%;
+  transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.25, 1.25), background 0.3s;
+}
+.wx-head:hover .wx-chev {
+  background: rgb(255 255 255 / 0.3);
+}
+.wx.is-open .wx-chev {
+  transform: rotate(180deg);
+  background: rgb(255 255 255 / 0.28);
+}
+.wx:not(.is-open) .wx-chev::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgb(255 255 255 / 0.55);
+  animation: wx-ping 2.4s ease-out infinite;
+}
+.wx-days {
+  grid-area: days;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.wx-day {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 8px 4px 9px;
+  font-size: 12px;
+  background: rgb(255 255 255 / 0.12);
+  border: 1px solid rgb(255 255 255 / 0.1);
+  border-radius: 16px;
+  transition: transform 0.3s ease, background 0.3s ease;
+  animation: wx-pop 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  animation-delay: calc(0.25s + var(--i, 0) * 0.09s);
+}
+.wx-head:hover .wx-day {
+  background: rgb(255 255 255 / 0.18);
+}
+.wx-day em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.75);
+}
+.wx-day > svg {
+  font-size: 20px;
+  color: rgb(var(--sun));
+  filter: drop-shadow(0 2px 6px rgb(0 0 0 / 0.25));
+}
+.wx-day b {
+  font-size: 15px;
+  font-weight: 800;
+}
+.wx-day i {
+  font-style: normal;
+  font-weight: 700;
+  color: rgb(255 255 255 / 0.6);
+}
+
+/* Açılan bölüm */
+.wx-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.65s cubic-bezier(0.22, 0.9, 0.28, 1);
+}
+.wx.is-open .wx-collapse {
+  grid-template-rows: 1fr;
+}
+.wx-collapse-in {
+  min-height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  transition: visibility 0s linear 0.65s;
+}
+.wx.is-open .wx-collapse-in {
+  visibility: visible;
+  transition-delay: 0s;
+}
+.wx-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  padding: 2px 12px 14px;
+  /* Panel "biraz" büyür: çok uzun içerik panelin içinde kaydırılır, sayfayı uzatmaz */
+  max-height: min(64vh, 560px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.35) transparent;
+}
+.wx-body::-webkit-scrollbar {
+  width: 6px;
+}
+.wx-body::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.3);
+  border-radius: 999px;
+}
+.wx-sec {
+  min-width: 0;
+  padding: 12px 14px;
+  background: rgb(255 255 255 / 0.1);
+  border: 1px solid rgb(255 255 255 / 0.13);
+  border-radius: 20px;
+  opacity: 0;
+  transform: translateY(16px) scale(0.98);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.wx.is-open .wx-sec {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.55s ease, transform 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+  transition-delay: calc(0.12s + var(--i, 0) * 0.07s);
+}
+.wx-t {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.72);
+}
+.wx-t svg {
+  color: rgb(var(--sun));
+}
+
+/* Saat + güneş yayı */
+.wx-clock {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 132px);
+  gap: 8px 12px;
+  align-items: center;
+  background: linear-gradient(135deg, rgb(var(--sea2) / 0.55), rgb(var(--deep) / 0.35));
+}
+.wx-clock .wx-t {
+  margin-bottom: 6px;
+}
+.wx-time {
+  font-family: var(--f-display), sans-serif;
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  text-shadow: 0 4px 16px rgb(0 0 0 / 0.3);
+}
+.wx-time small {
+  margin-left: 4px;
+  font-size: 18px;
+  font-weight: 700;
+  opacity: 0.6;
+}
+.wx-colon {
+  display: inline-block;
+  margin: 0 1px;
+  animation: wx-blink 1s steps(1, end) infinite;
+}
+.wx-date {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgb(255 255 255 / 0.85);
+}
+.wx-greet {
+  display: inline-flex;
+  margin-top: 8px;
+  padding: 4px 11px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  color: #3b2400;
+  background: rgb(var(--sun));
+  border-radius: 999px;
+}
+.wx-ptip {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: rgb(255 255 255 / 0.8);
+}
+.wx-sun {
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+}
+.wx-sun svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.wx-sun-track {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.35);
+  stroke-width: 2;
+  stroke-dasharray: 3 5;
+  stroke-linecap: round;
+}
+.wx-sun-done {
+  fill: none;
+  stroke: rgb(var(--sun));
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px rgb(var(--sun) / 0.8));
+}
+.wx-sun-horizon {
+  stroke: rgb(255 255 255 / 0.3);
+  stroke-width: 1.5;
+}
+.wx-sun-dot {
+  fill: #ffd86b;
+}
+.wx-sun-halo {
+  fill: rgb(255 216 107 / 0.3);
+  animation: wx-halo 2.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.wx-moon-dot {
+  fill: #dfe5ff;
+}
+.wx-moon-halo {
+  fill: rgb(200 210 255 / 0.25);
+  animation: wx-halo 3s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.wx-sun-times {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 4px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.wx-sun-left {
+  min-height: 1.2em;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-align: center;
+  color: rgb(255 255 255 / 0.75);
+}
+
+/* 24 saatlik grafik */
+.wx-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.wx-area {
+  opacity: 0;
+  transition: opacity 0.9s ease 0.6s;
+}
+.wx.is-open .wx-area {
+  opacity: 1;
+}
+.wx-line {
+  fill: none;
+  stroke: rgb(var(--sun));
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  filter: drop-shadow(0 2px 6px rgb(var(--sun) / 0.6));
+  transition: stroke-dashoffset 0.4s ease;
+}
+.wx.is-open .wx-line {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1.6s cubic-bezier(0.4, 0, 0.2, 1) 0.35s;
+}
+.wx-dot {
+  fill: #fff;
+  stroke: rgb(var(--sun));
+  stroke-width: 2;
+  opacity: 0;
+  transition: opacity 0.4s ease 0.9s;
+}
+.wx.is-open .wx-dot {
+  opacity: 1;
+}
+.wx-dot-now {
+  animation: wx-dotpulse 2s ease-in-out infinite;
+}
+.wx-hrs {
+  position: relative;
+  height: 72px;
+  margin-top: 6px;
+}
+.wx-h {
+  position: absolute;
+  top: 0;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  font-size: 11px;
+  transform: translateX(-50%);
+  text-align: center;
+  white-space: nowrap;
+}
+.wx-h b {
+  font-size: 14px;
+  font-weight: 800;
+}
+.wx-h svg {
+  font-size: 15px;
+  color: rgb(var(--sun));
+}
+.wx-h span {
+  font-weight: 700;
+  color: rgb(255 255 255 / 0.65);
+}
+.wx-h em {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 800;
+  color: rgb(var(--sky));
+}
+.wx-h:first-child {
+  transform: translateX(-30%);
+}
+.wx-h:last-child {
+  transform: translateX(-70%);
+}
+
+/* Günlük tahmin */
+.wx-fc {
+  display: grid;
+  gap: 8px;
+}
+.wx-fr {
+  display: grid;
+  grid-template-columns: 72px 24px 32px minmax(0, 1fr) 32px;
+  gap: 8px;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 800;
+}
+.wx-fr-d {
+  display: grid;
+  line-height: 1.15;
+}
+.wx-fr-d em {
+  font-style: normal;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: rgb(var(--sky));
+}
+.wx-fr-i {
+  font-size: 18px;
+  color: rgb(var(--sun));
+}
+.wx-fr-lo {
+  text-align: right;
+  color: rgb(255 255 255 / 0.65);
+}
+.wx-bar {
+  position: relative;
+  height: 7px;
+  background: rgb(255 255 255 / 0.16);
+  border-radius: 999px;
+}
+.wx-bar i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgb(var(--tide)), rgb(var(--sun)));
+  border-radius: 999px;
+  transition: width 1s cubic-bezier(0.2, 0.9, 0.3, 1);
+  box-shadow: 0 0 10px rgb(var(--sun) / 0.5);
+}
+
+/* Ayrıntı kutucukları */
+.wx-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+}
+.wx-tile {
+  display: grid;
+  gap: 2px;
+  padding: 10px;
+  background: rgb(0 0 0 / 0.14);
+  border-radius: 14px;
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+.wx-tile:hover {
+  transform: translateY(-3px);
+  background: rgb(0 0 0 / 0.22);
+}
+.wx-tile-k {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.7);
+}
+.wx-tile-k svg {
+  color: rgb(var(--sun));
+}
+.wx-tile b {
+  font-family: var(--f-display), sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+.wx-tile small {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgb(255 255 255 / 0.7);
+}
+.wx-wind-arrow {
+  transition: transform 1.2s cubic-bezier(0.2, 0.9, 0.3, 1.3);
+}
+
+/* Akıllı öneriler */
+.wx-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.wx-chip {
+  padding: 8px 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  background: rgb(255 255 255 / 0.14);
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 14px;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.wx.is-open .wx-chip {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  transition-delay: calc(0.5s + var(--i, 0) * 0.09s);
+}
+
+/* Günün Biga'sı */
+.wx-note {
+  background: linear-gradient(135deg, rgb(var(--tide) / 0.28), rgb(var(--sea2) / 0.3));
+}
+.wx-note .wx-t {
+  justify-content: flex-start;
+}
+.wx-mini {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: #fff;
+  background: rgb(255 255 255 / 0.18);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+.wx-mini:hover {
+  background: rgb(255 255 255 / 0.3);
+}
+.wx-mini:active {
+  transform: scale(0.94);
+}
+.wx-mini svg {
+  color: #fff;
+}
+.wx-note-in {
+  animation: wx-tab-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+.wx-note-in h4 {
+  margin: 8px 0 4px;
+  font-family: var(--f-display), sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.wx-note-in p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: rgb(255 255 255 / 0.9);
+}
+.wx-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #12303f;
+  background: rgb(var(--sky));
+  border-radius: 999px;
+}
+.wx-tag[data-tag="Lezzet"] {
+  background: #ffc9a8;
+}
+.wx-tag[data-tag="Gezi"] {
+  background: #b5f0d8;
+}
+.wx-tag[data-tag="Doğa"] {
+  background: #c9f2a7;
+}
+.wx-tag[data-tag="Kampüs"] {
+  background: #ffe49a;
+}
+.wx-tag[data-tag="Hava"] {
+  background: #d3d9ff;
+}
+
+/* Öğrenci rehberi */
+.wx-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 0 -4px 10px;
+  padding: 0 4px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.wx-tabs::-webkit-scrollbar {
+  display: none;
+}
+.wx-tab {
+  flex: none;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 13px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  background: rgb(255 255 255 / 0.13);
+  border: 1px solid rgb(255 255 255 / 0.1);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s, transform 0.2s;
+}
+.wx-tab:hover {
+  background: rgb(255 255 255 / 0.22);
+}
+.wx-tab:active {
+  transform: scale(0.95);
+}
+.wx-tab:focus-visible,
+.wx-mini:focus-visible,
+.wx-btn:focus-visible,
+.wx-go:focus-visible {
+  outline: 2px solid rgb(var(--sun));
+  outline-offset: 2px;
+}
+.wx-tab[aria-selected="true"] {
+  color: rgb(var(--sea));
+  background: #fff;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.2);
+}
+.wx-tips {
+  display: grid;
+  gap: 8px;
+}
+.wx-tip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 12px;
+  align-items: start;
+  padding: 11px 12px;
+  background: rgb(0 0 0 / 0.14);
+  border-radius: 16px;
+  animation: wx-tab-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+  animation-delay: calc(var(--i, 0) * 0.06s);
+}
+.wx-tip-e {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  font-size: 20px;
+  background: rgb(255 255 255 / 0.14);
+  border-radius: 12px;
+}
+.wx-tip b {
+  font-size: 13.5px;
+  font-weight: 800;
+}
+.wx-tip p {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: rgb(255 255 255 / 0.82);
+}
+.wx-go {
+  grid-column: 2;
+  justify-self: start;
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  margin-top: 4px;
+  padding: 5px 11px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #12303f;
+  text-decoration: none;
+  background: rgb(var(--sun));
+  border-radius: 999px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.wx-go:hover {
+  transform: translateX(3px);
+  box-shadow: 0 6px 14px rgb(0 0 0 / 0.25);
+}
+
+/* Alt bilgi */
+.wx-foot {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  justify-content: space-between;
+  background: rgb(0 0 0 / 0.12);
+}
+.wx-foot > div:first-child {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 800;
+}
+.wx-foot small {
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: rgb(255 255 255 / 0.65);
+}
+.wx-warn > span {
+  color: #fbbf24;
+}
+.wx-actions {
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+.wx-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  font-size: 14px;
+  color: #fff;
+  background: rgb(255 255 255 / 0.18);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+.wx-btn:hover {
+  background: rgb(255 255 255 / 0.3);
+}
+.wx-btn:active {
+  transform: scale(0.9);
+}
+.wx-btn.is-spin svg,
+.wx-spin {
+  animation: wx-spin 0.8s linear infinite;
+}
+
+/* Yükleniyor / hata */
+.wx-skel {
+  height: 128px;
+  background: linear-gradient(110deg, rgb(255 255 255 / 0.08) 30%, rgb(255 255 255 / 0.24) 50%, rgb(255 255 255 / 0.08) 70%);
+  background-size: 220% 100%;
+  animation: wx-sweep 1.4s linear infinite;
+}
+.wx-err {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 800;
+}
+.wx-err > svg {
+  color: #fbbf24;
+}
+.wx-err span {
+  flex: 1;
+}
+
+@keyframes wx-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.96);
+  }
+}
+@keyframes wx-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.9);
+  }
+}
+@keyframes wx-tab-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes wx-aurora {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(-40px, 30px) scale(1.25);
+  }
+}
+@keyframes wx-sheen {
+  0%,
+  55% {
+    transform: translateX(-120%);
+  }
+  80%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+@keyframes wx-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+@keyframes wx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes wx-zap {
+  0%,
+  86%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  90% {
+    transform: scale(1.18);
+    filter: drop-shadow(0 0 12px #ffe98a);
+  }
+  94% {
+    transform: scale(1);
+  }
+}
+@keyframes wx-ping {
+  from {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+@keyframes wx-live {
+  0% {
+    box-shadow: 0 0 0 0 rgb(74 222 128 / 0.7);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 8px rgb(74 222 128 / 0);
+  }
+}
+@keyframes wx-blink {
+  50% {
+    opacity: 0.2;
+  }
+}
+@keyframes wx-halo {
+  0%,
+  100% {
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 1;
+  }
+}
+@keyframes wx-dotpulse {
+  0%,
+  100% {
+    r: 5;
+  }
+  50% {
+    r: 7;
+  }
+}
+@keyframes wx-sweep {
+  to {
+    background-position: -220% 0;
+  }
+}
+@media (max-width: 380px) {
+  .wx-clock {
+    grid-template-columns: 1fr;
+  }
+  .wx-sun {
+    max-width: 200px;
+    margin: 0 auto;
+  }
+  .wx-time {
+    font-size: 40px;
+  }
+  .wx-temp b {
+    font-size: 42px;
+  }
+  .wx-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wx,
+  .wx *,
+  .wx::before,
+  .wx::after {
+    animation: none !important;
+    transition-duration: 0.01s !important;
+    transition-delay: 0s !important;
+  }
+}

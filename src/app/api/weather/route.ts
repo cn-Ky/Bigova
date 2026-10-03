@@ -1,17 +1,25 @@
 import { NextResponse } from "next/server";
-// Biga, Çanakkale — Open-Meteo (ücretsiz, anahtarsız). Sunucuda 10 dk önbelleğe alınır.
-const URL_ = "https://api.open-meteo.com/v1/forecast?latitude=40.2286&longitude=27.2425&current=temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m&timezone=Europe%2FIstanbul";
-export const revalidate = 600;
+import { buildUrl, parseOpenMeteo, type WeatherData } from "@/lib/weatherData";
+
+// Biga, Çanakkale — Open-Meteo (ücretsiz, anahtarsız).
+// Önceki sürüm rotayı statik önbelleğe alıyordu (ISR + CDN + 10 dk), bu yüzden veri uzun süre "donmuş" görünebiliyordu.
+// Artık her istek dinamik: Open-Meteo'ya taze gidilir, uçta (CDN) yalnızca 2 dakika paylaşılır.
+export const dynamic = "force-dynamic";
+
+let lastGood: WeatherData | null = null; // Open-Meteo kısa süre erişilemezse son bilinen veriyi göstermek için
+const MAX_STALE_MS = 3 * 60 * 60 * 1000;
+
 export async function GET() {
   try {
-    const r = await fetch(URL_, { next: { revalidate: 600 } });
-    if (!r.ok) throw new Error("upstream");
-    const c = (await r.json()).current;
-    return NextResponse.json(
-      { temp: Math.round(c.temperature_2m), feels: Math.round(c.apparent_temperature), wind: Math.round(c.wind_speed_10m), code: c.weather_code, isDay: c.is_day === 1 },
-      { headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=300" } },
-    );
+    const r = await fetch(buildUrl(), { cache: "no-store", signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error(`upstream ${r.status}`);
+    const data = parseOpenMeteo(await r.json());
+    lastGood = data;
+    return NextResponse.json(data, { headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=60" } });
   } catch {
-    return NextResponse.json({ error: "Hava durumu alınamadı." }, { status: 502 });
+    if (lastGood && Date.now() - lastGood.fetchedAt < MAX_STALE_MS) {
+      return NextResponse.json({ ...lastGood, stale: true }, { headers: { "Cache-Control": "no-store" } });
+    }
+    return NextResponse.json({ error: "Hava durumu alınamadı." }, { status: 502, headers: { "Cache-Control": "no-store" } });
   }
 }
