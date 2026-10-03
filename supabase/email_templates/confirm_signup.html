@@ -1,0 +1,17 @@
+<!-- Supabase > Authentication > Email Templates > "Confirm signup" bölümüne yapıştırın.
+     Konu (Subject): Bigova hesabını doğrula
+     Not: Bu şablon {{ .SiteURL }} kullanır; Authentication > URL Configuration > Site URL
+     alanı https://bigova.vercel.app olmalıdır. -->
+<div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:24px;color:#0E3A5B">
+  <h2 style="margin:0 0 12px">Bigova'ya hoş geldin 👋</h2>
+  <p>Hesabını etkinleştirmek için aşağıdaki düğmeye tıkla.</p>
+  <p style="margin:24px 0">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email"
+       style="background:#0E3A5B;color:#fff;padding:14px 22px;border-radius:14px;text-decoration:none;font-weight:bold;display:inline-block">
+      E-postamı doğrula
+    </a>
+  </p>
+  <p style="font-size:13px;color:#555">Düğme çalışmazsa bu adresi tarayıcına yapıştır:<br>
+    {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email</p>
+  <p style="font-size:12px;color:#888">Bu hesabı sen açmadıysan bu e-postayı yok sayabilirsin.</p>
+</div>

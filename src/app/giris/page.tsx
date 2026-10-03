@@ -24,15 +24,65 @@ export default function Giris() {
   const [show, setShow] = useState(false);
   const [msg, setMsg] = useState<{ t: string; ok: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [canResend, setCanResend] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("hata") === "dogrulama") {
+    const hata = new URLSearchParams(window.location.search).get("hata");
+    // Supabase bazı hataları adres çubuğundaki # kısmında gönderir
+    const hashExpired = /error_code=otp_expired|error=access_denied/.test(window.location.hash);
+    if (hata === "tarayici") {
       setMsg({
-        t: "Doğrulama bağlantısı geçersiz veya süresi dolmuş. Yeniden kayıt olmayı dene.",
+        t: "E-postan büyük olasılıkla doğrulandı; ancak bağlantı farklı bir tarayıcıda açıldığı için otomatik giriş yapılamadı. E-posta ve şifrenle giriş yapmayı dene.",
+        ok: true,
+      });
+    } else if (hata === "suresi-doldu" || hashExpired) {
+      setMsg({
+        t: "Doğrulama bağlantısının süresi dolmuş veya daha önce kullanılmış. E-postanı yazıp yeni bir bağlantı iste.",
         ok: false,
       });
+      setCanResend(true);
+    } else if (hata) {
+      setMsg({ t: "Doğrulama bağlantısı geçersiz. E-postanı yazıp yeni bir bağlantı iste.", ok: false });
+      setCanResend(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  async function resend() {
+    const mail = email.trim().toLowerCase();
+    if (!EMAIL_RE.test(mail)) return setMsg({ t: "Önce e-posta adresini yaz.", ok: false });
+    setBusy(true);
+    setMsg(null);
+    try {
+      const { error } = await supabaseBrowser().auth.resend({
+        type: "signup",
+        email: mail,
+        options: { emailRedirectTo: `${location.origin}/auth/callback` },
+      });
+      if (error) {
+        setMsg({
+          t:
+            error.code === "over_email_send_rate_limit" || error.status === 429
+              ? "Çok sık istek gönderildi. Birkaç dakika bekleyip tekrar dene."
+              : `E-posta gönderilemedi: ${error.message}`,
+          ok: false,
+        });
+      } else {
+        setMsg({ t: "Yeni doğrulama e-postası gönderildi. Spam klasörünü de kontrol et.", ok: true });
+        setCooldown(60);
+      }
+    } catch {
+      setMsg({ t: "Sunucuya bağlanılamadı. Tekrar dene.", ok: false });
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -58,10 +108,11 @@ export default function Giris() {
       if (mode === "login") {
         const { error } = await sb.auth.signInWithPassword({ email: mail, password });
         if (error) {
+          if (error.code === "email_not_confirmed") setCanResend(true);
           setMsg({
             t:
               error.code === "email_not_confirmed"
-                ? "E-posta adresin henüz doğrulanmamış. Gelen kutundaki bağlantıya tıkla."
+                ? "E-posta adresin henüz doğrulanmamış. Gelen kutundaki bağlantıya tıkla veya aşağıdan yeni bağlantı iste."
                 : error.code === "invalid_credentials"
                   ? "E-posta veya şifre hatalı."
                   : `Giriş yapılamadı: ${error.message}`,
@@ -95,6 +146,8 @@ export default function Giris() {
           router.push("/");
           router.refresh();
         } else {
+          setCanResend(true);
+          setCooldown(60);
           setMsg({
             t: "Kaydın oluşturuldu. E-postana gönderilen doğrulama bağlantısına tıkla, sonra giriş yap. Spam klasörünü de kontrol et.",
             ok: true,
@@ -193,6 +246,16 @@ export default function Giris() {
           >
             {msg.t}
           </p>
+        )}
+        {canResend && (
+          <button
+            type="button"
+            onClick={resend}
+            disabled={busy || cooldown > 0}
+            className="rounded-2xl bg-sun p-3 text-sm font-bold text-deep disabled:opacity-60"
+          >
+            {cooldown > 0 ? `Yeni e-posta için ${cooldown} sn bekle` : "Doğrulama e-postasını tekrar gönder"}
+          </button>
         )}
         <button
           type="button"
