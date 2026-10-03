@@ -2874,3 +2874,19 @@ html[data-mobile-nav="bottom"] .adaptive-drawer-bar {
     display: none;
   }
 }
+
+/* ───────── Bigocuk ───────── */
+.bc-blink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: blink 5s infinite;
+}
+.tile-art--bigocuk {
+  animation: art-float 3.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bc-blink,
+  .tile-art--bigocuk {
+    animation: none;
+  }
+}

@@ -93,6 +93,13 @@ const tiles = [
     c: "bg-sun text-deep",
   },
   {
+    kind: "bigocuk",
+    t: "Bigocuk",
+    d: "Oyna, Bigcoin kazan, avatarını giydir",
+    href: "/bigocuk",
+    c: "bg-sky text-deep",
+  },
+  {
     kind: "about",
     t: "Hakkımızda",
     d: "Misyon, ekip ve kulübümüz",
@@ -423,6 +430,16 @@ function TileArt({ kind }: { kind: string }) {
             strokeLinecap="round"
             strokeLinejoin="round"
           />
+        </svg>
+      );
+    case "bigocuk":
+      return (
+        <svg {...shared}>
+          <circle cx="68" cy="38" r="27" fill="currentColor" opacity=".16" stroke="currentColor" strokeWidth="3" />
+          <circle cx="68" cy="38" r="19" fill="none" stroke="currentColor" strokeWidth="2.5" opacity=".55" />
+          <text x="68" y="48" textAnchor="middle" fontSize="28" fontWeight="800" fill="currentColor" fontFamily="'Baloo 2', sans-serif">B</text>
+          <path d="M12 76Q30 62 46 72" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeDasharray="2 8" />
+          <path d="m100 14 3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="currentColor" opacity=".7" />
         </svg>
       );
     case "about":

@@ -7,6 +7,7 @@ import {
   faCalendarWeek,
   faCircleInfo,
   faCompass,
+  faGamepad,
   faGear,
   faLandmark,
   faMapLocationDot,
@@ -70,6 +71,12 @@ export const sideTabs = [
     l: "Anketler",
     i: faPoll,
     hint: "Haftalık öğrenci anketi",
+  },
+  {
+    href: "/bigocuk",
+    l: "Bigocuk",
+    i: faGamepad,
+    hint: "Oyunlar, Bigcoin ve avatar",
   },
   {
     href: "/hakkimizda",

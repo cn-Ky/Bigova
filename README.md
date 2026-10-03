@@ -23,6 +23,19 @@ Bigova ile kullanıcıların;
 
 hedeflenmektedir.
 
+## 🎮 Bigocuk
+
+Oyunlar, Bigcoin kazanma ve avatar giydirme bölümü (`/bigocuk`).
+
+- **Yürüyüş** (`/bigocuk/yuruyus`): telefonun hareket sensörüyle adım sayar, her 50 adım = 1 Bigcoin. Günlük sınır 10.000 adım.
+- **Avatar** (`/bigocuk/avatar`): Bigcoin ile saç, kıyafet, ayakkabı, gözlük, şapka, aksesuar ve arka plan satın al.
+- **Kurulum:** Supabase SQL Editor'de `supabase/bigocuk_upgrade.sql` dosyasını çalıştır (tekrar çalıştırmak güvenlidir).
+- **Yeni oyun eklemek:** `src/lib/bigocuk/games.ts` dizisine kayıt ekle, sayfasını `src/app/bigocuk/<oyun>/` altına yaz.
+- **Yeni coin kazanma yolu:** `bigocuk_earn_sources` tablosuna kaynak ekle (miktar + günlük sınır), sunucu tarafında `perform public.bigocuk_grant(kullanici_id, 'kaynak')` çağır.
+- **Yeni avatar parçası:** `src/lib/bigocuk/items.tsx` dosyasına ekle, SQL dosyasını yeniden çalıştır (fiyat listesi güncellenir).
+
+---
+
 # 📱 Temel Özellikler
 
 ## 🏪 Biga İşletmeleri
