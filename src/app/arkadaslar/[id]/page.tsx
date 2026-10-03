@@ -4,13 +4,14 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 import { useUser } from "@/lib/useUser";
 import {
     faArrowLeft,
+    faCheck,
     faFire,
     faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Message = {
   id: string;
@@ -29,6 +30,8 @@ export default function DirectMessage() {
   const [friend, setFriend] = useState<Profile | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isFriend, setIsFriend] = useState(false);
+  const [relation, setRelation] = useState<"none" | "outgoing" | "incoming">("none");
+  const endRef = useRef<HTMLLIElement>(null);
   const [streak, setStreak] = useState(0);
   const [message, setMessage] = useState("");
   const [notice, setNotice] = useState("");
@@ -39,16 +42,17 @@ export default function DirectMessage() {
 
   const load = useCallback(async () => {
     if (!user || !validId) return;
-    const { data: relation } = await sb
+    const { data: links } = await sb
       .from("friendships")
-      .select("status")
+      .select("requester,addressee,status")
       .or(
         `and(requester.eq.${user.id},addressee.eq.${friendId}),and(requester.eq.${friendId},addressee.eq.${user.id})`,
       )
-      .eq("status", "accepted")
-      .limit(1)
-      .maybeSingle();
-    if (!relation) {
+      .limit(1);
+    const link = links?.[0] as
+      | { requester: string; addressee: string; status: "pending" | "accepted" }
+      | undefined;
+    if (!link || link.status !== "accepted") {
       const { data: profile } = await sb
         .from("profiles")
         .select("id,name")
@@ -56,6 +60,7 @@ export default function DirectMessage() {
         .maybeSingle();
       setFriend(profile as Profile | null);
       setIsFriend(false);
+      setRelation(!link ? "none" : link.requester === user.id ? "outgoing" : "incoming");
       setMessages([]);
       return;
     }
@@ -151,8 +156,20 @@ export default function DirectMessage() {
     };
   }, [friendId, load, sb, user]);
 
-  async function send(e: React.FormEvent) {
-    e.preventDefault();
+  // Gerçek zamanlı bağlantı kurulamazsa mesajlar yine de birkaç saniyede bir yenilenir
+  useEffect(() => {
+    if (!user) return;
+    const poll = setInterval(() => {
+      if (!document.hidden) load();
+    }, 5000);
+    return () => clearInterval(poll);
+  }, [load, user]);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages.length]);
+
+  async function send(e?: React.FormEvent) {
+    e?.preventDefault();
     const body = message.trim();
     if (!body || !friend) return;
     if (!user && friendId.startsWith("demo-friend-")) {
@@ -186,15 +203,21 @@ export default function DirectMessage() {
     if (!user) return;
     setBusy(true);
     setNotice("");
-    const { error } = await sb
+    const { data: sent, error } = await sb
       .from("messages")
-      .insert({ to_id: friendId, body });
+      .insert({ to_id: friendId, body })
+      .select("id,from_id,to_id,body,created_at")
+      .single();
     setBusy(false);
     if (error)
-      setNotice("Mesaj gönderilemedi. Arkadaşlığın devam ettiğini kontrol et.");
+      setNotice(`Mesaj gönderilemedi: ${error.message}`);
     else {
       setMessage("");
-      await load();
+      if (sent)
+        setMessages((cur) =>
+          cur.some((m) => m.id === (sent as Message).id) ? cur : [...cur, sent as Message],
+        );
+      void load();
     }
   }
   async function addFriend() {
@@ -205,11 +228,24 @@ export default function DirectMessage() {
       .from("friendships")
       .insert({ requester: user.id, addressee: friend.id, status: "pending" });
     setBusy(false);
-    setNotice(
-      error
-        ? "İstek gönderilemedi. Daha önce bir istek gönderilmiş olabilir."
-        : "Arkadaşlık isteği gönderildi. Kabul edildiğinde burada bire bir konuşabilirsiniz.",
-    );
+    if (error) setNotice(`İstek gönderilemedi: ${error.message}`);
+    else {
+      setNotice("");
+      setRelation("outgoing");
+    }
+  }
+  async function acceptFriend() {
+    if (!user || !friend) return;
+    setBusy(true);
+    setNotice("");
+    const { error } = await sb
+      .from("friendships")
+      .update({ status: "accepted" })
+      .eq("requester", friend.id)
+      .eq("addressee", user.id);
+    setBusy(false);
+    if (error) setNotice("İstek kabul edilemedi.");
+    else await load();
   }
 
   if (user === undefined)
@@ -241,20 +277,40 @@ export default function DirectMessage() {
             {friend.name || "Öğrenci"}
           </h1>
           <p className="mt-3 text-sm text-ink/70">
-            Bire bir sohbet başlatmak için önce arkadaşlık isteği gönder.
+            {relation === "outgoing"
+              ? "İstek gönderildi. Kabul edildiğinde burada bire bir mesajlaşabilirsiniz."
+              : relation === "incoming"
+                ? "Bu kişi sana arkadaşlık isteği gönderdi. Kabul edince mesajlaşabilirsiniz."
+                : "Bire bir sohbet başlatmak için önce arkadaşlık isteği gönder."}
           </p>
           {notice && (
             <p role="status" className="mt-3 text-sm font-bold text-coral">
               {notice}
             </p>
           )}
-          <button
-            onClick={addFriend}
-            disabled={busy}
-            className="mt-4 rounded-full bg-sea px-5 py-3 font-bold text-white disabled:opacity-50"
-          >
-            {busy ? "Gönderiliyor…" : "Arkadaşlık isteği gönder"}
-          </button>
+          {relation === "none" && (
+            <button
+              onClick={addFriend}
+              disabled={busy}
+              className="mt-4 rounded-full bg-sea px-5 py-3 font-bold text-white disabled:opacity-50"
+            >
+              {busy ? "Gönderiliyor…" : "Arkadaşlık isteği gönder"}
+            </button>
+          )}
+          {relation === "outgoing" && (
+            <span className="mt-4 inline-block rounded-full bg-foam px-5 py-3 text-sm font-bold text-ink/60">
+              Yanıt bekleniyor
+            </span>
+          )}
+          {relation === "incoming" && (
+            <button
+              onClick={acceptFriend}
+              disabled={busy}
+              className="mt-4 inline-flex items-center gap-2 rounded-full bg-tide px-5 py-3 font-bold text-deep disabled:opacity-50"
+            >
+              <FontAwesomeIcon icon={faCheck} /> {busy ? "Kabul ediliyor…" : "İsteği kabul et"}
+            </button>
+          )}
         </section>
       </main>
     );
@@ -311,6 +367,7 @@ export default function DirectMessage() {
             Henüz mesaj yok. Sohbeti başlat.
           </li>
         )}
+        <li ref={endRef} aria-hidden className="h-0" />
       </ol>
       {notice && (
         <p role="alert" className="px-4 pb-2 text-sm font-bold text-coral">
@@ -324,9 +381,15 @@ export default function DirectMessage() {
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+              e.preventDefault();
+              if (message.trim() && !busy) void send();
+            }
+          }}
           maxLength={2000}
           rows={1}
-          placeholder="Mesaj yaz"
+          placeholder="Mesaj yaz (Enter ile gönder)"
           aria-label="Mesaj yaz"
           className="max-h-28 min-h-12 flex-1 resize-y rounded-2xl bg-card px-4 py-3 outline-none focus:ring-2 focus:ring-tide"
         />
