@@ -15,7 +15,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-type Profile = { id: string; name: string; student_no: string };
+type Profile = { id: string; name: string; student_no?: string | null };
 type Person = Profile & {
   direction: "friend" | "incoming" | "outgoing";
   streak: number;
@@ -54,7 +54,7 @@ export default function Arkadaslar() {
       ),
     );
     const [{ data: profiles }, { data: streaks }] = await Promise.all([
-      sb.from("profiles").select("id,name,student_no").in("id", ids),
+      sb.from("profiles").select("id,name").in("id", ids),
       sb
         .from("friendship_streaks")
         .select("user_a,user_b,current_streak,last_mutual_date"),
@@ -108,9 +108,9 @@ export default function Arkadaslar() {
     const timer = setTimeout(async () => {
       const { data } = await sb
         .from("profiles")
-        .select("id,name,student_no")
+        .select("id,name")
         .neq("id", user.id)
-        .or(`student_no.ilike.%${term}%,name.ilike.%${term}%`)
+        .ilike("name", `%${term}%`)
         .limit(10);
       setResults(
         ((data as Profile[]) ?? []).filter(
@@ -136,7 +136,7 @@ export default function Arkadaslar() {
           : "Arkadaşlık isteği gönderilemedi.",
       );
     else {
-      setNotice(`${profile.name || profile.student_no} için istek gönderildi.`);
+      setNotice(`${profile.name || "Öğrenci"} için istek gönderildi.`);
       setResults((list) => list.filter((person) => person.id !== profile.id));
       await load();
     }
@@ -152,7 +152,7 @@ export default function Arkadaslar() {
     setBusyId("");
     if (error) setNotice("İstek kabul edilemedi.");
     else {
-      setNotice(`${person.name || person.student_no} artık arkadaşlarında.`);
+      setNotice(`${person.name || "Öğrenci"} artık arkadaşlarında.`);
       await load();
     }
   }
@@ -180,8 +180,8 @@ export default function Arkadaslar() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ad veya okul numarası yaz"
-            aria-label="Ad veya okul numarasıyla arkadaş ara"
+            placeholder="Arkadaşının adını yaz"
+            aria-label="Adıyla arkadaş ara"
             className="w-full bg-transparent outline-none"
           />
         </label>
@@ -205,15 +205,12 @@ export default function Arkadaslar() {
                     className="flex items-center gap-3 rounded-2xl bg-card p-3"
                   >
                     <span className="grid h-10 w-10 place-items-center rounded-full bg-tide/25 font-bold">
-                      {(profile.name || profile.student_no)[0]}
+                      {(profile.name || "?")[0]}
                     </span>
                     <span className="min-w-0 flex-1">
                       <b className="block truncate">
                         {profile.name || "Öğrenci"}
                       </b>
-                      <small className="text-ink/60">
-                        {profile.student_no}
-                      </small>
                     </span>
                     <button
                       onClick={() => sendRequest(profile)}
@@ -245,7 +242,6 @@ export default function Arkadaslar() {
                 >
                   <span className="min-w-0 flex-1">
                     <b className="block truncate">{person.name || "Öğrenci"}</b>
-                    <small className="text-ink/60">{person.student_no}</small>
                   </span>
                   <button
                     onClick={() => acceptRequest(person)}
@@ -271,11 +267,10 @@ export default function Arkadaslar() {
                   className="flex items-center gap-3 rounded-2xl bg-card p-3"
                 >
                   <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-sky font-display font-extrabold text-deep">
-                    {(person.name || person.student_no)[0]}
+                    {(person.name || "?")[0]}
                   </span>
                   <span className="min-w-0 flex-1">
                     <b className="block truncate">{person.name || "Öğrenci"}</b>
-                    <small className="text-ink/60">{person.student_no}</small>
                     <span className="mt-1 flex items-center gap-1 text-xs font-bold text-coral">
                       <FontAwesomeIcon icon={faFire} />{" "}
                       {person.streak > 0
@@ -306,7 +301,7 @@ export default function Arkadaslar() {
                   key={person.id}
                   className="flex items-center justify-between rounded-2xl bg-card p-3"
                 >
-                  <b>{person.name || person.student_no}</b>
+                  <b>{person.name || "Öğrenci"}</b>
                   <span className="text-xs text-ink/60">Yanıt bekleniyor</span>
                 </li>
               ))}
@@ -316,7 +311,7 @@ export default function Arkadaslar() {
         {!people.length && query.trim().length < 2 && (
           <p className="py-8 text-center text-sm text-ink/60">
             <FontAwesomeIcon icon={faUserCheck} className="mr-2" />
-            İsim veya okul numarasıyla arkadaşını bul.
+            İsmiyle arkadaşını bul.
           </p>
         )}
         {friends.length > 0 && (
@@ -348,7 +343,7 @@ function DemoFriends() {
   const results = demoFriends.filter(
     (person) =>
       !friendIds.includes(person.id) &&
-      `${person.name} ${person.student_no}`
+      `${person.name}`
         .toLocaleLowerCase("tr-TR")
         .includes(query.trim().toLocaleLowerCase("tr-TR")),
   );
@@ -371,7 +366,7 @@ function DemoFriends() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Örnek ad veya okul numarası ara"
+            placeholder="Örnek ad ara"
             aria-label="Demo arkadaş ara"
             className="w-full bg-transparent outline-none"
           />
@@ -426,7 +421,7 @@ function DemoFriends() {
                     <span className="min-w-0 flex-1">
                       <b className="block">{person.name}</b>
                       <small className="text-ink/60">
-                        Örnek profil · {person.student_no}
+                        Örnek profil
                       </small>
                     </span>
                     <button

@@ -1,27 +1,34 @@
 "use client";
 import Mascot from "@/components/Mascot";
+import {
+  EMAIL_RE,
+  MIN_PASSWORD,
+  REQUIRE_SCHOOL_MAIL,
+  SCHOOL_MAIL,
+} from "@/lib/authConfig";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const SCHOOL_MAIL = /^\d{6,12}@ogr\.comu\.edu\.tr$/i;
+const field = "rounded-2xl bg-foam p-4 outline-none focus:ring-2 focus:ring-tide";
+const clean = (s: string) => s.trim().replace(/\s+/g, " ");
 
 export default function Giris() {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "register">("login");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+  const [show, setShow] = useState(false);
   const [msg, setMsg] = useState<{ t: string; ok: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (
-      new URLSearchParams(window.location.search).get("hata") === "dogrulama"
-    ) {
+    if (new URLSearchParams(window.location.search).get("hata") === "dogrulama") {
       setMsg({
-        t: "Doğrulama bağlantısı geçersiz veya süresi dolmuş. Yeni bir kayıt bağlantısı iste.",
+        t: "Doğrulama bağlantısı geçersiz veya süresi dolmuş. Yeniden kayıt olmayı dene.",
         ok: false,
       });
     }
@@ -30,31 +37,37 @@ export default function Giris() {
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const mail = email.trim().toLowerCase();
-    if (!SCHOOL_MAIL.test(mail))
+    if (!EMAIL_RE.test(mail))
+      return setMsg({ t: "Geçerli bir e-posta adresi yaz.", ok: false });
+    if (REQUIRE_SCHOOL_MAIL && !SCHOOL_MAIL.test(mail))
       return setMsg({
         t: "Sadece ogrencinumarasi@ogr.comu.edu.tr adresi kabul edilir.",
         ok: false,
       });
-    if (password.length < 8)
-      return setMsg({ t: "Şifre en az 8 karakter olmalı.", ok: false });
+    if (password.length < MIN_PASSWORD)
+      return setMsg({ t: `Şifre en az ${MIN_PASSWORD} karakter olmalı.`, ok: false });
+    const first = clean(firstName);
+    const last = clean(lastName);
+    if (mode === "register" && (first.length < 2 || last.length < 2))
+      return setMsg({ t: "İsim ve soyisim en az 2 karakter olmalı.", ok: false });
+
     setBusy(true);
     setMsg(null);
     try {
       const sb = supabaseBrowser();
       if (mode === "login") {
-        const { error } = await sb.auth.signInWithPassword({
-          email: mail,
-          password,
-        });
-        if (error)
+        const { error } = await sb.auth.signInWithPassword({ email: mail, password });
+        if (error) {
           setMsg({
             t:
               error.code === "email_not_confirmed"
-                ? "E-posta adresin henüz doğrulanmamış. Deneme sürümüne giriş yapmadan devam edebilirsin."
-                : `Giriş yapılamadı: ${error.message}`,
+                ? "E-posta adresin henüz doğrulanmamış. Gelen kutundaki bağlantıya tıkla."
+                : error.code === "invalid_credentials"
+                  ? "E-posta veya şifre hatalı."
+                  : `Giriş yapılamadı: ${error.message}`,
             ok: false,
           });
-        else {
+        } else {
           router.push("/");
           router.refresh();
         }
@@ -63,30 +76,41 @@ export default function Giris() {
           email: mail,
           password,
           options: {
-            data: { name },
+            data: { first_name: first, last_name: last, name: `${first} ${last}` },
             emailRedirectTo: `${location.origin}/auth/callback`,
           },
         });
-        if (error)
-          setMsg({ t: "Kayıt yapılamadı: " + error.message, ok: false });
-        else if (data.session) {
+        if (error) {
+          setMsg({
+            t:
+              error.code === "user_already_exists"
+                ? "Bu e-posta ile zaten bir hesap var. Giriş yapmayı dene."
+                : `Kayıt yapılamadı: ${error.message}`,
+            ok: false,
+          });
+        } else if (data.user && data.user.identities?.length === 0) {
+          // Supabase, var olan e-postada hata vermeden boş identities döndürür
+          setMsg({ t: "Bu e-posta ile zaten bir hesap var. Giriş yapmayı dene.", ok: false });
+        } else if (data.session) {
           router.push("/");
           router.refresh();
-        } else
+        } else {
           setMsg({
-            t: "Doğrulama bağlantısı okul mailine gönderildi. Gelen kutunu ve spam klasörünü kontrol et.",
+            t: "Kaydın oluşturuldu. E-postana gönderilen doğrulama bağlantısına tıkla, sonra giriş yap. Spam klasörünü de kontrol et.",
             ok: true,
           });
+        }
       }
     } catch {
       setMsg({
-        t: "Supabase bağlantısı kurulamadı. Uygulama ayarlarını ve internet bağlantını kontrol et.",
+        t: "Sunucuya bağlanılamadı. İnternet bağlantını kontrol edip tekrar dene.",
         ok: false,
       });
     } finally {
       setBusy(false);
     }
   }
+
   return (
     <main className="px-5 pt-[max(2rem,env(safe-area-inset-top))]">
       <div className="mx-auto max-w-md text-center">
@@ -95,7 +119,9 @@ export default function Giris() {
           {mode === "login" ? "Tekrar hoş geldin" : "Aramıza katıl"}
         </h1>
         <p className="text-sm text-ink/70">
-          Sadece okul mailiyle giriş yapılır.
+          {mode === "login"
+            ? "E-posta ve şifrenle giriş yap."
+            : "İsim, soyisim, e-posta ve şifreyle hemen kayıt ol."}
         </p>
       </div>
       <form
@@ -103,14 +129,26 @@ export default function Giris() {
         className="mx-auto mt-6 grid max-w-md gap-3 rounded-[28px] bg-card p-5 shadow-sm"
       >
         {mode === "register" && (
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Ad Soyad"
-            autoComplete="name"
-            required
-            className="rounded-2xl bg-foam p-4 outline-none"
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="İsim"
+              autoComplete="given-name"
+              maxLength={40}
+              required
+              className={field}
+            />
+            <input
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Soyisim"
+              autoComplete="family-name"
+              maxLength={40}
+              required
+              className={field}
+            />
+          </div>
         )}
         <input
           value={email}
@@ -118,20 +156,29 @@ export default function Giris() {
           type="email"
           inputMode="email"
           autoComplete="email"
-          placeholder="123456789@ogr.comu.edu.tr"
+          placeholder="E-posta adresi"
           required
-          className="rounded-2xl bg-foam p-4 outline-none"
+          className={field}
         />
-        <input
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          type="password"
-          autoComplete={mode === "login" ? "current-password" : "new-password"}
-          placeholder="Şifre (en az 8 karakter)"
-          minLength={8}
-          required
-          className="rounded-2xl bg-foam p-4 outline-none"
-        />
+        <div className="relative">
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type={show ? "text" : "password"}
+            autoComplete={mode === "login" ? "current-password" : "new-password"}
+            placeholder={`Şifre (en az ${MIN_PASSWORD} karakter)`}
+            minLength={MIN_PASSWORD}
+            required
+            className={`${field} w-full pr-20`}
+          />
+          <button
+            type="button"
+            onClick={() => setShow((v) => !v)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full px-3 py-1 text-xs font-bold text-ink/70"
+          >
+            {show ? "Gizle" : "Göster"}
+          </button>
+        </div>
         <button
           type="submit"
           disabled={busy}
@@ -155,9 +202,7 @@ export default function Giris() {
           }}
           className="text-sm font-bold underline"
         >
-          {mode === "login"
-            ? "Hesabın yok mu? Kayıt ol"
-            : "Hesabın var mı? Giriş yap"}
+          {mode === "login" ? "Hesabın yok mu? Kayıt ol" : "Hesabın var mı? Giriş yap"}
         </button>
       </form>
       <div className="mx-auto mt-4 max-w-md text-center">
@@ -165,7 +210,7 @@ export default function Giris() {
           href="/"
           className="inline-block rounded-full bg-sun px-6 py-3 font-display font-bold text-deep"
         >
-          Deneme sürümüne giriş yapmadan devam et
+          Giriş yapmadan devam et
         </Link>
       </div>
     </main>

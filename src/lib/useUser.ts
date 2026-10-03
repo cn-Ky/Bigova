@@ -15,7 +15,9 @@ export function useUser() {
     } catch { setUser(null); }
   }, []);
   const signOut = async () => { try { await supabaseBrowser().auth.signOut(); } catch {} setUser(null); };
-  const no = user?.email?.split("@")[0];
-  const name = (user?.user_metadata?.name as string | undefined)?.split(" ")[0] || no;
-  return { user, name, no, signOut };
+  const meta = (user?.user_metadata ?? {}) as { first_name?: string; last_name?: string; name?: string };
+  const email = user?.email ?? undefined;
+  const fullName = [meta.first_name, meta.last_name].filter(Boolean).join(" ") || meta.name || email?.split("@")[0];
+  const name = meta.first_name || meta.name?.split(" ")[0] || email?.split("@")[0];
+  return { user, name, fullName, email, signOut };
 }

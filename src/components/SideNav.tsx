@@ -92,7 +92,7 @@ function Item({ t, on }: { t: SideTab; on: boolean }) {
 
 export default function SideNav() {
   const p = usePathname();
-  const { user, name, no, signOut } = useUser();
+  const { user, name, email, signOut } = useUser();
   const glow = (e: React.MouseEvent<HTMLElement>) => {
     const b = e.currentTarget.getBoundingClientRect();
     e.currentTarget.style.setProperty("--mx", `${e.clientX - b.left}px`);
@@ -154,7 +154,7 @@ export default function SideNav() {
             </span>
             <span className="side-user-text min-w-0 flex-1 leading-tight">
               <b className="block truncate">{name}</b>
-              <span className="text-xs text-white/70">{no}</span>
+              <span className="block truncate text-xs text-white/70">{email}</span>
             </span>
             <motion.button
               whileTap={{ scale: 0.85 }}

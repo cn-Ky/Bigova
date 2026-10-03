@@ -1,5 +1,5 @@
 -- Supabase > SQL Editor'de tek seferde çalıştır.
--- 1) Sadece okul maili ile kayıt (veritabanı düzeyinde)
+-- 1) Okul maili kuralı (ASKIDA: aşağıdaki trigger kasıtlı olarak oluşturulmuyor; bkz. auth_open_signup.sql)
 create or replace function public.enforce_school_mail() returns trigger language plpgsql as $$
 begin
   if new.email is null or new.email !~* '^[0-9]{6,12}@ogr\.comu\.edu\.tr$' then
@@ -8,12 +8,12 @@ begin
   return new;
 end $$;
 drop trigger if exists school_mail_only on auth.users;
-create trigger school_mail_only before insert on auth.users for each row execute function public.enforce_school_mail();
+-- create trigger school_mail_only before insert on auth.users for each row execute function public.enforce_school_mail();
 
 -- 2) Tablolar
 create table public.profiles (
   id uuid primary key references auth.users on delete cascade,
-  student_no text unique not null, name text not null default '', created_at timestamptz default now());
+  student_no text unique, name text not null default '', first_name text, last_name text, created_at timestamptz default now());
 create table public.businesses (
   id uuid primary key default gen_random_uuid(), name text not null, category text not null,
   phone text, price_info text, has_toilet boolean default false, opens_at text, closes_at text,
@@ -43,9 +43,17 @@ create table public.magazines (
 
 -- 3) Yeni kullanıcı -> profil
 create or replace function public.handle_new_user() returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  fn text := nullif(trim(coalesce(new.raw_user_meta_data->>'first_name','')), '');
+  ln text := nullif(trim(coalesce(new.raw_user_meta_data->>'last_name','')), '');
 begin
-  insert into public.profiles (id, student_no, name)
-  values (new.id, split_part(new.email,'@',1), coalesce(new.raw_user_meta_data->>'name',''));
+  insert into public.profiles (id, student_no, name, first_name, last_name)
+  values (
+    new.id,
+    case when new.email ~* '^[0-9]{6,12}@ogr\.comu\.edu\.tr$' then split_part(new.email,'@',1) else null end,
+    coalesce(nullif(trim(concat_ws(' ', fn, ln)), ''), coalesce(new.raw_user_meta_data->>'name', '')),
+    fn, ln
+  );
   return new;
 end $$;
 create trigger on_auth_user_created after insert on auth.users for each row execute function public.handle_new_user();

@@ -19,7 +19,7 @@ type Message = {
   body: string;
   created_at: string;
 };
-type Profile = { id: string; name: string; student_no: string };
+type Profile = { id: string; name: string };
 
 export default function DirectMessage() {
   const params = useParams<{ id: string }>();
@@ -51,7 +51,7 @@ export default function DirectMessage() {
     if (!relation) {
       const { data: profile } = await sb
         .from("profiles")
-        .select("id,name,student_no")
+        .select("id,name")
         .eq("id", friendId)
         .maybeSingle();
       setFriend(profile as Profile | null);
@@ -63,7 +63,7 @@ export default function DirectMessage() {
       await Promise.all([
         sb
           .from("profiles")
-          .select("id,name,student_no")
+          .select("id,name")
           .eq("id", friendId)
           .maybeSingle(),
         sb
@@ -235,12 +235,11 @@ export default function DirectMessage() {
         </Link>
         <section className="mt-6 rounded-[20px] bg-card p-5 text-center shadow-sm">
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-sky font-display text-xl font-extrabold text-deep">
-            {(friend.name || friend.student_no)[0]}
+            {(friend.name || "?")[0]}
           </span>
           <h1 className="mt-3 font-display text-xl font-extrabold">
             {friend.name || "Öğrenci"}
           </h1>
-          <p className="text-sm text-ink/60">{friend.student_no}</p>
           <p className="mt-3 text-sm text-ink/70">
             Bire bir sohbet başlatmak için önce arkadaşlık isteği gönder.
           </p>
@@ -273,7 +272,7 @@ export default function DirectMessage() {
           </Link>
           <div className="min-w-0 flex-1">
             <h1 className="truncate font-display text-lg font-extrabold">
-              {friend.name || friend.student_no}
+              {friend.name || "Öğrenci"}
             </h1>
             <p className="text-xs text-white/70">
               {user ? "Bire bir sohbet" : "Deneme sohbeti · bu tarayıcıda"}

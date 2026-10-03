@@ -1,6 +1,7 @@
 import {
   faArrowUpRightFromSquare,
   faBook,
+  faBriefcase,
   faBookOpen,
   faBus,
   faCalendarWeek,
@@ -39,6 +40,12 @@ export const sideTabs = [
     l: "Kitap pazarı",
     i: faBook,
     hint: "İkinci el kitaplar",
+  },
+  {
+    href: "/is-ilanlari",
+    l: "İş İlanları",
+    i: faBriefcase,
+    hint: "İş, staj ve ek gelir",
   },
   {
     href: "/arkadaslar",

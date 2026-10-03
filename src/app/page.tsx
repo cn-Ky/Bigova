@@ -58,6 +58,13 @@ const tiles = [
     c: "bg-coral text-deep",
   },
   {
+    kind: "jobs",
+    t: "İş İlanları",
+    d: "İş, staj ve iletişim bilgileri",
+    href: "/is-ilanlari",
+    c: "bg-tide text-deep",
+  },
+  {
     kind: "friends",
     t: "Arkadaşlar",
     d: "Arkadaş ekle, bire bir sohbet",
@@ -279,6 +286,37 @@ function TileArt({ kind }: { kind: string }) {
             stroke="currentColor"
             strokeWidth="3"
             strokeLinecap="round"
+          />
+        </svg>
+      );
+    case "jobs":
+      return (
+        <svg {...shared}>
+          <path
+            d="M22 34h68q5 0 5 5v33q0 5-5 5H22q-5 0-5-5V39q0-5 5-5z"
+            fill="currentColor"
+            opacity=".18"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <path
+            d="M42 34v-7q0-5 5-5h18q5 0 5 5v7"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M17 54h78"
+            stroke="currentColor"
+            strokeWidth="3"
+          />
+          <path
+            d="M50 49h12v11H50z"
+            fill="currentColor"
+            opacity=".55"
+            stroke="currentColor"
+            strokeWidth="2"
           />
         </svg>
       );
@@ -789,7 +827,7 @@ export default function Home() {
             <Mascot size={44} />
             <span className="flex-1 text-sm">
               <b className="block font-display text-base">
-                Okul mailinle giriş yap
+                Giriş yap veya kayıt ol
               </b>
               Notlar, arkadaşlar ve mesajlar seni bekliyor.
             </span>
