@@ -27,7 +27,7 @@ export default function UserAvatar({
       aria-hidden={avatar ? undefined : true}
     >
       {avatar ? (
-        <Avatar config={avatar} view="bust" size="fluid" label={`${name || "Öğrenci"} avatarı`} />
+        <span className="block h-[90%] w-[90%] translate-y-[6%]"><Avatar config={avatar} view="bust" size="fluid" label={`${name || "Öğrenci"} avatarı`} /></span>
       ) : (
         initial(name)
       )}
