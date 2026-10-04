@@ -22,12 +22,12 @@ export default function UserAvatar({
 }) {
   return (
     <span
-      className={`relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-tide/25 font-display font-extrabold ${className}`}
+      className={`relative grid shrink-0 place-items-center overflow-hidden rounded-full [clip-path:circle(50%)] bg-tide/25 font-display font-extrabold ${className}`}
       style={{ width: size, height: size, fontSize: size * 0.4, background: avatar ? BG_TINT : undefined }}
       aria-hidden={avatar ? undefined : true}
     >
       {avatar ? (
-        <span className="block h-[90%] w-[90%] translate-y-[6%]"><Avatar config={avatar} view="bust" size="fluid" label={`${name || "Öğrenci"} avatarı`} /></span>
+        <Avatar config={avatar} view="bust" size="fluid" className="h-full w-full" label={`${name || "Öğrenci"} avatarı`} />
       ) : (
         initial(name)
       )}
