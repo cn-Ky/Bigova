@@ -37,68 +37,69 @@ export const BIGA_NOTES: BigaNote[] = [
   { tag: "Gezi", title: "Hafta sonu planı", text: "Biga'dan Çanakkale merkeze günübirlik gidip kordon, kale ve çarşıyı gezmek öğrenciler için hem ekonomik hem keyifli bir hafta sonu planı." },
 ];
 
-export type Tip = { icon: string; title: string; text: string; href?: string; cta?: string };
+export type TipIcon = "calendar" | "notes" | "books" | "timer" | "bell" | "food" | "budget" | "cheese" | "snack" | "handshake" | "bus" | "map" | "ferry" | "wind" | "night" | "horse" | "castle" | "museum" | "medal" | "sunset" | "friends" | "poll" | "magazine" | "game" | "club" | "job" | "cv" | "water" | "sleep" | "emergency";
+export type Tip = { icon: TipIcon; title: string; text: string; href?: string; cta?: string };
 export type TipSection = { id: string; title: string; icon: "kampus" | "yemek" | "ulasim" | "gezi" | "sosyal" | "yasam"; tips: Tip[] };
 
 export const GUIDE: TipSection[] = [
   {
     id: "kampus", title: "Kampüs & Ders", icon: "kampus",
     tips: [
-      { icon: "🗓️", title: "Ders programın tek yerde", text: "Biga İİBF ve MYO programlarına Bigova'dan hızlıca bak.", href: "/ders-programi", cta: "Programa git" },
-      { icon: "📝", title: "Notları paylaş, notlara ulaş", text: "Ders notlarını PDF olarak yükle ya da arkadaşlarının notlarına göz at.", href: "/notlar", cta: "Notlar" },
-      { icon: "📚", title: "Kitabı ikinci elden bul", text: "Sıfır kitap almadan önce kitap pazarındaki ilanlara bak.", href: "/kitap-pazari", cta: "Kitap pazarı" },
-      { icon: "⏱️", title: "25 dakika çalış, 5 dakika dinlen", text: "Sınav haftasında Pomodoro tekniği dikkatini toplamana yardım eder." },
-      { icon: "🔔", title: "Duyuruları kaçırma", text: "Dönem başında kulüp ve kampüs etkinlikleri için ana sayfadaki duyuruları takip et." },
+      { icon: "calendar", title: "Ders programın tek yerde", text: "Biga İİBF ve MYO programlarına Bigova'dan hızlıca bak.", href: "/ders-programi", cta: "Programa git" },
+      { icon: "notes", title: "Notları paylaş, notlara ulaş", text: "Ders notlarını PDF olarak yükle ya da arkadaşlarının notlarına göz at.", href: "/notlar", cta: "Notlar" },
+      { icon: "books", title: "Kitabı ikinci elden bul", text: "Sıfır kitap almadan önce kitap pazarındaki ilanlara bak.", href: "/kitap-pazari", cta: "Kitap pazarı" },
+      { icon: "timer", title: "25 dakika çalış, 5 dakika dinlen", text: "Sınav haftasında Pomodoro tekniği dikkatini toplamana yardım eder." },
+      { icon: "bell", title: "Duyuruları kaçırma", text: "Dönem başında kulüp ve kampüs etkinlikleri için ana sayfadaki duyuruları takip et." },
     ],
   },
   {
     id: "yemek", title: "Yeme-İçme & Bütçe", icon: "yemek",
     tips: [
-      { icon: "🍽️", title: "Çıkmadan önce bak", text: "İşletmeler sayfasında fiyat, çalışma saati ve tuvalet bilgisine göz atıp boşuna yola çıkma.", href: "/isletmeler", cta: "İşletmeler" },
-      { icon: "💸", title: "Haftalık limit koy", text: "Aylık bütçeni 4'e böl, hafta içinde limitini aşmamaya çalış." },
-      { icon: "🧀", title: "Yöresel lezzetler", text: "Çanakkale peynir helvası ve Ezine peyniri hem lezzetli hem hediyelik için iyi seçenekler." },
-      { icon: "🥪", title: "Ders arası için hazırlık", text: "Uzun ders günlerinde yanına küçük bir atıştırmalık ve su şişesi almak hem tasarruf hem enerji demek." },
-      { icon: "🤝", title: "Hesabı bölüşün", text: "Arkadaşlarla kafeye giderken ortak masa ve paylaşımlı sipariş bütçeyi rahatlatır." },
+      { icon: "food", title: "Çıkmadan önce bak", text: "İşletmeler sayfasında fiyat, çalışma saati ve tuvalet bilgisine göz atıp boşuna yola çıkma.", href: "/isletmeler", cta: "İşletmeler" },
+      { icon: "budget", title: "Haftalık limit koy", text: "Aylık bütçeni 4'e böl, hafta içinde limitini aşmamaya çalış." },
+      { icon: "cheese", title: "Yöresel lezzetler", text: "Çanakkale peynir helvası ve Ezine peyniri hem lezzetli hem hediyelik için iyi seçenekler." },
+      { icon: "snack", title: "Ders arası için hazırlık", text: "Uzun ders günlerinde yanına küçük bir atıştırmalık ve su şişesi almak hem tasarruf hem enerji demek." },
+      { icon: "handshake", title: "Hesabı bölüşün", text: "Arkadaşlarla kafeye giderken ortak masa ve paylaşımlı sipariş bütçeyi rahatlatır." },
     ],
   },
   {
     id: "ulasim", title: "Ulaşım & Rota", icon: "ulasim",
     tips: [
-      { icon: "🚌", title: "Servis ve otobüs saatleri", text: "Kalkış saatlerini Ulaşım sayfasından kontrol et, son seferi kaçırma.", href: "/ulasim", cta: "Ulaşım" },
-      { icon: "🗺️", title: "Biga'yı haritada keşfet", text: "İşletmeleri ve önemli noktaları harita üzerinde gör.", href: "/harita", cta: "Harita" },
-      { icon: "⛴️", title: "Feribot saatleri değişir", text: "Çanakkale–Eceabat, Geyikli–Bozcaada gibi hatların saatleri mevsime ve hava koşullarına göre değişebilir. Gitmeden kontrol et." },
-      { icon: "🌬️", title: "Rüzgârlı günlerde", text: "Sert poyraz ya da lodosta deniz seferleri aksayabilir, planına yedek bir seçenek ekle." },
-      { icon: "🌙", title: "Geç saatlerde", text: "Gece dönüşlerinde ışıklı ve işlek yolları seç, konumunu bir arkadaşınla paylaş." },
+      { icon: "bus", title: "Servis ve otobüs saatleri", text: "Kalkış saatlerini Ulaşım sayfasından kontrol et, son seferi kaçırma.", href: "/ulasim", cta: "Ulaşım" },
+      { icon: "map", title: "Biga'yı haritada keşfet", text: "İşletmeleri ve önemli noktaları harita üzerinde gör.", href: "/harita", cta: "Harita" },
+      { icon: "ferry", title: "Feribot saatleri değişir", text: "Çanakkale–Eceabat, Geyikli–Bozcaada gibi hatların saatleri mevsime ve hava koşullarına göre değişebilir. Gitmeden kontrol et." },
+      { icon: "wind", title: "Rüzgârlı günlerde", text: "Sert poyraz ya da lodosta deniz seferleri aksayabilir, planına yedek bir seçenek ekle." },
+      { icon: "night", title: "Geç saatlerde", text: "Gece dönüşlerinde ışıklı ve işlek yolları seç, konumunu bir arkadaşınla paylaş." },
     ],
   },
   {
     id: "gezi", title: "Çanakkale Gezi", icon: "gezi",
     tips: [
-      { icon: "🐴", title: "Kordon & Truva Atı", text: "Gün batımında kordonda yürümek, boğazdan geçen gemileri izlemek ücretsiz ve keyifli." },
-      { icon: "🏰", title: "Çimenlik Kalesi & Deniz Müzesi", text: "Boğaz manzarası ve Çanakkale Savaşları'na dair ilginç parçalar bir arada." },
-      { icon: "🏛️", title: "Troya Antik Kenti & Müzesi", text: "UNESCO Dünya Mirası alanı; müze ile birlikte gezmek en verimlisi." },
-      { icon: "🎖️", title: "Gelibolu Yarımadası", text: "Şehitler Abidesi, Conkbayırı ve Kabatepe gibi noktaları gün boyu planlayarak gez." },
-      { icon: "🌅", title: "Assos & Bozcaada", text: "Assos'ta gün batımı, Bozcaada'da bağlar ve dar sokaklar. Hafta sonu için harika iki durak." },
+      { icon: "horse", title: "Kordon & Truva Atı", text: "Gün batımında kordonda yürümek, boğazdan geçen gemileri izlemek ücretsiz ve keyifli." },
+      { icon: "castle", title: "Çimenlik Kalesi & Deniz Müzesi", text: "Boğaz manzarası ve Çanakkale Savaşları'na dair ilginç parçalar bir arada." },
+      { icon: "museum", title: "Troya Antik Kenti & Müzesi", text: "UNESCO Dünya Mirası alanı; müze ile birlikte gezmek en verimlisi." },
+      { icon: "medal", title: "Gelibolu Yarımadası", text: "Şehitler Abidesi, Conkbayırı ve Kabatepe gibi noktaları gün boyu planlayarak gez." },
+      { icon: "sunset", title: "Assos & Bozcaada", text: "Assos'ta gün batımı, Bozcaada'da bağlar ve dar sokaklar. Hafta sonu için harika iki durak." },
     ],
   },
   {
     id: "sosyal", title: "Sosyal & Kulüp", icon: "sosyal",
     tips: [
-      { icon: "👋", title: "Arkadaşlarını bul", text: "Bigova'da arkadaş ekle, mesajlaş ve ortak seri başlat.", href: "/arkadaslar", cta: "Arkadaşlar" },
-      { icon: "📊", title: "Haftalık ankete katıl", text: "Biga öğrencilerinin neler düşündüğünü gör, sen de oy ver.", href: "/anketler", cta: "Anketler" },
-      { icon: "📰", title: "Dergiyi oku", text: "Öğrenci dergisinde kampüs ve şehir yaşamıyla ilgili yazılara göz at.", href: "/dergi", cta: "Dergi" },
-      { icon: "🎮", title: "Yürü, Bigcoin kazan", text: "Bigocuk'ta adım atarak Bigcoin topla, avatarını giydir.", href: "/bigocuk", cta: "Bigocuk" },
-      { icon: "🎯", title: "Bir kulübe katıl", text: "Yeni insanlarla tanışmanın ve CV'ni güçlendirmenin en kolay yollarından biri bir kulüp ya da topluluğa katılmak." },
+      { icon: "friends", title: "Arkadaşlarını bul", text: "Bigova'da arkadaş ekle, mesajlaş ve ortak seri başlat.", href: "/arkadaslar", cta: "Arkadaşlar" },
+      { icon: "poll", title: "Haftalık ankete katıl", text: "Biga öğrencilerinin neler düşündüğünü gör, sen de oy ver.", href: "/anketler", cta: "Anketler" },
+      { icon: "magazine", title: "Dergiyi oku", text: "Öğrenci dergisinde kampüs ve şehir yaşamıyla ilgili yazılara göz at.", href: "/dergi", cta: "Dergi" },
+      { icon: "game", title: "Yürü, Bigcoin kazan", text: "Bigocuk'ta adım atarak Bigcoin topla, avatarını giydir.", href: "/bigocuk", cta: "Bigocuk" },
+      { icon: "club", title: "Bir kulübe katıl", text: "Yeni insanlarla tanışmanın ve CV'ni güçlendirmenin en kolay yollarından biri bir kulüp ya da topluluğa katılmak." },
     ],
   },
   {
     id: "yasam", title: "Kariyer & Yaşam", icon: "yasam",
     tips: [
-      { icon: "💼", title: "Yarı zamanlı iş & staj", text: "Biga'daki güncel iş ve staj ilanlarına göz at.", href: "/is-ilanlari", cta: "İş ilanları" },
-      { icon: "📄", title: "CV'ni güncel tut", text: "Kulüp, proje ve gönüllü deneyimlerini ekle; her başvuruda küçük bir fark yaratır." },
-      { icon: "💧", title: "Su iç, hareket et", text: "Uzun çalışma saatlerinde her saat başı kalkıp bir bardak su iç, biraz yürü." },
-      { icon: "😴", title: "Uyku düzeni", text: "Sınav haftasında bile 7-8 saat uyku hafızanı korur, sabahlamaktan daha verimlidir." },
-      { icon: "🚨", title: "Acil durumda 112", text: "Acil bir sağlık ya da güvenlik durumunda 112'yi ara. Konumunu net söylemeye çalış." },
+      { icon: "job", title: "Yarı zamanlı iş & staj", text: "Biga'daki güncel iş ve staj ilanlarına göz at.", href: "/is-ilanlari", cta: "İş ilanları" },
+      { icon: "cv", title: "CV'ni güncel tut", text: "Kulüp, proje ve gönüllü deneyimlerini ekle; her başvuruda küçük bir fark yaratır." },
+      { icon: "water", title: "Su iç, hareket et", text: "Uzun çalışma saatlerinde her saat başı kalkıp bir bardak su iç, biraz yürü." },
+      { icon: "sleep", title: "Uyku düzeni", text: "Sınav haftasında bile 7-8 saat uyku hafızanı korur, sabahlamaktan daha verimlidir." },
+      { icon: "emergency", title: "Acil durumda 112", text: "Acil bir sağlık ya da güvenlik durumunda 112'yi ara. Konumunu net söylemeye çalış." },
     ],
   },
 ];

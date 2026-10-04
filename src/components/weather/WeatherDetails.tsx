@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowRight, faArrowUp, faBriefcase, faBus, faClock, faGraduationCap, faLightbulb, faMapLocationDot, faRotateRight, faShuffle,
-  faUserGroup, faUtensils, faXmark, faCalendarDay, faDroplet, faTemperatureHalf, faGauge, faSun, faCircleInfo,
+  faUserGroup, faUtensils, faXmark, faCalendarDay, faDroplet, faTemperatureHalf, faGauge, faSun, faMoon, faUmbrella, faCircleInfo,
 } from "@fortawesome/free-solid-svg-icons";
 import { iconOf, kindOf } from "@/lib/weather";
 import {
@@ -12,6 +12,7 @@ import {
   type Day, type WeatherData,
 } from "@/lib/weatherData";
 import { BIGA_NOTES, GUIDE, type TipSection } from "@/lib/bigaInfo";
+import { ADVICE_ICON, TIP_ICON } from "@/lib/icons";
 import { useTween } from "./hooks";
 
 const sv = (i: number) => ({ ["--i" as string]: i }) as CSSProperties;
@@ -61,8 +62,8 @@ function SunArc({ day, open, nowMin }: { day: Day; open: boolean; nowMin: number
         </g>
       </svg>
       <div className="wx-sun-times">
-        <span>🌅 {day.sunrise}</span>
-        <span>🌇 {day.sunset}</span>
+        <span><FontAwesomeIcon icon={faSun} /> {day.sunrise}</span>
+        <span><FontAwesomeIcon icon={faMoon} /> {day.sunset}</span>
       </div>
       <div className="wx-sun-left">{text}</div>
     </div>
@@ -131,7 +132,7 @@ function HourChart({ data }: { data: WeatherData }) {
                 <b>{h.temp}°</b>
                 <FontAwesomeIcon icon={iconOf(kindOf(h.code), h.isDay)} />
                 <span>{i === 0 ? "Şimdi" : `${h.time.slice(11, 13)}:00`}</span>
-                {h.pop >= 30 && <em>💧{h.pop}%</em>}
+                {h.pop >= 30 && <em><FontAwesomeIcon icon={faDroplet} /> {h.pop}%</em>}
               </div>
             );
           })}
@@ -155,7 +156,7 @@ function Forecast({ data, open }: { data: WeatherData; open: boolean }) {
           const width = Math.max(10, ((d.max - d.min) / span) * 100);
           return (
             <div key={d.date} className="wx-fr" style={sv(i)}>
-              <span className="wx-fr-d"><b>{dayLabel(d.date, i)}</b>{d.pop >= 20 && <em>💧%{d.pop}</em>}</span>
+              <span className="wx-fr-d"><b>{dayLabel(d.date, i)}</b>{d.pop >= 20 && <em><FontAwesomeIcon icon={faDroplet} /> %{d.pop}</em>}</span>
               <FontAwesomeIcon icon={iconOf(kindOf(d.code), true)} className="wx-fr-i" />
               <span className="wx-fr-lo">{d.min}°</span>
               <span className="wx-bar"><i style={{ left: `${left}%`, width: open ? `${width}%` : "0%", transitionDelay: `${0.45 + i * 0.1}s` }} /></span>
@@ -175,19 +176,19 @@ function Stats({ data }: { data: WeatherData }) {
   const wn = windName(c.windDir);
   const hum = c.humidity < 30 ? "Kuru" : c.humidity < 60 ? "Rahat" : c.humidity < 80 ? "Nemli" : "Çok nemli";
   const pr = c.pressure < 1009 ? "Düşük" : c.pressure > 1022 ? "Yüksek" : "Normal";
-  const tiles: { k: string; v: string; s: string; i?: ReactNode; e?: string; t?: string }[] = [
+  const tiles: { k: string; v: string; s: string; i?: ReactNode; t?: string }[] = [
     { k: "Hissedilen", v: `${c.feels}°`, s: `Ölçülen ${c.temp}°`, i: <FontAwesomeIcon icon={faTemperatureHalf} /> },
     { k: "Nem", v: `%${c.humidity}`, s: hum, i: <FontAwesomeIcon icon={faDroplet} /> },
     { k: "Rüzgâr", v: `${c.wind} km/sa`, s: `${wn.name} · ${windLabel(c.wind)}`, i: <FontAwesomeIcon icon={faArrowUp} className="wx-wind-arrow" style={{ transform: `rotate(${(c.windDir + 180) % 360}deg)` }} />, t: `Rüzgâr ${wn.short} yönünden esiyor` },
     { k: "Basınç", v: `${c.pressure} hPa`, s: pr, i: <FontAwesomeIcon icon={faGauge} /> },
     { k: "UV", v: `${today.uv}`, s: uvLabel(today.uv), i: <FontAwesomeIcon icon={faSun} /> },
-    { k: "Yağış", v: `%${today.pop}`, s: `${today.rain} mm`, e: "☔" },
+    { k: "Yağış", v: `%${today.pop}`, s: `${today.rain} mm`, i: <FontAwesomeIcon icon={faUmbrella} /> },
   ];
   return (
     <div className="wx-sec wx-stats" style={sv(3)}>
       {tiles.map((t, n) => (
         <div key={t.k} className="wx-tile" style={sv(n)} title={t.t}>
-          <span className="wx-tile-k">{t.e ?? t.i} {t.k}</span>
+          <span className="wx-tile-k">{t.i} {t.k}</span>
           <b>{t.v}</b>
           <small>{t.s}</small>
         </div>
@@ -204,7 +205,7 @@ function Advice({ data }: { data: WeatherData }) {
       <div className="wx-t"><FontAwesomeIcon icon={faLightbulb} /> Bugün için öneriler</div>
       <div className="wx-chips">
         {list.map((a, i) => (
-          <span key={a.t} className="wx-chip" style={sv(i)}><span aria-hidden>{a.e}</span> {a.t}</span>
+          <span key={a.t} className="wx-chip" style={sv(i)}><FontAwesomeIcon icon={ADVICE_ICON[a.icon]} /> {a.t}</span>
         ))}
       </div>
     </div>
@@ -257,7 +258,7 @@ function Guide() {
       <div key={sec.id} id="wx-tabpanel" role="tabpanel" aria-labelledby={`wx-tab-${sec.id}`} className="wx-tips">
         {sec.tips.map((t, i) => (
           <div key={t.title} className="wx-tip" style={sv(i)}>
-            <span className="wx-tip-e" aria-hidden>{t.icon}</span>
+            <span className="wx-tip-e" aria-hidden><FontAwesomeIcon icon={TIP_ICON[t.icon]} /></span>
             <div>
               <b>{t.title}</b>
               <p>{t.text}</p>

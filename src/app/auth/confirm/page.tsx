@@ -1,5 +1,7 @@
 "use client";
 import Mascot from "@/components/Mascot";
+import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import Link from "next/link";
@@ -59,7 +61,7 @@ export default function Confirm() {
         <Mascot size={96} className="mx-auto" />
         {done ? (
           <>
-            <h1 className="mt-2 font-display text-2xl font-extrabold">E-postan doğrulandı 🎉</h1>
+            <h1 className="mt-2 font-display text-2xl font-extrabold">E-postan doğrulandı <FontAwesomeIcon icon={faCircleCheck} className="ml-1 text-tide" /></h1>
             <p className="mt-1 text-sm text-ink/70">Seni ana sayfaya yönlendiriyoruz…</p>
           </>
         ) : ready && !tokenHash ? (

@@ -466,7 +466,7 @@ export default function BigaMapPage() {
               }}
             >
               <option value="">{placeholderFrom}</option>
-              {status === "ready" && <option value="me">📍 Konumum</option>}
+              {status === "ready" && <option value="me">Konumum</option>}
               {routeGroups.map((group) => (
                 <optgroup key={group.category} label={categoryName(group.category)}>
                   {group.items.map((place) => (
@@ -499,7 +499,7 @@ export default function BigaMapPage() {
               }}
             >
               <option value="">{placeholderTo}</option>
-              {status === "ready" && <option value="me">📍 Konumum</option>}
+              {status === "ready" && <option value="me">Konumum</option>}
               {routeGroups.map((group) => (
                 <optgroup key={group.category} label={categoryName(group.category)}>
                   {group.items.map((place) => (

@@ -5,6 +5,7 @@ import { useUser } from "@/lib/useUser";
 import {
   faArrowRight,
   faCalendarDays,
+  faHand,
   faLocationDot,
   faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
@@ -626,7 +627,6 @@ export default function Home() {
   const router = useRouter();
   const { user, name } = useUser();
   const { scrollY } = useScroll();
-  const my = useTransform(scrollY, [0, 300], [0, 60]);
   const hy = useTransform(scrollY, [0, 300], [0, -18]);
   const [q, setQ] = useState("");
   const [i, setI] = useState(0);
@@ -656,9 +656,10 @@ export default function Home() {
               className="text-sm text-sky"
             >
               Merhaba{user && name ? `, ${name}` : ""}{" "}
-              <span className="inline-block origin-[70%_70%] animate-[wig_2.4s_ease_infinite]">
-                👋
-              </span>
+              <FontAwesomeIcon
+                icon={faHand}
+                className="inline-block origin-[70%_70%] animate-[wig_2.4s_ease_infinite]"
+              />
             </motion.p>
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
@@ -671,15 +672,6 @@ export default function Home() {
               ne yapıyoruz?
             </motion.h1>
           </motion.div>
-          <div className="shrink-0 lg:origin-bottom lg:scale-[1.25]">
-            <motion.div
-              style={{ y: my }}
-              whileHover={{ rotate: -6, scale: 1.08 }}
-              whileTap={{ rotate: [0, -14, 10, 0], y: -14 }}
-            >
-              <Mascot size={104} className="-mb-2" />
-            </motion.div>
-          </div>
         </div>
       </header>
 

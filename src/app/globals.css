@@ -3342,6 +3342,9 @@ html[data-mobile-nav="bottom"] .adaptive-drawer-bar {
   font-size: 12px;
   font-weight: 800;
 }
+.wx-sun-times svg {
+  color: rgb(var(--sun));
+}
 .wx-sun-left {
   min-height: 1.2em;
   font-size: 11.5px;
@@ -3351,7 +3354,7 @@ html[data-mobile-nav="bottom"] .adaptive-drawer-bar {
 }
 
 /* 24 saatlik grafik */
-.wx-chart svg {
+.wx-chart > svg {
   display: block;
   width: 100%;
   height: auto;
@@ -3412,13 +3415,16 @@ html[data-mobile-nav="bottom"] .adaptive-drawer-bar {
   font-size: 14px;
   font-weight: 800;
 }
-.wx-h svg {
+.wx-h > svg {
   font-size: 15px;
   color: rgb(var(--sun));
 }
 .wx-h span {
   font-weight: 700;
   color: rgb(255 255 255 / 0.65);
+}
+.wx-h em svg {
+  font-size: 0.85em;
 }
 .wx-h em {
   font-style: normal;
@@ -3541,6 +3547,10 @@ html[data-mobile-nav="bottom"] .adaptive-drawer-bar {
   opacity: 0;
   transform: translateX(-10px);
   transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.wx-chip > svg {
+  margin-right: 4px;
+  color: rgb(var(--sun));
 }
 .wx.is-open .wx-chip {
   opacity: 1;
@@ -3691,7 +3701,8 @@ html[data-mobile-nav="bottom"] .adaptive-drawer-bar {
   place-items: center;
   width: 38px;
   height: 38px;
-  font-size: 20px;
+  font-size: 17px;
+  color: rgb(var(--sun));
   background: rgb(255 255 255 / 0.14);
   border-radius: 12px;
 }

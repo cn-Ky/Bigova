@@ -198,7 +198,8 @@ export function periodTip(hour: number): string {
 
 // ---------------------------------------------------------------- Akıllı öneriler
 
-export type Advice = { e: string; t: string };
+export type AdviceIcon = "storm" | "snow" | "fog" | "umbrella" | "wind" | "cold" | "cool" | "hot" | "uv" | "park" | "stars" | "rain" | "calm";
+export type Advice = { icon: AdviceIcon; t: string };
 /** Güncel durum ve tahmine göre kısa, uygulanabilir öneriler (en fazla 4). */
 export function adviceFor(w: WeatherData): Advice[] {
   const c = w.current;
@@ -207,22 +208,22 @@ export function adviceFor(w: WeatherData): Advice[] {
   const tomorrow = w.days[1];
   const out: Advice[] = [];
 
-  if (kind === "storm") out.push({ e: "⛈️", t: "Gök gürültülü fırtına: açık alandan ve ağaç altından uzak dur." });
-  if (kind === "snow") out.push({ e: "❄️", t: "Kar var: kaymaz tabanlı ayakkabı giy, yola erken çık." });
-  if (kind === "fog") out.push({ e: "🌫️", t: "Sis var: görüş düşük, yolda ve trafikte dikkatli ol." });
+  if (kind === "storm") out.push({ icon: "storm", t: "Gök gürültülü fırtına: açık alandan ve ağaç altından uzak dur." });
+  if (kind === "snow") out.push({ icon: "snow", t: "Kar var: kaymaz tabanlı ayakkabı giy, yola erken çık." });
+  if (kind === "fog") out.push({ icon: "fog", t: "Sis var: görüş düşük, yolda ve trafikte dikkatli ol." });
   if (kind !== "storm" && kind !== "snow" && (kind === "rain" || (today && today.pop >= 50))) {
-    out.push({ e: "☔", t: `Bugün yağış ihtimali %${today?.pop ?? 0}: şemsiye ya da yağmurluk al.` });
+    out.push({ icon: "umbrella", t: `Bugün yağış ihtimali %${today?.pop ?? 0}: şemsiye ya da yağmurluk al.` });
   }
-  if (c.wind >= 35 || c.gust >= 55) out.push({ e: "💨", t: "Rüzgâr sert: eşyalarını sabitle, feribot ve deniz seferleri aksayabilir." });
-  if (c.feels <= 8) out.push({ e: "🧣", t: "Soğuk: kat kat giyin, atkı ve eldiven iyi gider." });
-  else if (c.feels <= 15) out.push({ e: "🧥", t: "Serin: ince bir ceket ya da hırka yanında olsun." });
-  if (c.feels >= 30) out.push({ e: "🥵", t: "Çok sıcak: bol su iç, öğle güneşinde dışarıda kalma." });
-  if (today && today.uv >= 6 && c.isDay) out.push({ e: "🧴", t: `UV ${today.uv} (${uvLabel(today.uv).toLowerCase()}): güneş kremi ve gözlük şart.` });
+  if (c.wind >= 35 || c.gust >= 55) out.push({ icon: "wind", t: "Rüzgâr sert: eşyalarını sabitle, feribot ve deniz seferleri aksayabilir." });
+  if (c.feels <= 8) out.push({ icon: "cold", t: "Soğuk: kat kat giyin, atkı ve eldiven iyi gider." });
+  else if (c.feels <= 15) out.push({ icon: "cool", t: "Serin: ince bir ceket ya da hırka yanında olsun." });
+  if (c.feels >= 30) out.push({ icon: "hot", t: "Çok sıcak: bol su iç, öğle güneşinde dışarıda kalma." });
+  if (today && today.uv >= 6 && c.isDay) out.push({ icon: "uv", t: `UV ${today.uv} (${uvLabel(today.uv).toLowerCase()}): güneş kremi ve gözlük şart.` });
   if (c.isDay && (kind === "clear" || kind === "partly") && c.feels >= 16 && c.feels <= 27 && c.wind < 25) {
-    out.push({ e: "🌳", t: "Hava çok güzel: ders arasında kampüste kısa bir yürüyüş ya da açık havada çalışma iyi gelir." });
+    out.push({ icon: "park", t: "Hava çok güzel: ders arasında kampüste kısa bir yürüyüş ya da açık havada çalışma iyi gelir." });
   }
-  if (!c.isDay && kind === "clear") out.push({ e: "🌌", t: "Gökyüzü açık: şehir ışığından uzaklaşırsan yıldızlar harika görünür." });
-  if (tomorrow && tomorrow.pop >= 60 && out.length < 4) out.push({ e: "🌧️", t: `Yarın yağış bekleniyor (%${tomorrow.pop}): planını buna göre yap.` });
-  if (out.length === 0) out.push({ e: "🙂", t: "Hava sakin görünüyor: günün keyfini çıkar, su içmeyi unutma." });
+  if (!c.isDay && kind === "clear") out.push({ icon: "stars", t: "Gökyüzü açık: şehir ışığından uzaklaşırsan yıldızlar harika görünür." });
+  if (tomorrow && tomorrow.pop >= 60 && out.length < 4) out.push({ icon: "rain", t: `Yarın yağış bekleniyor (%${tomorrow.pop}): planını buna göre yap.` });
+  if (out.length === 0) out.push({ icon: "calm", t: "Hava sakin görünüyor: günün keyfini çıkar, su içmeyi unutma." });
   return out.slice(0, 4);
 }
