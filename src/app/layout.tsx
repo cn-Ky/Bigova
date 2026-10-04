@@ -7,6 +7,7 @@ import "@fortawesome/fontawesome-svg-core/styles.css";
 import "leaflet/dist/leaflet.css";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./weather-fx.css";
 config.autoAddCss = false;
 
 export const metadata: Metadata = {

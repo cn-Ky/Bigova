@@ -644,12 +644,14 @@ export default function Home() {
   };
   return (
     <main>
-      <header className="relative overflow-hidden rounded-b-[36px] bg-gradient-to-b from-sea to-sea2 px-5 pb-16 pt-[max(4rem,calc(env(safe-area-inset-top)+3.25rem))] text-white lg:pt-6">
+      <header className="hero-cq relative overflow-hidden rounded-b-[36px] bg-gradient-to-b from-sea to-sea2 px-5 pb-16 pt-[max(4rem,calc(env(safe-area-inset-top)+3.25rem))] text-white lg:pt-6">
         <span className="cloud left-0 top-8 h-5 w-24" />
         <span className="cloud left-0 top-20 h-4 w-16 [animation-delay:-16s]" />
-        <Weather />
-        <div className="relative z-10 flex items-end justify-between">
-          <motion.div style={{ y: hy }} className="relative z-10">
+        <div className="hero-row">
+          <div className="hero-slot">
+            <Weather />
+          </div>
+          <motion.div style={{ y: hy }} className="hero-greet relative z-10">
             <motion.p
               initial={{ opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
@@ -665,7 +667,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.6 }}
-              className="mt-1 font-display text-[28px] font-extrabold leading-tight lg:text-5xl"
+              className="mt-1 font-display text-[28px] font-extrabold leading-tight"
             >
               Bugün Biga'da
               <br />

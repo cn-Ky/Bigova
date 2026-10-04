@@ -6,6 +6,7 @@ import { faChevronDown, faLocationDot, faRotateRight, faTriangleExclamation } fr
 import { KINDS, iconOf, kindOf, label, type Kind } from "@/lib/weather";
 import { BIGA, dayLabel, type WeatherData } from "@/lib/weatherData";
 import FX, { TINT } from "./weather/FX";
+import Gulls from "./weather/Gulls";
 import WeatherDetails from "./weather/WeatherDetails";
 import { useTween } from "./weather/hooks";
 
@@ -94,6 +95,14 @@ export default function Weather() {
           <motion.div key={`${kind}-${day}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1 }} className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
             <div className={`absolute inset-0 ${day ? TINT[kind] : "bg-[#050E1F]/55"}`} />
             <FX kind={kind} day={day} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {open && kind && (
+          <motion.div key="gulls" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }} className="pointer-events-none absolute inset-0 z-0" aria-hidden>
+            <Gulls night={!day} />
           </motion.div>
         )}
       </AnimatePresence>

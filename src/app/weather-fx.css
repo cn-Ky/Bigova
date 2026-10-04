@@ -1,0 +1,716 @@
+/* ───────── Hava efektleri v2 + martılar + ana sayfa üst alan düzeni ───────── */
+
+/* Ana sayfa üst alan: mobilde hava kartı üstte, geniş ekranda başlık solda / hava kartı sağda aynı satırda */
+.hero-cq {
+  container-type: inline-size;
+}
+.hero-row {
+  display: flex;
+  flex-direction: column;
+}
+@media (min-width: 1024px) {
+  .hero-row {
+    flex-direction: row-reverse; /* DOM'da hava kartı önce gelir (mobil sırası) */
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .hero-slot {
+    flex: 0 1 520px;
+    min-width: 400px;
+  }
+  .hero-slot .wx {
+    max-width: none;
+    margin: 0 0 0 auto;
+  }
+  .hero-greet {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  /* Başlık, bulunduğu alana göre ölçeklenir; hava kartıyla yan yana sığar */
+  .hero-greet h1 {
+    font-size: clamp(30px, 4cqw, 48px);
+  }
+}
+
+/* Efekt katmanı: ölçüler cqw/cqh ile bu kutuya göre hesaplanır */
+.fx {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  container-type: size;
+  pointer-events: none;
+}
+
+/* ---- Yıldızlar ---- */
+.fx-star {
+  position: absolute;
+  width: var(--s, 2px);
+  height: var(--s, 2px);
+  border-radius: 50%;
+  background: var(--c, #fff);
+  box-shadow: 0 0 calc(var(--s, 2px) * 2.5) var(--c, #fff);
+  opacity: 0.2;
+  animation: fx-twinkle var(--t, 3s) ease-in-out var(--d, 0s) infinite;
+}
+.fx-star.is-glint::before,
+.fx-star.is-glint::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--s, 2px) * 8);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #fff, transparent);
+  transform: translate(-50%, -50%);
+}
+.fx-star.is-glint::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+@keyframes fx-twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+}
+.fx-milky {
+  position: absolute;
+  left: -10%;
+  top: 8%;
+  width: 120%;
+  height: 36%;
+  background: radial-gradient(ellipse at center, rgb(170 190 255 / 0.2), rgb(120 140 255 / 0.07) 45%, transparent 70%);
+  filter: blur(16px);
+  transform: rotate(-14deg);
+}
+.fx-shoot {
+  position: absolute;
+  width: 120px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.95));
+  opacity: 0;
+  transform: rotate(28deg);
+  animation: fx-shoot var(--t, 12s) linear var(--d, 0s) infinite;
+}
+@keyframes fx-shoot {
+  0%,
+  93% {
+    opacity: 0;
+    translate: 0 0;
+  }
+  94% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: 260px 138px;
+  }
+}
+
+/* ---- Ay ---- */
+.fx-moonpos {
+  position: absolute;
+  top: 18px;
+  right: 22%;
+}
+@media (min-width: 1024px) {
+  .fx-moonpos {
+    top: 40px;
+    right: 56%;
+  }
+}
+.fx-moonbox {
+  position: relative;
+  width: 60px;
+  height: 60px;
+}
+.fx-moon-glow {
+  position: absolute;
+  inset: -60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(255 244 200 / 0.32), rgb(255 244 200 / 0.1) 38%, transparent 66%);
+  animation: fx-breathe 6s ease-in-out infinite;
+}
+.fx-moon {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 62%, rgb(190 165 90 / 0.38) 0 5px, transparent 6px),
+    radial-gradient(circle at 52% 36%, rgb(190 165 90 / 0.3) 0 7px, transparent 8px),
+    radial-gradient(circle at 24% 34%, rgb(190 165 90 / 0.28) 0 3.5px, transparent 4.5px),
+    radial-gradient(circle at 36% 30%, #fffef5 0%, #fff3c6 48%, #ead58e 100%);
+  -webkit-mask: radial-gradient(circle at 82% 34%, transparent 0 41%, #000 42%);
+  mask: radial-gradient(circle at 82% 34%, transparent 0 41%, #000 42%);
+  filter: drop-shadow(0 0 8px rgb(255 244 200 / 0.55));
+}
+@keyframes fx-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+/* ---- Güneş ---- */
+.fx-sunpos {
+  position: absolute;
+  top: 6px;
+  right: 14%;
+}
+@media (min-width: 1024px) {
+  .fx-sunpos {
+    top: 30px;
+    right: 56%;
+  }
+}
+.fx-sun {
+  position: relative;
+  width: 110px;
+  height: 110px;
+}
+.fx-sun > span {
+  position: absolute;
+  border-radius: 50%;
+}
+.fx-sun-corona {
+  inset: -80px;
+  background: radial-gradient(circle, rgb(255 228 140 / 0.6) 0%, rgb(255 200 90 / 0.24) 32%, transparent 66%);
+  animation: fx-breathe 5s ease-in-out infinite;
+}
+.fx-sun-rays {
+  inset: -70px;
+  background: repeating-conic-gradient(from 0deg, rgb(255 238 175 / 0.55) 0 2.4deg, transparent 2.4deg 15deg);
+  -webkit-mask: radial-gradient(circle, transparent 17%, #000 27%, transparent 68%);
+  mask: radial-gradient(circle, transparent 17%, #000 27%, transparent 68%);
+  animation: fx-spin 70s linear infinite;
+}
+.fx-sun-rays--b {
+  inset: -100px;
+  background: repeating-conic-gradient(from 7deg, rgb(255 222 135 / 0.3) 0 1.4deg, transparent 1.4deg 22.5deg);
+  animation-duration: 110s;
+  animation-direction: reverse;
+}
+.fx-sun-core {
+  inset: 18px;
+  background: radial-gradient(circle at 38% 34%, #fffcea 0%, #ffe68c 40%, #ffbd42 100%);
+  box-shadow: 0 0 28px 10px rgb(255 214 100 / 0.75), 0 0 80px 30px rgb(255 190 70 / 0.35);
+  animation: fx-breathe 4s ease-in-out infinite;
+}
+.fx-flare {
+  width: var(--s);
+  height: var(--s);
+  background: radial-gradient(circle, rgb(255 255 255 / 0.32), rgb(255 214 120 / 0.14) 58%, transparent 70%);
+}
+@keyframes fx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- Bulutlar ---- */
+.fx-cloud {
+  position: absolute;
+  left: 0;
+  width: var(--w, 240px);
+  opacity: var(--o, 1);
+  animation: fx-drift var(--dur, 90s) linear var(--del, 0s) infinite;
+  will-change: transform;
+}
+.fx-cloud svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 8px 10px rgb(10 30 60 / 0.2));
+  animation: fx-cloudbob 9s ease-in-out infinite alternate;
+}
+@keyframes fx-drift {
+  from {
+    transform: translateX(calc(var(--w, 240px) * -1 - 20px));
+  }
+  to {
+    transform: translateX(calc(100cqw + 20px));
+  }
+}
+@keyframes fx-cloudbob {
+  from {
+    translate: 0 -3px;
+  }
+  to {
+    translate: 0 4px;
+  }
+}
+
+/* ---- Yağmur ---- */
+.fx-drop {
+  position: absolute;
+  top: 0;
+  left: var(--x);
+  width: var(--w, 1.5px);
+  height: var(--h, 16px);
+  border-radius: 2px;
+  background: linear-gradient(transparent, rgb(214 238 255 / 0.95));
+  opacity: var(--o, 0.6);
+  animation: fx-fall var(--t, 0.7s) linear var(--d, 0s) infinite;
+}
+@keyframes fx-fall {
+  from {
+    transform: translate(0, -8cqh) rotate(14deg);
+  }
+  to {
+    transform: translate(-30cqh, 112cqh) rotate(14deg);
+  }
+}
+.fx-ripple {
+  position: absolute;
+  left: var(--x);
+  bottom: var(--b, 10px);
+  width: 24px;
+  height: 7px;
+  border: 1.5px solid rgb(225 242 255 / 0.65);
+  border-radius: 50%;
+  opacity: 0;
+  animation: fx-rip 1.6s ease-out var(--d, 0s) infinite;
+}
+@keyframes fx-rip {
+  0% {
+    transform: scale(0.15);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+.fx-mist {
+  position: absolute;
+  inset: auto 0 0;
+  height: 32%;
+  background: linear-gradient(to top, rgb(186 206 226 / 0.3), transparent);
+}
+
+/* ---- Şimşek ---- */
+.fx-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at var(--fx, 60%) 0%, rgb(238 242 255 / 0.8), rgb(205 215 255 / 0.28) 50%, transparent 78%);
+  opacity: 0;
+  animation: fx-flash var(--t, 7s) linear var(--d, 0s) infinite;
+}
+.fx-bolt {
+  position: absolute;
+  top: 0;
+  height: 46cqh;
+  min-height: 120px;
+  width: auto;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0;
+  filter: drop-shadow(0 0 5px #cfd9ff) drop-shadow(0 0 14px rgb(160 180 255 / 0.9));
+  animation: fx-flash var(--t, 7s) linear var(--d, 0s) infinite;
+}
+.fx-bolt path:last-child {
+  stroke-width: 2;
+}
+@keyframes fx-flash {
+  0%,
+  90%,
+  100% {
+    opacity: 0;
+  }
+  91% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 0.15;
+  }
+  93.5% {
+    opacity: 0.95;
+  }
+  96% {
+    opacity: 0.25;
+  }
+  98% {
+    opacity: 0;
+  }
+}
+
+/* ---- Kar ---- */
+.fx-flake {
+  position: absolute;
+  top: 0;
+  left: var(--x);
+  width: var(--s);
+  height: var(--s);
+  opacity: var(--o, 0.8);
+  animation: fx-snowfall var(--t, 9s) linear var(--d, 0s) infinite;
+}
+.fx-flake > i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, rgb(255 255 255 / 0.85) 38%, rgb(255 255 255 / 0) 72%);
+  filter: blur(var(--b, 0px));
+  animation: fx-sway var(--sw, 3s) ease-in-out var(--d, 0s) infinite alternate;
+}
+.fx-crystal {
+  position: absolute;
+  top: 0;
+  left: var(--x);
+  width: var(--s);
+  height: var(--s);
+  opacity: 0.85;
+  filter: drop-shadow(0 0 3px rgb(255 255 255 / 0.7));
+  animation: fx-snowfall var(--t, 14s) linear var(--d, 0s) infinite;
+}
+.fx-crystal svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: fx-spin 9s linear infinite;
+}
+@keyframes fx-snowfall {
+  from {
+    transform: translateY(-8cqh);
+  }
+  to {
+    transform: translateY(110cqh);
+  }
+}
+@keyframes fx-sway {
+  from {
+    transform: translateX(-16px);
+  }
+  to {
+    transform: translateX(16px);
+  }
+}
+.fx-snowglow {
+  position: absolute;
+  inset: auto 0 0;
+  height: 26%;
+  background: linear-gradient(to top, rgb(255 255 255 / 0.26), transparent);
+}
+
+/* ---- Sis ---- */
+.fx-fog {
+  position: absolute;
+  left: -35%;
+  width: 90%;
+  height: var(--h, 90px);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgb(236 243 249 / 0.6), transparent 70%);
+  filter: blur(14px);
+  animation: fx-fogmove var(--t, 22s) ease-in-out var(--d, 0s) infinite alternate;
+}
+@keyframes fx-fogmove {
+  to {
+    transform: translateX(60cqw);
+  }
+}
+
+/* ───────── Martılar ───────── */
+.gulls {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: none; /* mobilde kart zaten tüm genişliği kaplar */
+  overflow: hidden;
+  container-type: size;
+  pointer-events: none;
+  animation: gulls-in 1.4s ease both;
+}
+@media (min-width: 1024px) {
+  .gulls {
+    display: block;
+  }
+}
+.gulls.is-night {
+  filter: brightness(0.74) saturate(0.85);
+}
+@keyframes gulls-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.gull {
+  position: absolute;
+  left: var(--x, 0);
+  top: var(--y, 20%);
+  width: var(--sz, 60px);
+  opacity: var(--o, 1);
+  animation-duration: var(--dur, 28s);
+  animation-delay: var(--del, 0s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+.gull-flip.is-left {
+  transform: scaleX(-1);
+}
+.gull-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 7px 5px rgb(0 30 60 / 0.2));
+}
+
+/* Güzergâhlar (cqw/cqh: gökyüzü kutusuna göre) */
+.gp-lr {
+  animation-name: gp-lr;
+}
+.gp-rl {
+  animation-name: gp-rl;
+}
+.gp-swoop {
+  animation-name: gp-swoop;
+}
+.gp-climb {
+  animation-name: gp-climb;
+}
+@keyframes gp-lr {
+  0% {
+    transform: translate(-16cqw, 0) rotate(0deg);
+  }
+  20% {
+    transform: translate(10cqw, -4cqh) rotate(-5deg);
+  }
+  40% {
+    transform: translate(36cqw, 2cqh) rotate(4deg);
+  }
+  60% {
+    transform: translate(62cqw, -5cqh) rotate(-4deg);
+  }
+  80% {
+    transform: translate(88cqw, 1cqh) rotate(3deg);
+  }
+  100% {
+    transform: translate(116cqw, -3cqh) rotate(0deg);
+  }
+}
+@keyframes gp-rl {
+  0% {
+    transform: translate(116cqw, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(86cqw, 5cqh) rotate(5deg);
+  }
+  50% {
+    transform: translate(56cqw, -3cqh) rotate(-4deg);
+  }
+  75% {
+    transform: translate(26cqw, 4cqh) rotate(4deg);
+  }
+  100% {
+    transform: translate(-16cqw, -2cqh) rotate(0deg);
+  }
+}
+@keyframes gp-swoop {
+  0% {
+    transform: translate(-14cqw, -8cqh) rotate(8deg);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  35% {
+    transform: translate(26cqw, 20cqh) rotate(12deg);
+    animation-timing-function: ease-in-out;
+  }
+  52% {
+    transform: translate(46cqw, 26cqh) rotate(-3deg);
+    animation-timing-function: cubic-bezier(0.3, 0, 0.7, 1);
+  }
+  100% {
+    transform: translate(116cqw, -16cqh) rotate(-14deg);
+  }
+}
+@keyframes gp-climb {
+  0% {
+    transform: translate(-14cqw, 22cqh) rotate(-12deg);
+  }
+  30% {
+    transform: translate(24cqw, 6cqh) rotate(-16deg);
+  }
+  55% {
+    transform: translate(50cqw, -6cqh) rotate(-8deg);
+  }
+  80% {
+    transform: translate(82cqw, -20cqh) rotate(-14deg);
+  }
+  100% {
+    transform: translate(116cqw, -32cqh) rotate(-10deg);
+  }
+}
+
+/* Elips şeklinde dönen martı: x (kendisi), y (gull-y), yön (gull-flip) üç ayrı animasyon */
+.gp-ellipse {
+  animation-name: gp-ex;
+  animation-timing-function: cubic-bezier(0.37, 0, 0.63, 1);
+}
+.gp-ellipse .gull-y {
+  animation: gp-ey var(--dur, 15s) cubic-bezier(0.37, 0, 0.63, 1) var(--del, 0s) infinite;
+}
+.gp-ellipse .gull-flip.is-face {
+  animation: gull-face var(--dur, 15s) steps(1, end) var(--del, 0s) infinite;
+}
+.gp-ellipse.is-rev,
+.gp-ellipse.is-rev .gull-y,
+.gp-ellipse.is-rev .gull-flip {
+  animation-direction: reverse;
+}
+@keyframes gp-ex {
+  0%,
+  100% {
+    transform: translateX(calc(var(--rx, 8) * 1cqw));
+  }
+  25%,
+  75% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(calc(var(--rx, 8) * -1cqw));
+  }
+}
+@keyframes gp-ey {
+  0%,
+  50%,
+  100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(calc(var(--ry, 7) * 1cqh));
+  }
+  75% {
+    transform: translateY(calc(var(--ry, 7) * -1cqh));
+  }
+}
+@keyframes gull-face {
+  0% {
+    transform: scaleX(-1);
+  }
+  50% {
+    transform: scaleX(1);
+  }
+}
+
+/* Kanat çırpma: omuz noktası etrafında döner */
+.gull-wing {
+  transform-origin: 32px 25px;
+  transform-box: view-box;
+}
+.gull-wing--far {
+  animation-delay: calc(var(--flap, 0.7s) * -0.1) !important;
+}
+.gull[data-fly="flap"] .gull-wing {
+  animation: gull-flap var(--flap, 0.7s) ease-in-out infinite;
+}
+.gull[data-fly="flap"] .gull-svg {
+  animation: gull-bob var(--flap, 0.7s) ease-in-out infinite;
+}
+.gull[data-fly="burst"] .gull-wing {
+  animation: gull-burst calc(var(--flap, 0.7s) * 6) ease-in-out infinite;
+}
+.gull[data-fly="burst"] .gull-svg {
+  animation: gull-bob-burst calc(var(--flap, 0.7s) * 6) ease-in-out infinite;
+}
+.gull[data-fly="glide"] .gull-wing {
+  animation: gull-glide calc(var(--flap, 0.7s) * 5) ease-in-out infinite;
+}
+.gull[data-fly="glide"] .gull-svg {
+  animation: gull-bob-glide calc(var(--flap, 0.7s) * 5) ease-in-out infinite;
+}
+@keyframes gull-flap {
+  0%,
+  100% {
+    transform: rotate(16deg) scaleY(1);
+  }
+  50% {
+    transform: rotate(-62deg) scaleY(0.82);
+  }
+}
+@keyframes gull-bob {
+  0%,
+  100% {
+    transform: translateY(2px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+@keyframes gull-burst {
+  0%,
+  18%,
+  36%,
+  100% {
+    transform: rotate(16deg) scaleY(1);
+  }
+  9%,
+  27%,
+  45% {
+    transform: rotate(-62deg) scaleY(0.82);
+  }
+  58% {
+    transform: rotate(-8deg) scaleY(1);
+  }
+  92% {
+    transform: rotate(-3deg) scaleY(1);
+  }
+}
+@keyframes gull-bob-burst {
+  0%,
+  18%,
+  36% {
+    transform: translateY(2px);
+  }
+  9%,
+  27%,
+  45% {
+    transform: translateY(-3px);
+  }
+  58%,
+  100% {
+    transform: translateY(0);
+  }
+}
+@keyframes gull-glide {
+  0%,
+  100% {
+    transform: rotate(-5deg) scaleY(1);
+  }
+  50% {
+    transform: rotate(-18deg) scaleY(0.95);
+  }
+}
+@keyframes gull-bob-glide {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx *,
+  .fx::before,
+  .gulls,
+  .gulls * {
+    animation: none !important;
+  }
+}
