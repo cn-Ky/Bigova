@@ -5,9 +5,11 @@ import {
     faPeopleGroup,
     faScaleBalanced,
     faSchool,
+    faShieldHalved,
     faStar,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import LegalNotice from "@/components/LegalNotice";
 
 const sections = [
   {
@@ -185,6 +187,12 @@ export default function Hakkimizda() {
             Nereden çıktığımızı, neye inandığımızı ve bu topluluğu nasıl
             büyütmek istediğimizi keşfet.
           </p>
+          <a
+            href="#yasal"
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-bold text-white"
+          >
+            <FontAwesomeIcon icon={faShieldHalved} /> Yasal bilgilendirme
+          </a>
         </div>
         <div className="pointer-events-none absolute -bottom-8 right-3 opacity-30 sm:right-12">
           <AboutArt kind="campus" />
@@ -303,6 +311,8 @@ export default function Hakkimizda() {
             ))}
           </div>
         </section>
+
+        <LegalNotice />
 
         <section className="mt-7 grid gap-4 rounded-[20px] bg-coral/15 p-5 sm:grid-cols-[1fr_auto] sm:items-center sm:p-7">
           <div>
