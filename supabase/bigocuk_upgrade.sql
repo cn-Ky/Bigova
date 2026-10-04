@@ -1,5 +1,5 @@
 -- ============================================================================
--- Bigocuk: Bigcoin cüzdanı, adım sayar ve avatar mağazası
+-- Bigocuk: Bigcoin cüzdanı, adım sayar ve hayvan avatar mağazası
 -- Supabase > SQL Editor'de çalıştır. Birden çok kez çalıştırmak güvenlidir
 -- (mağaza fiyatları aşağıdaki listeden yeniden yazılır, kullanıcı verisi korunur).
 -- Önkoşul: supabase/schema.sql çalıştırılmış olmalı (public.profiles tablosu).
@@ -12,7 +12,7 @@
 -- 1) Tablolar ---------------------------------------------------------------
 create table if not exists public.bigocuk_items (
   id text primary key,
-  slot text not null check (slot in ('bg','hair','top','bottom','shoes','glasses','hat','extra')),
+  slot text not null,
   name text not null,
   price integer not null default 0 check (price >= 0)
 );
@@ -62,52 +62,137 @@ create table if not exists public.bigocuk_earn_sources (
   active boolean not null default true
 );
 
--- 2) Mağaza kataloğu (src/lib/bigocuk/items.tsx ile aynı) -------------------
+-- 2) Mağaza kataloğu (src/lib/bigocuk/items.tsx ve species.tsx ile aynı) ----
+-- v2: Avatarlar artık hayvan. Eski insan parçaları (saç, alt, ayakkabı, aksesuar) kaldırılır
+-- ve bunlar için harcanan Bigcoin KULLANICIYA İADE EDİLİR (bir kez, tekrar çalıştırmak güvenli).
+do $$
+begin
+  if exists (select 1 from public.bigocuk_items where slot in ('hair','bottom','shoes','extra')) then
+    update public.bigocuk_wallets w
+       set coins = w.coins + r.total, updated_at = now()
+      from (
+        select inv.user_id, sum(i.price)::integer as total
+          from public.bigocuk_inventory inv
+          join public.bigocuk_items i on i.id = inv.item_id
+         where i.slot in ('hair','bottom','shoes','extra')
+         group by inv.user_id
+      ) r
+     where w.user_id = r.user_id and r.total > 0;
+
+    insert into public.bigocuk_ledger (user_id, delta, reason, day)
+    select inv.user_id, sum(i.price)::integer, 'refund:avatar-v2', public.bigocuk_today()
+      from public.bigocuk_inventory inv
+      join public.bigocuk_items i on i.id = inv.item_id
+     where i.slot in ('hair','bottom','shoes','extra')
+     group by inv.user_id
+    having sum(i.price) > 0;
+
+    delete from public.bigocuk_items where slot in ('hair','bottom','shoes','extra'); -- envanterden cascade silinir
+  end if;
+
+  -- eski insan avatarlarının artık geçersiz alanlarını temizle
+  update public.bigocuk_wallets
+     set avatar = avatar - 'skin' - 'hairColor' - 'hair' - 'bottom' - 'shoes' - 'extra'
+   where avatar ?| array['skin','hairColor','hair','bottom','shoes','extra'];
+end $$;
+
+alter table public.bigocuk_items drop constraint if exists bigocuk_items_slot_check;
+alter table public.bigocuk_items add constraint bigocuk_items_slot_check
+  check (slot in ('species','hat','glasses','neck','top','hand','back','bg'));
+
 insert into public.bigocuk_items (id, slot, name, price) values
-  ('hair-short', 'hair', 'Kısa saç', 0),
-  ('hair-long', 'hair', 'Uzun saç', 40),
-  ('hair-bun', 'hair', 'Topuz', 40),
-  ('hair-pony', 'hair', 'At kuyruğu', 50),
-  ('hair-curly', 'hair', 'Kıvırcık', 60),
-  ('hair-afro', 'hair', 'Kabarık', 60),
-  ('top-tee', 'top', 'Beyaz tişört', 0),
-  ('top-bigova', 'top', 'Bigova tişörtü', 80),
-  ('top-jersey', 'top', 'Turkuaz forma', 140),
-  ('top-stripe', 'top', 'Çizgili sweat', 100),
-  ('top-hoodie', 'top', 'Kırmızı hoodie', 120),
-  ('top-rain', 'top', 'Sarı yağmurluk', 150),
-  ('top-blazer', 'top', 'Ceket', 200),
-  ('bottom-jeans', 'bottom', 'Mavi kot', 0),
-  ('bottom-black', 'bottom', 'Siyah pantolon', 60),
-  ('bottom-shorts', 'bottom', 'Şort', 50),
-  ('bottom-skirt', 'bottom', 'Etek', 70),
-  ('bottom-cargo', 'bottom', 'Kargo pantolon', 80),
-  ('bottom-track', 'bottom', 'Eşofman', 60),
-  ('shoes-white', 'shoes', 'Beyaz spor ayakkabı', 0),
-  ('shoes-red', 'shoes', 'Kırmızı spor ayakkabı', 60),
-  ('shoes-boots', 'shoes', 'Siyah bot', 70),
-  ('shoes-rain', 'shoes', 'Sarı çizme', 90),
+  ('sp-marti', 'species', 'Martı', 0),
+  ('sp-kedi', 'species', 'Kedi', 0),
+  ('sp-kopek', 'species', 'Köpek', 0),
+  ('sp-tavsan', 'species', 'Tavşan', 0),
+  ('sp-tilki', 'species', 'Tilki', 150),
+  ('sp-panda', 'species', 'Panda', 200),
+  ('sp-penguen', 'species', 'Penguen', 200),
+  ('sp-baykus', 'species', 'Baykuş', 250),
+  ('sp-aslan', 'species', 'Aslan', 350),
+  ('sp-ahtapot', 'species', 'Ahtapot', 300),
+  ('sp-kaplumbaga', 'species', 'Kaplumbağa', 250),
+  ('sp-ejderha', 'species', 'Ejderha', 700),
+  ('sp-anka', 'species', 'Anka Kuşu', 900),
+  ('sp-unicorn', 'species', 'Tek Boynuzlu At', 800),
+  ('hat-none', 'hat', 'Şapkasız', 0),
+  ('hat-beanie', 'hat', 'Bere', 60),
+  ('hat-cap', 'hat', 'Lacivert kep', 70),
+  ('hat-bucket', 'hat', 'Bucket şapka', 80),
+  ('hat-crown', 'hat', 'Altın taç', 400),
+  ('hat-straw', 'hat', 'Hasır şapka', 70),
+  ('hat-wizard', 'hat', 'Sihirbaz şapkası', 120),
+  ('hat-bigova', 'hat', 'Bigova kasketi', 100),
+  ('hat-grad', 'hat', 'ÇOMÜ mezuniyet kepi', 220),
+  ('hat-sailor', 'hat', 'Denizci şapkası', 90),
+  ('hat-troy', 'hat', 'Truva miğferi', 180),
+  ('hat-olive', 'hat', 'Zeytin dalı tacı', 130),
+  ('hat-kalpak', 'hat', 'Kurtuluş kalpağı', 160),
   ('glasses-none', 'glasses', 'Gözlüksüz', 0),
   ('glasses-round', 'glasses', 'Yuvarlak gözlük', 50),
   ('glasses-sun', 'glasses', 'Güneş gözlüğü', 80),
   ('glasses-heart', 'glasses', 'Kalp gözlük', 100),
-  ('hat-none', 'hat', 'Şapkasız', 0),
-  ('hat-beanie', 'hat', 'Bere', 60),
-  ('hat-cap', 'hat', 'Kep', 70),
-  ('hat-bucket', 'hat', 'Bucket şapka', 80),
-  ('hat-crown', 'hat', 'Altın taç', 400),
-  ('extra-none', 'extra', 'Aksesuarsız', 0),
-  ('extra-phones', 'extra', 'Kulaklık', 100),
-  ('extra-scarf', 'extra', 'Atkı', 80),
-  ('extra-pack', 'extra', 'Sırt çantası', 120),
-  ('extra-badge', 'extra', 'Martı rozeti', 60),
+  ('glasses-star', 'glasses', 'Yıldız gözlük', 90),
+  ('glasses-monocle', 'glasses', 'Tek gözlük', 110),
+  ('glasses-3d', 'glasses', '3D gözlük', 70),
+  ('neck-none', 'neck', 'Boyunsuz', 0),
+  ('neck-scarf', 'neck', 'Atkı', 80),
+  ('neck-bow', 'neck', 'Papyon', 60),
+  ('neck-tie', 'neck', 'Kravat', 70),
+  ('neck-bell', 'neck', 'Zilli tasma', 40),
+  ('neck-coin', 'neck', 'Bigcoin kolyesi', 120),
+  ('neck-bigova', 'neck', 'Bigova rozeti', 70),
+  ('neck-marti', 'neck', 'Martı rozeti', 60),
+  ('neck-comu', 'neck', 'ÇOMÜ yaka kartı', 90),
+  ('neck-18mart', 'neck', '18 Mart rozeti', 110),
+  ('neck-ataturk', 'neck', 'Atatürk imza rozeti', 150),
+  ('neck-medal', 'neck', 'Cumhuriyet madalyası', 200),
+  ('top-none', 'top', 'Kıyafetsiz', 0),
+  ('top-tee', 'top', 'Beyaz tişört', 0),
+  ('top-bigova', 'top', 'Bigova tişörtü', 80),
+  ('top-comu', 'top', 'ÇOMÜ sweatshirt', 150),
+  ('top-jersey', 'top', 'Turkuaz forma', 140),
+  ('top-cumhuriyet', 'top', 'Kırmızı forma', 130),
+  ('top-stripe', 'top', 'Çizgili sweat', 100),
+  ('top-hoodie', 'top', 'Kırmızı hoodie', 120),
+  ('top-rain', 'top', 'Sarı yağmurluk', 150),
+  ('top-blazer', 'top', 'Ceket', 200),
+  ('top-sailor', 'top', 'Gemici bluzu', 110),
+  ('top-vest', 'top', 'Kazdağı yeleği', 110),
+  ('hand-none', 'hand', 'Elleri boş', 0),
+  ('hand-flag', 'hand', 'Türk bayrağı', 90),
+  ('hand-scroll', 'hand', 'Gençliğe Hitabe', 120),
+  ('hand-bigova-flag', 'hand', 'Bigova flaması', 70),
+  ('hand-simit', 'hand', 'Simit', 40),
+  ('hand-book', 'hand', 'Ders kitabı', 60),
+  ('hand-tea', 'hand', 'Çay bardağı', 50),
+  ('hand-horse', 'hand', 'Truva atı', 150),
+  ('hand-amphora', 'hand', 'Parion amforası', 130),
+  ('hand-cheese', 'hand', 'Ezine peyniri', 70),
+  ('hand-shield', 'hand', 'Granikos kalkanı', 140),
+  ('hand-balloon', 'hand', 'Balon', 50),
+  ('back-none', 'back', 'Sırtsız', 0),
+  ('back-pack', 'back', 'Sırt çantası', 120),
+  ('back-comu', 'back', 'ÇOMÜ çantası', 130),
+  ('back-cape', 'back', 'Kırmızı pelerin', 160),
+  ('back-wings-marti', 'back', 'Martı kanatları', 220),
+  ('back-wings-butterfly', 'back', 'Kelebek kanatları', 200),
+  ('back-jet', 'back', 'Jetpack', 260),
   ('bg-sky', 'bg', 'Açık gökyüzü', 0),
   ('bg-sea', 'bg', 'Ege denizi', 40),
   ('bg-sunset', 'bg', 'Gün batımı', 40),
   ('bg-forest', 'bg', 'Orman', 40),
   ('bg-lav', 'bg', 'Lavanta', 40),
   ('bg-night', 'bg', 'Yıldızlı gece', 60),
-  ('bg-gold', 'bg', 'Altın ışıltı', 300)
+  ('bg-gold', 'bg', 'Altın ışıltı', 300),
+  ('bg-bigova', 'bg', 'Bigova dalgaları', 60),
+  ('bg-comu', 'bg', 'ÇOMÜ kampüsü', 90),
+  ('bg-granikos', 'bg', 'Biga Ovası', 60),
+  ('bg-kordon', 'bg', 'Çanakkale kordonu', 80),
+  ('bg-bridge', 'bg', '1915 Çanakkale Köprüsü', 100),
+  ('bg-anitkabir', 'bg', 'Anıtkabir', 120),
+  ('bg-bozca', 'bg', 'Bozcaada bağları', 70),
+  ('bg-kazdagi', 'bg', 'Kazdağları', 70)
 on conflict (id) do update set slot = excluded.slot, name = excluded.name, price = excluded.price;
 
 -- 3) RLS: herkes yalnızca kendi verisini OKUR, hiç kimse doğrudan yazamaz -----
@@ -140,7 +225,7 @@ language sql stable as $$ select (now() at time zone 'Europe/Istanbul')::date $$
 
 create or replace function public.bigocuk_default_avatar() returns jsonb
 language sql immutable as $$
-  select '{"skin":"s2","hairColor":"h2","bg":"bg-sky","hair":"hair-short","top":"top-tee","bottom":"bottom-jeans","shoes":"shoes-white","glasses":"glasses-none","hat":"hat-none","extra":"extra-none"}'::jsonb
+  select '{"species":"sp-marti","color":"c1","pattern":"p1","eyes":"e1","feature":"f1","hat":"hat-none","glasses":"glasses-none","neck":"neck-none","top":"top-none","hand":"hand-none","back":"back-none","bg":"bg-sky"}'::jsonb
 $$;
 
 create or replace function public.bigocuk_ensure_wallet() returns void
@@ -254,6 +339,7 @@ begin
 end $$;
 
 -- Avatarı kaydeder. Sadece ücretsiz ya da satın alınmış parçalar giyilebilir.
+-- Renk, desen, göz rengi ve türe özel özellik ücretsizdir (yalnızca biçimi denetlenir).
 create or replace function public.bigocuk_save_avatar(p_avatar jsonb) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
@@ -264,11 +350,15 @@ declare
 begin
   perform public.bigocuk_ensure_wallet();
   if jsonb_typeof(p_avatar) is distinct from 'object' then raise exception 'Geçersiz avatar.'; end if;
-  if coalesce(p_avatar->>'skin', '') !~ '^s[1-6]$' then raise exception 'Geçersiz ten rengi.'; end if;
-  if coalesce(p_avatar->>'hairColor', '') !~ '^h[1-8]$' then raise exception 'Geçersiz saç rengi.'; end if;
-  clean := jsonb_build_object('skin', p_avatar->>'skin', 'hairColor', p_avatar->>'hairColor');
+  if coalesce(p_avatar->>'color', '') !~ '^c[1-8]$' then raise exception 'Geçersiz renk.'; end if;
+  if coalesce(p_avatar->>'pattern', '') !~ '^p[1-6]$' then raise exception 'Geçersiz desen.'; end if;
+  if coalesce(p_avatar->>'eyes', '') !~ '^e[1-8]$' then raise exception 'Geçersiz göz rengi.'; end if;
+  if coalesce(p_avatar->>'feature', '') !~ '^f[1-3]$' then raise exception 'Geçersiz özellik.'; end if;
+  clean := jsonb_build_object(
+    'color', p_avatar->>'color', 'pattern', p_avatar->>'pattern',
+    'eyes', p_avatar->>'eyes', 'feature', p_avatar->>'feature');
 
-  foreach s_name in array array['bg','hair','top','bottom','shoes','glasses','hat','extra'] loop
+  foreach s_name in array array['species','hat','glasses','neck','top','hand','back','bg'] loop
     v := p_avatar->>s_name;
     if v is null or not exists (
       select 1 from public.bigocuk_items i

@@ -5,16 +5,19 @@ import { errMsg, useBigocuk } from "@/lib/bigocuk/api";
 import { COIN_NAME } from "@/lib/bigocuk/config";
 import {
   DEFAULT_AVATAR,
-  HAIR_COLORS,
+  EYE_COLORS,
   ITEM_MAP,
-  SKINS,
+  PATTERNS,
+  SETS,
   SLOTS,
   isFree,
   itemsOf,
+  speciesOf,
   type AvatarConfig,
+  type ItemSet,
   type Slot,
 } from "@/lib/bigocuk/items";
-import { faArrowLeft, faCheck, faLock, faRotateLeft, faShirt } from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft, faCheck, faLock, faPaw, faRotateLeft } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -22,12 +25,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const fmt = (n: number) => n.toLocaleString("tr-TR");
 const SLOT_IDS = SLOTS.map((s) => s.id);
+const TIER_TONE: Record<string, string> = { Yaygın: "bg-foam text-ink/70", Nadir: "bg-tide/25 text-ink", Efsanevi: "bg-sun/40 text-deep" };
 
 export default function AvatarSayfasi() {
   const { status, state, buy, saveAvatar } = useBigocuk();
   const live = status === "ready" && !!state;
   const [draft, setDraft] = useState<AvatarConfig>(DEFAULT_AVATAR);
-  const [tab, setTab] = useState<Slot>("hair");
+  const [tab, setTab] = useState<Slot>("species");
+  const [setFilter, setSetFilter] = useState<ItemSet | "all">("all");
   const [focus, setFocus] = useState<string | null>(null); // satın alınmamış, denenen parça
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -48,7 +53,14 @@ export default function AvatarSayfasi() {
   const lockedInDraft = SLOT_IDS.filter((s) => !has(draft[s]));
   const focusItem = focus ? ITEM_MAP[focus] : null;
   const coins = state?.coins ?? 0;
+  const sp = speciesOf(draft.species);
+  const showSets = tab !== "species";
+  const list = itemsOf(tab).filter((i) => setFilter === "all" || i.set === setFilter);
 
+  const setLook = (k: "color" | "pattern" | "eyes" | "feature", v: string) => {
+    setMsg(null);
+    setDraft((d) => ({ ...d, [k]: v }));
+  };
   const pick = (slot: Slot, id: string) => {
     setMsg(null);
     setDraft((d) => ({ ...d, [slot]: id }));
@@ -78,11 +90,11 @@ export default function AvatarSayfasi() {
         </Link>
         <div className="flex items-center gap-3">
           <span className="grid h-11 w-11 place-items-center rounded-xl bg-white/15">
-            <FontAwesomeIcon icon={faShirt} />
+            <FontAwesomeIcon icon={faPaw} />
           </span>
           <div className="min-w-0 flex-1">
             <h1 className="font-display text-2xl font-extrabold">Avatarım</h1>
-            <p className="text-sm text-white/75">Giy, dene, {COIN_NAME} ile al</p>
+            <p className="text-sm text-white/75">Hayvanını seç, giydir, {COIN_NAME} ile al</p>
           </div>
           {live && (
             <span className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 font-display text-lg font-extrabold">
@@ -98,6 +110,10 @@ export default function AvatarSayfasi() {
           <motion.div key={JSON.stringify(draft)} initial={{ scale: 0.97 }} animate={{ scale: 1 }} className="mx-auto h-[300px] w-[222px] overflow-hidden rounded-3xl">
             <Avatar config={draft} size="fluid" label="Avatar önizlemesi" />
           </motion.div>
+          <p className="mt-2 text-center font-display text-lg font-extrabold leading-tight">
+            {sp.name}
+            <span className={`ml-2 rounded-full px-2 py-0.5 align-middle text-[11px] font-bold ${TIER_TONE[sp.tier]}`}>{sp.tier}</span>
+          </p>
 
           {focusItem && (
             <div className="mt-3 rounded-2xl bg-sun/20 p-3 text-center">
@@ -169,9 +185,19 @@ export default function AvatarSayfasi() {
 
         {/* Seçenekler */}
         <section className="min-w-0">
+          {/* Görünüm: seçili hayvana göre değişir, hepsi ücretsiz */}
           <div className="rounded-[20px] bg-card p-4 shadow-sm">
-            <Swatches label="Ten rengi" items={SKINS} value={draft.skin} onPick={(id) => setDraft((d) => ({ ...d, skin: id }))} />
-            <Swatches label="Saç rengi" items={HAIR_COLORS} value={draft.hairColor} onPick={(id) => setDraft((d) => ({ ...d, hairColor: id }))} className="mt-3" />
+            <p className="mb-2 text-[11px] font-extrabold uppercase tracking-wide text-ink/50">{sp.name} görünümü · ücretsiz</p>
+            <Swatches label="Renk" items={sp.palette} value={draft.color} onPick={(id) => setLook("color", id)} />
+            <Swatches label="Göz rengi" items={EYE_COLORS} value={draft.eyes} onPick={(id) => setLook("eyes", id)} className="mt-3" />
+            <Chips label="Desen" items={PATTERNS} value={draft.pattern} onPick={(id) => setLook("pattern", id)} className="mt-3" />
+            <Chips
+              label={sp.featureLabel}
+              items={sp.features.map((name, i) => ({ id: `f${i + 1}`, name }))}
+              value={draft.feature}
+              onPick={(id) => setLook("feature", id)}
+              className="mt-3"
+            />
           </div>
 
           <div role="tablist" aria-label="Parça türü" className="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
@@ -180,7 +206,7 @@ export default function AvatarSayfasi() {
                 key={s.id}
                 role="tab"
                 aria-selected={tab === s.id}
-                onClick={() => setTab(s.id)}
+                onClick={() => { setTab(s.id); setSetFilter("all"); }}
                 className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold ${tab === s.id ? "bg-sea text-white" : "bg-card text-ink"}`}
               >
                 {s.label}
@@ -188,45 +214,66 @@ export default function AvatarSayfasi() {
             ))}
           </div>
 
-          <ul className="mt-3 grid grid-cols-3 gap-2.5 sm:grid-cols-4 xl:grid-cols-5">
-            {itemsOf(tab).map((it) => {
-              const equipped = draft[tab] === it.id;
-              const mine = has(it.id);
-              return (
-                <li key={it.id}>
-                  <button
-                    onClick={() => pick(tab, it.id)}
-                    aria-pressed={equipped}
-                    className={`relative w-full rounded-2xl bg-card p-1.5 text-left shadow-sm ring-2 transition ${equipped ? "ring-sun" : "ring-transparent"}`}
-                  >
-                    <span className="block aspect-square overflow-hidden rounded-xl">
-                      <Avatar config={{ ...draft, [tab]: it.id }} size="fluid" view={SLOT_VIEW[tab]} label={it.name} />
-                    </span>
-                    <span className="mt-1.5 block truncate px-0.5 text-[12px] font-bold leading-tight">{it.name}</span>
-                    <span className="block px-0.5 pb-0.5 text-[11px] font-bold text-ink/60">
-                      {isFree(it.id) ? (
-                        "Ücretsiz"
-                      ) : owned.has(it.id) ? (
-                        "Sende"
-                      ) : (
-                        <span className="inline-flex items-center gap-1"><Coin size={13} /> {fmt(it.price)}</span>
+          {showSets && (
+            <div className="-mx-5 mt-2 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]" aria-label="Koleksiyon">
+              {[{ id: "all" as const, label: "Tümü" }, ...SETS].map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setSetFilter(s.id)}
+                  aria-pressed={setFilter === s.id}
+                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ring-1 ${setFilter === s.id ? "bg-sun text-deep ring-sun" : "bg-transparent text-ink/70 ring-ink/15"}`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {list.length === 0 ? (
+            <p className="mt-4 rounded-2xl border-2 border-dashed border-ink/15 p-5 text-center text-sm text-ink/55">Bu koleksiyonda bu türden parça yok.</p>
+          ) : (
+            <ul className="mt-3 grid grid-cols-3 gap-2.5 sm:grid-cols-4 xl:grid-cols-5">
+              {list.map((it) => {
+                const equipped = draft[tab] === it.id;
+                const mine = has(it.id);
+                const setLabel = SETS.find((x) => x.id === it.set)?.label;
+                return (
+                  <li key={it.id}>
+                    <button
+                      onClick={() => pick(tab, it.id)}
+                      aria-pressed={equipped}
+                      className={`relative w-full rounded-2xl bg-card p-1.5 text-left shadow-sm ring-2 transition ${equipped ? "ring-sun" : "ring-transparent"}`}
+                    >
+                      <span className="block aspect-square overflow-hidden rounded-xl">
+                        <Avatar config={{ ...draft, [tab]: it.id }} size="fluid" view={SLOT_VIEW[tab]} label={it.name} />
+                      </span>
+                      <span className="mt-1.5 block truncate px-0.5 text-[12px] font-bold leading-tight">{it.name}</span>
+                      <span className="flex items-center justify-between gap-1 px-0.5 pb-0.5 text-[11px] font-bold text-ink/60">
+                        {isFree(it.id) ? (
+                          "Ücretsiz"
+                        ) : owned.has(it.id) ? (
+                          "Sende"
+                        ) : (
+                          <span className="inline-flex items-center gap-1"><Coin size={13} /> {fmt(it.price)}</span>
+                        )}
+                        {setLabel && <span className="truncate rounded-full bg-sun/25 px-1.5 text-[9px] font-extrabold text-ink/70">{setLabel.split(" ")[0]}</span>}
+                      </span>
+                      {equipped && (
+                        <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-sun text-xs text-deep">
+                          <FontAwesomeIcon icon={faCheck} />
+                        </span>
                       )}
-                    </span>
-                    {equipped && (
-                      <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-sun text-xs text-deep">
-                        <FontAwesomeIcon icon={faCheck} />
-                      </span>
-                    )}
-                    {!mine && !equipped && (
-                      <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-deep/70 text-[10px] text-white">
-                        <FontAwesomeIcon icon={faLock} />
-                      </span>
-                    )}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+                      {!mine && !equipped && (
+                        <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-deep/70 text-[10px] text-white">
+                          <FontAwesomeIcon icon={faLock} />
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </section>
       </div>
     </main>
@@ -256,6 +303,34 @@ function Swatches({
             className={`h-8 w-8 rounded-full ring-2 ring-offset-2 ring-offset-[rgb(var(--card))] ${value === s.id ? "ring-sun" : "ring-ink/10"}`}
             style={{ background: s.c }}
           />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Chips({
+  label, items, value, onPick, className = "",
+}: {
+  label: string;
+  items: readonly { id: string; name: string }[];
+  value: string;
+  onPick: (id: string) => void;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <p className="mb-1.5 text-xs font-bold text-ink/60">{label}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {items.map((s) => (
+          <button
+            key={s.id}
+            onClick={() => onPick(s.id)}
+            aria-pressed={value === s.id}
+            className={`rounded-full px-3 py-1.5 text-xs font-bold ${value === s.id ? "bg-sea text-white" : "bg-foam text-ink"}`}
+          >
+            {s.name}
+          </button>
         ))}
       </div>
     </div>

@@ -5,7 +5,7 @@ import { useBigocuk } from "@/lib/bigocuk/api";
 import { COIN_NAME } from "@/lib/bigocuk/config";
 import { GAMES } from "@/lib/bigocuk/games";
 import { DEFAULT_AVATAR } from "@/lib/bigocuk/items";
-import { faArrowRight, faGamepad, faShirt } from "@fortawesome/free-solid-svg-icons";
+import { faArrowRight, faGamepad, faPaw } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -24,7 +24,7 @@ export default function Bigocuk() {
           </span>
           <div>
             <h1 className="font-display text-2xl font-extrabold">Bigocuk</h1>
-            <p className="text-sm text-white/75">Oyna, {COIN_NAME} kazan, avatarını giydir</p>
+            <p className="text-sm text-white/75">Oyna, {COIN_NAME} kazan, hayvan dostunu giydir</p>
           </div>
         </div>
       </header>
@@ -33,7 +33,7 @@ export default function Bigocuk() {
         {/* Cüzdan + avatar */}
         <div className="flex items-center gap-4 rounded-[24px] bg-card p-4 shadow-sm">
           <div className="h-[116px] w-[100px] shrink-0 overflow-hidden rounded-2xl">
-            <Avatar config={live ? state!.avatar : DEFAULT_AVATAR} size="fluid" view="bust" label="Senin avatarın" />
+            <Avatar config={live ? state!.avatar : DEFAULT_AVATAR} size="fluid" view="bust" label="Senin hayvan avatarın" />
           </div>
           <div className="min-w-0 flex-1">
             {live ? (
@@ -66,7 +66,7 @@ export default function Bigocuk() {
               </Link>
             ) : (
               <Link href="/bigocuk/avatar" className="mt-3 inline-flex items-center gap-2 rounded-xl bg-sea px-3.5 py-2 text-sm font-bold text-white">
-                <FontAwesomeIcon icon={faShirt} /> Avatarımı giydir
+                <FontAwesomeIcon icon={faPaw} /> Hayvanımı giydir
               </Link>
             )}
           </div>
