@@ -1,55 +1,64 @@
 "use client";
 import { supabaseBrowser } from "@/lib/supabase/client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DEFAULT_AVATAR, type AvatarConfig } from "./items";
 
-type AvatarMap = Record<string, AvatarConfig>;
+type Entry = { avatar: AvatarConfig; at: number };
+const cache = new Map<string, Entry>();
+const FRESH_MS = 10_000; // bundan eskiyse yeniden çekilir
+const POLL_MS = 30_000;
 
-/** Oturum boyunca önbellek: aynı kişinin avatarı tekrar tekrar istenmez. */
-const cache = new Map<string, AvatarConfig>();
+async function fetchAvatars(ids: string[]) {
+  const sb = supabaseBrowser();
+  for (let i = 0; i < ids.length; i += 100) {
+    const { data, error } = await sb.rpc("get_avatars", { p_ids: ids.slice(i, i + 100) });
+    if (error) return;
+    for (const row of (data as { id: string; avatar: Partial<AvatarConfig> }[]) ?? [])
+      cache.set(row.id, { avatar: { ...DEFAULT_AVATAR, ...row.avatar }, at: Date.now() });
+  }
+}
 
 /**
- * Verilen kullanıcıların avatarlarını getirir (get_avatars RPC'si).
- * SQL henüz kurulmadıysa sessizce boş döner; bileşenler baş harfe düşer.
+ * Kullanıcıların güncel avatarlarını getirir. Önbellek yalnızca anında göstermek içindir:
+ * her açılışta, sekmeye dönünce ve 30 sn'de bir sunucudan yenilenir (avatar değişince herkes görür).
  */
-export function useAvatars(ids: string[]): AvatarMap {
+export function useAvatars(ids: string[]): Record<string, AvatarConfig> {
   const [, bump] = useState(0);
   const key = useMemo(() => Array.from(new Set(ids)).sort().join(","), [ids]);
-  const inflight = useRef(new Set<string>());
 
   useEffect(() => {
-    const missing = key
-      .split(",")
-      .filter((id) => id && !cache.has(id) && !inflight.current.has(id));
-    if (!missing.length) return;
-    missing.forEach((id) => inflight.current.add(id));
+    const list = key.split(",").filter(Boolean);
+    if (!list.length) return;
     let alive = true;
-    (async () => {
+    const refresh = async (force: boolean) => {
+      const stale = list.filter((id) => force || !cache.has(id) || Date.now() - cache.get(id)!.at > FRESH_MS);
+      if (!stale.length) return;
       try {
-        const sb = supabaseBrowser();
-        for (let i = 0; i < missing.length; i += 100) {
-          const { data, error } = await sb.rpc("get_avatars", { p_ids: missing.slice(i, i + 100) });
-          if (error) break;
-          for (const row of (data as { id: string; avatar: Partial<AvatarConfig> }[]) ?? [])
-            cache.set(row.id, { ...DEFAULT_AVATAR, ...row.avatar });
-        }
+        await fetchAvatars(stale);
       } catch {
         /* avatar yoksa baş harf gösterilir */
-      } finally {
-        missing.forEach((id) => inflight.current.delete(id));
-        if (alive) bump((n) => n + 1);
       }
-    })();
+      if (alive) bump((n) => n + 1);
+    };
+    void refresh(false);
+    const timer = setInterval(() => !document.hidden && void refresh(true), POLL_MS);
+    const onVisible = () => !document.hidden && void refresh(false);
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       alive = false;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [key]);
 
-  const out: AvatarMap = {};
-  for (const id of key.split(",")) if (id && cache.has(id)) out[id] = cache.get(id)!;
+  const out: Record<string, AvatarConfig> = {};
+  for (const id of key.split(",")) {
+    const e = cache.get(id);
+    if (id && e) out[id] = e.avatar;
+  }
   return out;
 }
 
 export function rememberAvatar(id: string, avatar: AvatarConfig) {
-  cache.set(id, avatar);
+  cache.set(id, { avatar, at: Date.now() });
 }

@@ -3,6 +3,7 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 import { useUser } from "@/lib/useUser";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DEFAULT_AVATAR, type AvatarConfig } from "./items";
+import { rememberAvatar } from "./useAvatars";
 
 export type BigocukState = {
   coins: number;
@@ -80,8 +81,11 @@ export function useBigocuk() {
   };
   const commit = (next: BigocukState) => setState(next);
   const buy = async (itemId: string) => setState(normalize(await rpc("bigocuk_buy", { p_item_id: itemId })));
-  const saveAvatar = async (cfg: AvatarConfig) =>
-    setState(normalize(await rpc("bigocuk_save_avatar", { p_avatar: cfg })));
+  const saveAvatar = async (cfg: AvatarConfig) => {
+    const next = normalize(await rpc("bigocuk_save_avatar", { p_avatar: cfg }));
+    setState(next);
+    if (user) rememberAvatar(user.id, next.avatar); // arkadaş listesi hemen güncel görsün
+  };
 
   return { user, status, state, refresh, addSteps, commit, buy, saveAvatar };
 }

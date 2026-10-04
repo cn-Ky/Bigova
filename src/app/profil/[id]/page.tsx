@@ -1,12 +1,14 @@
 "use client";
 import Avatar from "@/components/bigocuk/Avatar";
-import { DEFAULT_AVATAR, type AvatarConfig } from "@/lib/bigocuk/items";
-import { rememberAvatar } from "@/lib/bigocuk/useAvatars";
+import UserAvatar from "@/components/bigocuk/UserAvatar";
+import { DEFAULT_AVATAR, ITEM_MAP, SLOTS, speciesOf, type AvatarConfig } from "@/lib/bigocuk/items";
+import { rememberAvatar, useAvatars } from "@/lib/bigocuk/useAvatars";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useUser } from "@/lib/useUser";
 import {
   faArrowLeft,
   faCheck,
+  faFire,
   faLock,
   faMessage,
   faPaw,
@@ -40,10 +42,14 @@ export default function Profil() {
   const sb = useMemo(() => supabaseBrowser(), []);
   const [card, setCard] = useState<Card | null | undefined>(undefined);
   const [mutual, setMutual] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [friends, setFriends] = useState<{ id: string; name: string; mutual: boolean }[]>([]);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ t: string; ok: boolean } | null>(null);
 
   const targetId = id === "ben" && user ? user.id : id;
+  const friendIds = useMemo(() => friends.map((f) => f.id), [friends]);
+  const friendAvatars = useAvatars(friendIds);
 
   const load = useCallback(async () => {
     if (!user || !UUID.test(targetId)) return setCard(null);
@@ -69,9 +75,24 @@ export default function Profil() {
     const avatar = { ...DEFAULT_AVATAR, ...row.avatar };
     if (!row.locked) rememberAvatar(row.id, avatar);
     setCard({ ...row, avatar });
-    if (row.relation !== "self" && !row.locked) {
+    if (row.locked) return setFriends([]);
+    if (row.relation !== "self") {
       const { data: m } = await sb.rpc("mutual_friend_count", { p_id: targetId });
       setMutual(typeof m === "number" ? m : 0);
+    }
+    const { data: fl } = await sb.rpc("profile_friends", { p_id: targetId });
+    setFriends((fl as { id: string; name: string; mutual: boolean }[]) ?? []);
+    if (row.relation === "friend") {
+      const [a, b] = [user.id, targetId].sort();
+      const { data: st } = await sb
+        .from("friendship_streaks")
+        .select("current_streak,last_mutual_date")
+        .eq("user_a", a)
+        .eq("user_b", b)
+        .maybeSingle();
+      const today = new Date().toISOString().slice(0, 10);
+      const yest = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      setStreak(st && (st.last_mutual_date === today || st.last_mutual_date === yest) ? st.current_streak : 0);
     }
   }, [sb, user, targetId]);
 
@@ -153,7 +174,8 @@ export default function Profil() {
         </Link>
       </header>
 
-      <section className="-mt-20 px-5">
+      <section className="relative z-10 -mt-20 px-5 lg:grid lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-8">
+        <div className="min-w-0">
         <div className="mx-auto grid w-52 place-items-center overflow-hidden rounded-[32px] bg-card shadow-lg ring-4 ring-foam">
           {card.locked ? (
             <span className="grid aspect-[200/270] w-full place-items-center bg-ink/5 text-5xl text-ink/30">
@@ -264,6 +286,48 @@ export default function Profil() {
           <p className="mt-4 flex items-center justify-center gap-2 text-xs text-ink/55">
             <FontAwesomeIcon icon={faUsers} /> {first} ile arkadaşsınız.
           </p>
+        )}
+        </div>
+
+        {!card.locked && (
+          <div className="mt-8 grid content-start gap-5 lg:mt-24">
+            {streak > 0 && (
+              <p className="flex items-center gap-2 rounded-2xl bg-coral/15 p-3 font-bold text-coral">
+                <FontAwesomeIcon icon={faFire} /> Seninle {streak} günlük mesaj serisi
+              </p>
+            )}
+            <section className="rounded-[22px] bg-card p-4 shadow-sm">
+              <h2 className="font-display text-lg font-extrabold">Avatarı</h2>
+              <p className="mt-1 text-sm text-ink/65">
+                <b>{speciesOf(card.avatar.species).name}</b> · {speciesOf(card.avatar.species).tier}
+              </p>
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {SLOTS.filter((sl) => sl.id !== "species" && !/-none$/.test(card.avatar[sl.id] ?? "") && ITEM_MAP[card.avatar[sl.id]]).map((sl) => (
+                  <li key={sl.id} className="rounded-full bg-foam px-3 py-1.5 text-xs font-bold">
+                    <span className="text-ink/55">{sl.label}:</span> {ITEM_MAP[card.avatar[sl.id]].name}
+                  </li>
+                ))}
+              </ul>
+            </section>
+            {friends.length > 0 && (
+              <section className="rounded-[22px] bg-card p-4 shadow-sm">
+                <h2 className="font-display text-lg font-extrabold">
+                  Arkadaşları <span className="text-sm text-ink/55">{friends.length}</span>
+                </h2>
+                <ul className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 xl:grid-cols-6">
+                  {friends.map((f) => (
+                    <li key={f.id} className="text-center">
+                      <Link href={f.id === user.id ? "/profil/ben" : `/profil/${f.id}`} className="block">
+                        <UserAvatar name={f.name} avatar={friendAvatars[f.id]} size={64} className={`mx-auto ${f.mutual ? "ring-2 ring-tide" : ""}`} />
+                        <span className="mt-1 block truncate text-xs font-bold">{f.id === user.id ? "Sen" : f.name.split(" ")[0]}</span>
+                        {f.mutual && <span className="block text-[10px] text-tide">ortak</span>}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </div>
         )}
       </section>
     </main>

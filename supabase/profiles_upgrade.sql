@@ -109,3 +109,23 @@ grant execute on function public.get_avatars(uuid[]) to authenticated;
 grant execute on function public.profile_card(uuid) to authenticated;
 grant execute on function public.mutual_friend_count(uuid) to authenticated;
 grant execute on function public.set_profile_privacy(text) to authenticated;
+
+-- 7) Profil sayfasındaki arkadaş listesi (ortak arkadaşlar öne çıkar)
+create or replace function public.profile_friends(p_id uuid)
+returns table (id uuid, name text, mutual boolean)
+language sql stable security definer set search_path = public as $$
+  with theirs as (
+    select case when f.requester = p_id then f.addressee else f.requester end as fid
+    from public.friendships f where f.status = 'accepted' and p_id in (f.requester, f.addressee)
+  ), mine as (
+    select case when f.requester = auth.uid() then f.addressee else f.requester end as fid
+    from public.friendships f where f.status = 'accepted' and auth.uid() in (f.requester, f.addressee)
+  )
+  select p.id, p.name, exists (select 1 from mine m where m.fid = p.id) as mutual
+  from theirs t join public.profiles p on p.id = t.fid
+  where public.can_see_profile(p_id) and p.name <> ''
+  order by 3 desc, p.name
+  limit 60
+$$;
+revoke execute on function public.profile_friends(uuid) from public, anon;
+grant execute on function public.profile_friends(uuid) to authenticated;

@@ -7,9 +7,12 @@ import { useUser } from "@/lib/useUser";
 import {
   faCheck,
   faFire,
+  faPaw,
+  faTrophy,
   faMagnifyingGlass,
   faMessage,
   faPaperPlane,
+  faUser,
   faUserCheck,
   faUserPlus,
   faXmark,
@@ -242,6 +245,8 @@ export default function Arkadaslar() {
   const outgoing = people.filter((p) => p.direction === "outgoing");
   const term = query.trim();
   const searching = term.length > 0;
+  const maxStreak = friends.reduce((m, f) => Math.max(m, f.streak), 0);
+  const board = [...friends].filter((f) => f.streak > 0).sort((a, b) => b.streak - a.streak).slice(0, 5);
   const freshSuggestions = suggestions.filter((s) => !people.some((p) => p.id === s.id));
 
   const action = (profile: Profile) => {
@@ -296,6 +301,15 @@ export default function Arkadaslar() {
       <header className="rounded-b-[24px] bg-sea px-5 pb-5 pt-[max(1.25rem,env(safe-area-inset-top))] text-white shadow-lg">
         <h1 className="font-display text-2xl font-extrabold">Arkadaşlar</h1>
         <p className="text-sm text-white/75">Öğrenci ara, arkadaş ekle ve bire bir konuş.</p>
+        <ul className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
+          <li className="rounded-full bg-white/15 px-3 py-1.5">{friends.length} arkadaş</li>
+          {incoming.length > 0 && <li className="rounded-full bg-coral px-3 py-1.5">{incoming.length} yeni istek</li>}
+          {maxStreak > 0 && (
+            <li className="rounded-full bg-white/15 px-3 py-1.5">
+              <FontAwesomeIcon icon={faFire} className="text-sun" /> En uzun seri {maxStreak} gün
+            </li>
+          )}
+        </ul>
         <label className="mt-4 flex items-center gap-2 rounded-full bg-card px-4 py-3 text-ink focus-within:ring-2 focus-within:ring-tide focus-within:ring-offset-2 focus-within:ring-offset-sea">
           <FontAwesomeIcon icon={faMagnifyingGlass} className="opacity-50" />
           <input
@@ -313,15 +327,15 @@ export default function Arkadaslar() {
           )}
         </label>
       </header>
-      <div className="grid gap-6 px-5 py-5">
+      <div className="grid gap-6 px-5 py-5 lg:grid-cols-3">
         {notice && (
-          <p role="status" className={`text-sm font-bold ${notice.ok ? "text-tide" : "text-coral"}`}>
+          <p role="status" className={`lg:col-span-3 text-sm font-bold ${notice.ok ? "text-tide" : "text-coral"}`}>
             {notice.t}
           </p>
         )}
 
         {searching && (
-          <section>
+          <section className="lg:col-span-3">
             <h2 className="mb-3 font-display text-lg font-extrabold">Bu kişiyi mi arıyorsunuz?</h2>
             {resultsFor !== term ? (
               <div className="shimmer h-16 rounded-2xl" />
@@ -333,6 +347,7 @@ export default function Arkadaslar() {
           </section>
         )}
 
+        <div className="grid content-start gap-6 lg:col-span-2">
         {!searching && incoming.length > 0 && (
           <section>
             <h2 className="mb-3 font-display text-lg font-extrabold">
@@ -370,7 +385,7 @@ export default function Arkadaslar() {
         )}
 
         {!searching && (
-          <section aria-label="Arkadaş avatarları">
+          <section aria-label="Arkadaş avatarları" className="lg:col-span-3">
             <ul className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
               <li className="w-[72px] shrink-0 text-center">
                 <Link href="/profil/ben" className="block" aria-label="Profilim">
@@ -451,6 +466,41 @@ export default function Arkadaslar() {
           </section>
         )}
 
+        {!searching && !people.length && (
+          <p className="rounded-2xl bg-card p-6 text-center text-sm text-ink/60">
+            <FontAwesomeIcon icon={faUserCheck} className="mr-2" />
+            Henüz arkadaşın yok. Yukarıdan isim yazıp ara ya da önerilen kişilere göz at.
+          </p>
+        )}
+        </div>
+        <aside className="grid content-start gap-6">
+          {!searching && (
+            <section className="rounded-2xl bg-card p-4">
+              <h2 className="mb-3 font-display text-lg font-extrabold">Hızlı erişim</h2>
+              <div className="grid gap-2 text-sm font-bold">
+                <Link href="/bigocuk/avatar" className="flex items-center gap-3 rounded-xl bg-foam p-3"><FontAwesomeIcon icon={faPaw} className="text-sea" /> Avatarımı düzenle</Link>
+                <Link href="/profil/ben" className="flex items-center gap-3 rounded-xl bg-foam p-3"><FontAwesomeIcon icon={faUser} className="text-sea" /> Profilimi gör</Link>
+                <Link href="/bigocuk" className="flex items-center gap-3 rounded-xl bg-foam p-3"><FontAwesomeIcon icon={faFire} className="text-coral" /> Bigocuk: coin kazan</Link>
+              </div>
+            </section>
+          )}
+          {!searching && board.length > 0 && (
+            <section className="rounded-2xl bg-card p-4">
+              <h2 className="mb-3 font-display text-lg font-extrabold"><FontAwesomeIcon icon={faTrophy} className="mr-2 text-sun" />Seri tablosu</h2>
+              <ol className="grid gap-2">
+                {board.map((f, i) => (
+                  <li key={f.id}>
+                    <Link href={`/profil/${f.id}`} className="flex items-center gap-3">
+                      <span className="w-4 text-center text-sm font-extrabold text-ink/50">{i + 1}</span>
+                      <UserAvatar name={f.name} avatar={avatars[f.id]} size={36} />
+                      <b className="min-w-0 flex-1 truncate text-sm">{f.name || "Öğrenci"}</b>
+                      <span className="flex items-center gap-1 text-xs font-bold text-coral"><FontAwesomeIcon icon={faFire} />{f.streak}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
         {!searching && freshSuggestions.length > 0 && (
           <section>
             <h2 className="mb-3 font-display text-lg font-extrabold">Önerilen kişiler</h2>
@@ -458,14 +508,9 @@ export default function Arkadaslar() {
           </section>
         )}
 
-        {!searching && !people.length && freshSuggestions.length === 0 && (
-          <p className="py-8 text-center text-sm text-ink/60">
-            <FontAwesomeIcon icon={faUserCheck} className="mr-2" />
-            Henüz başka üye yok. İsmini yazarak arkadaşını bul ya da arkadaşlarını Bigova'ya davet et.
-          </p>
-        )}
+        </aside>
         {friends.length > 0 && !searching && (
-          <p className="text-xs text-ink/55">
+          <p className="text-xs text-ink/55 lg:col-span-3">
             <FontAwesomeIcon icon={faPaperPlane} className="mr-1" />
             Seri, iki tarafın aynı gün en az bir mesaj göndermesiyle ilerler.
           </p>
