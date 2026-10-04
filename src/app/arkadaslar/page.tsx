@@ -1,4 +1,6 @@
 "use client";
+import UserAvatar from "@/components/bigocuk/UserAvatar";
+import { useAvatars } from "@/lib/bigocuk/useAvatars";
 import { demoFriends } from "@/lib/demoData";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useUser } from "@/lib/useUser";
@@ -49,8 +51,6 @@ function Highlight({ name, term }: { name: string; term: string }) {
   );
 }
 
-const initial = (name: string) => (name || "?").trim()[0]?.toLocaleUpperCase("tr-TR") ?? "?";
-
 export default function Arkadaslar() {
   const { user } = useUser();
   const sb = useMemo(() => supabaseBrowser(), []);
@@ -62,6 +62,11 @@ export default function Arkadaslar() {
   const [busyId, setBusyId] = useState("");
   const [notice, setNotice] = useState<{ t: string; ok: boolean } | null>(null);
   const seq = useRef(0);
+  const avatarIds = useMemo(
+    () => [...(user ? [user.id] : []), ...[...people, ...results, ...suggestions].map((p) => p.id)],
+    [people, results, suggestions, user],
+  );
+  const avatars = useAvatars(avatarIds);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -275,12 +280,13 @@ export default function Arkadaslar() {
   };
   const row = (profile: Profile, hl = false) => (
     <li key={profile.id} className="flex items-center gap-3 rounded-2xl bg-card p-3">
-      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-tide/25 font-display font-extrabold">
-        {initial(profile.name)}
-      </span>
-      <span className="min-w-0 flex-1">
-        <b className="block truncate">{hl ? <Highlight name={profile.name} term={term} /> : profile.name || "Öğrenci"}</b>
-      </span>
+      <Link href={`/profil/${profile.id}`} aria-label={`${profile.name || "Öğrenci"} profilini aç`} className="flex min-w-0 flex-1 items-center gap-3">
+        <UserAvatar name={profile.name} avatar={avatars[profile.id]} />
+        <span className="min-w-0 flex-1">
+          <b className="block truncate">{hl ? <Highlight name={profile.name} term={term} /> : profile.name || "Öğrenci"}</b>
+          <small className="text-ink/55">Profili gör</small>
+        </span>
+      </Link>
       {action(profile)}
     </li>
   );
@@ -335,13 +341,13 @@ export default function Arkadaslar() {
             <ul className="grid gap-2">
               {incoming.map((person) => (
                 <li key={person.id} className="flex items-center gap-3 rounded-2xl bg-card p-3">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-sun/40 font-display font-extrabold text-deep">
-                    {initial(person.name)}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <b className="block truncate">{person.name || "Öğrenci"}</b>
-                    <small className="text-ink/60">Sana arkadaşlık isteği gönderdi</small>
-                  </span>
+                  <Link href={`/profil/${person.id}`} aria-label={`${person.name || "Öğrenci"} profilini aç`} className="flex min-w-0 flex-1 items-center gap-3">
+                    <UserAvatar name={person.name} avatar={avatars[person.id]} />
+                    <span className="min-w-0 flex-1">
+                      <b className="block truncate">{person.name || "Öğrenci"}</b>
+                      <small className="text-ink/60">Sana arkadaşlık isteği gönderdi</small>
+                    </span>
+                  </Link>
                   <button
                     onClick={() => acceptRequest(person)}
                     disabled={busyId === person.id}
@@ -363,20 +369,42 @@ export default function Arkadaslar() {
           </section>
         )}
 
+        {!searching && (
+          <section aria-label="Arkadaş avatarları">
+            <ul className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
+              <li className="w-[72px] shrink-0 text-center">
+                <Link href="/profil/ben" className="block" aria-label="Profilim">
+                  <UserAvatar name="Sen" avatar={avatars[user.id]} size={72} className="ring-2 ring-sun" />
+                  <span className="mt-1 block truncate text-xs font-bold">Sen</span>
+                </Link>
+              </li>
+              {friends.map((person) => (
+                <li key={person.id} className="w-[72px] shrink-0 text-center">
+                  <Link href={`/profil/${person.id}`} className="block" aria-label={`${person.name || "Arkadaş"} profilini aç`}>
+                    <UserAvatar name={person.name} avatar={avatars[person.id]} size={72} className="ring-2 ring-tide" />
+                    <span className="mt-1 block truncate text-xs font-bold">{(person.name || "Öğrenci").split(" ")[0]}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {!searching && friends.length > 0 && (
           <section>
             <h2 className="mb-3 font-display text-lg font-extrabold">Bire bir sohbetler</h2>
             <ul className="grid gap-2 md:grid-cols-2">
               {friends.map((person) => (
                 <li key={person.id}>
-                  <Link
-                    href={`/arkadaslar/${person.id}`}
-                    aria-label={`${person.name || "Arkadaş"} ile sohbeti aç`}
-                    className="flex items-center gap-3 rounded-2xl bg-card p-3 transition active:scale-[.98]"
-                  >
-                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-sky font-display font-extrabold text-deep">
-                      {initial(person.name)}
-                    </span>
+                  <div className="flex items-center gap-3 rounded-2xl bg-card p-3 transition active:scale-[.98]">
+                    <Link href={`/profil/${person.id}`} aria-label={`${person.name || "Arkadaş"} profilini aç`} className="shrink-0">
+                      <UserAvatar name={person.name} avatar={avatars[person.id]} size={48} />
+                    </Link>
+                    <Link
+                      href={`/arkadaslar/${person.id}`}
+                      aria-label={`${person.name || "Arkadaş"} ile sohbeti aç`}
+                      className="flex min-w-0 flex-1 items-center gap-3"
+                    >
                     <span className="min-w-0 flex-1">
                       <b className="block truncate">{person.name || "Öğrenci"}</b>
                       <span className="block truncate text-sm text-ink/65">
@@ -391,7 +419,8 @@ export default function Arkadaslar() {
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sea text-white">
                       <FontAwesomeIcon icon={faMessage} />
                     </span>
-                  </Link>
+                    </Link>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -404,7 +433,10 @@ export default function Arkadaslar() {
             <ul className="grid gap-2">
               {outgoing.map((person) => (
                 <li key={person.id} className="flex items-center gap-3 rounded-2xl bg-card p-3">
-                  <b className="min-w-0 flex-1 truncate">{person.name || "Öğrenci"}</b>
+                  <Link href={`/profil/${person.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+                    <UserAvatar name={person.name} avatar={avatars[person.id]} size={40} />
+                    <b className="min-w-0 flex-1 truncate">{person.name || "Öğrenci"}</b>
+                  </Link>
                   <span className="text-xs text-ink/60">Yanıt bekleniyor</span>
                   <button
                     onClick={() => removeLink(person)}

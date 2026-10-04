@@ -1,4 +1,5 @@
 "use client";
+import AccountSettings from "@/components/AccountSettings";
 import {
     CLICK_SOUND_ENABLED_KEY,
     CLICK_SOUND_STYLE_KEY,
@@ -12,17 +13,26 @@ import {
     MOBILE_NAVS,
 } from "@/lib/navigationLayouts";
 import { applyTheme, THEMES } from "@/lib/themes";
-import {
-    faCheck,
-    faChevronRight,
-    faUser,
-} from "@fortawesome/free-solid-svg-icons";
+import { faCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
+/** CSS'teki lg kırılımıyla (1024px) aynı: true = geniş ekran/masaüstü. */
+function useIsDesktop() {
+  const [desktop, setDesktop] = useState<boolean | null>(null);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const sync = () => setDesktop(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  return desktop;
+}
+
 export default function Ayarlar() {
+  const isDesktop = useIsDesktop();
   const [cur, setCur] = useState("sabah");
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [soundStyle, setSoundStyle] = useState("soft");
@@ -64,19 +74,7 @@ export default function Ayarlar() {
         <p className="text-sm text-white/75">Uygulamayı sana göre ayarla.</p>
       </header>
       <section className="px-5 pt-6">
-        <Link
-          href="/giris"
-          className="flex items-center gap-3 rounded-[22px] bg-card p-4 shadow-sm transition active:scale-[.97]"
-        >
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-sea text-white">
-            <FontAwesomeIcon icon={faUser} />
-          </span>
-          <span className="flex-1">
-            <b className="block">Hesap</b>
-            <span className="text-sm opacity-70">Giriş yap veya kayıt ol</span>
-          </span>
-          <FontAwesomeIcon icon={faChevronRight} className="opacity-40" />
-        </Link>
+        <AccountSettings />
         <section className="mt-7 border-b border-ink/10 pb-6">
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -121,6 +119,7 @@ export default function Ayarlar() {
             ))}
           </div>
         </section>
+        {isDesktop === false && (
         <section className="mt-7 border-b border-ink/10 pb-6">
           <h2 className="font-display text-xl font-bold">Mobil gezinme</h2>
           <p className="mt-1 text-sm opacity-70">
@@ -157,6 +156,8 @@ export default function Ayarlar() {
             ))}
           </ul>
         </section>
+        )}
+        {isDesktop === true && (
         <section className="mt-7 border-b border-ink/10 pb-6">
           <h2 className="font-display text-xl font-bold">
             Geniş ekran gezinme
@@ -195,6 +196,7 @@ export default function Ayarlar() {
             ))}
           </ul>
         </section>
+        )}
         <h2 className="mb-1 mt-7 font-display text-xl font-bold">Tema</h2>
         <p className="mb-3 text-sm opacity-70">
           Seçimin bu cihazda kayıtlı kalır.

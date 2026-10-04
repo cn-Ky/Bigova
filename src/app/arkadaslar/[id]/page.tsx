@@ -1,4 +1,6 @@
 "use client";
+import UserAvatar from "@/components/bigocuk/UserAvatar";
+import { useAvatars } from "@/lib/bigocuk/useAvatars";
 import { demoFriends } from "@/lib/demoData";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useUser } from "@/lib/useUser";
@@ -21,6 +23,7 @@ type Message = {
   created_at: string;
 };
 type Profile = { id: string; name: string };
+const UUID_RE = /^[0-9a-f-]{36}$/i;
 
 export default function DirectMessage() {
   const params = useParams<{ id: string }>();
@@ -32,6 +35,8 @@ export default function DirectMessage() {
   const [isFriend, setIsFriend] = useState(false);
   const [relation, setRelation] = useState<"none" | "outgoing" | "incoming">("none");
   const endRef = useRef<HTMLLIElement>(null);
+  const avatarIds = useMemo(() => (UUID_RE.test(friendId) ? [friendId] : []), [friendId]);
+  const avatars = useAvatars(avatarIds);
   const [streak, setStreak] = useState(0);
   const [message, setMessage] = useState("");
   const [notice, setNotice] = useState("");
@@ -270,9 +275,9 @@ export default function DirectMessage() {
           <FontAwesomeIcon icon={faArrowLeft} /> Arkadaşlara dön
         </Link>
         <section className="mt-6 rounded-[20px] bg-card p-5 text-center shadow-sm">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-sky font-display text-xl font-extrabold text-deep">
-            {(friend.name || "?")[0]}
-          </span>
+          <Link href={`/profil/${friend.id}`} aria-label="Profili aç" className="mx-auto block w-fit">
+            <UserAvatar name={friend.name} avatar={avatars[friend.id]} size={72} />
+          </Link>
           <h1 className="mt-3 font-display text-xl font-extrabold">
             {friend.name || "Öğrenci"}
           </h1>
@@ -326,14 +331,20 @@ export default function DirectMessage() {
           >
             <FontAwesomeIcon icon={faArrowLeft} />
           </Link>
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate font-display text-lg font-extrabold">
-              {friend.name || "Öğrenci"}
-            </h1>
-            <p className="text-xs text-white/70">
-              {user ? "Bire bir sohbet" : "Deneme sohbeti · bu tarayıcıda"}
-            </p>
-          </div>
+          {user ? (
+            <Link href={`/profil/${friend.id}`} aria-label={`${friend.name || "Öğrenci"} profilini aç`} className="flex min-w-0 flex-1 items-center gap-3">
+              <UserAvatar name={friend.name} avatar={avatars[friend.id]} size={40} className="ring-2 ring-white/30" />
+              <span className="min-w-0 flex-1">
+                <h1 className="truncate font-display text-lg font-extrabold">{friend.name || "Öğrenci"}</h1>
+                <p className="text-xs text-white/70">Bire bir sohbet · profili gör</p>
+              </span>
+            </Link>
+          ) : (
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate font-display text-lg font-extrabold">{friend.name || "Öğrenci"}</h1>
+              <p className="text-xs text-white/70">Deneme sohbeti · bu tarayıcıda</p>
+            </div>
+          )}
           <span className="flex items-center gap-1 rounded-full bg-white/15 px-3 py-2 text-sm font-bold">
             <FontAwesomeIcon icon={faFire} className="text-sun" />
             {streak}
@@ -344,24 +355,29 @@ export default function DirectMessage() {
         Seri, iki taraf da aynı gün mesaj gönderdiğinde ilerler.
       </p>
       <ol className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4">
-        {messages.map((entry) => (
-          <li
-            key={entry.id}
-            className={`max-w-[82%] rounded-2xl px-3 py-2 ${entry.from_id === (user?.id ?? "demo-self") ? "self-end rounded-br-sm bg-sea text-white" : "self-start rounded-bl-sm bg-card text-ink"}`}
-          >
-            <p className="whitespace-pre-wrap break-words text-sm">
-              {entry.body}
-            </p>
-            <time
-              className={`mt-1 block text-right text-[10px] ${entry.from_id === (user?.id ?? "demo-self") ? "text-white/65" : "text-ink/50"}`}
+        {messages.map((entry) => {
+          const mine = entry.from_id === (user?.id ?? "demo-self");
+          const bubble = (
+            <div
+              className={`rounded-2xl px-3 py-2 ${mine ? "rounded-br-sm bg-sea text-white" : "rounded-bl-sm bg-card text-ink"}`}
             >
-              {new Date(entry.created_at).toLocaleTimeString("tr-TR", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </time>
-          </li>
-        ))}
+              <p className="whitespace-pre-wrap break-words text-sm">{entry.body}</p>
+              <time className={`mt-1 block text-right text-[10px] ${mine ? "text-white/65" : "text-ink/50"}`}>
+                {new Date(entry.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+              </time>
+            </div>
+          );
+          return mine ? (
+            <li key={entry.id} className="max-w-[82%] self-end">
+              {bubble}
+            </li>
+          ) : (
+            <li key={entry.id} className="flex max-w-[88%] items-end gap-2 self-start">
+              <UserAvatar name={friend.name} avatar={avatars[friend.id]} size={30} />
+              <div className="min-w-0">{bubble}</div>
+            </li>
+          );
+        })}
         {messages.length === 0 && (
           <li className="m-auto text-center text-sm text-ink/60">
             Henüz mesaj yok. Sohbeti başlat.

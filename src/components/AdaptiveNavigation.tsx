@@ -3,7 +3,8 @@ import BottomNav from "@/components/BottomNav";
 import Mascot from "@/components/Mascot";
 import SideNav from "@/components/SideNav";
 import { isOn, settingsTab, sideTabs, type SideTab } from "@/components/tabs";
-import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { useUser } from "@/lib/useUser";
+import { faBars, faRightFromBracket, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
@@ -45,6 +46,7 @@ function TopLink({
 export default function AdaptiveNavigation() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { user, signOut } = useUser();
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
@@ -153,6 +155,21 @@ export default function AdaptiveNavigation() {
                     />
                   ))}
                 </div>
+                {user && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setOpen(false);
+                      await signOut();
+                    }}
+                    className="adaptive-top-link is-labeled mt-4 w-full"
+                  >
+                    <span className="adaptive-top-icon">
+                      <FontAwesomeIcon icon={faRightFromBracket} />
+                    </span>
+                    <span className="adaptive-top-label">Çıkış yap</span>
+                  </button>
+                )}
               </motion.aside>
             </motion.div>
           )}
