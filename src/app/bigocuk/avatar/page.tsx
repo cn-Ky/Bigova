@@ -17,7 +17,7 @@ import {
   type ItemSet,
   type Slot,
 } from "@/lib/bigocuk/items";
-import { faArrowLeft, faCheck, faLock, faPaw, faRotateLeft } from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft, faCheck, faLock, faPaw, faRotateLeft, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -28,7 +28,7 @@ const SLOT_IDS = SLOTS.map((s) => s.id);
 const TIER_TONE: Record<string, string> = { Yaygın: "bg-foam text-ink/70", Nadir: "bg-tide/25 text-ink", Efsanevi: "bg-sun/40 text-deep" };
 
 export default function AvatarSayfasi() {
-  const { status, state, buy, saveAvatar } = useBigocuk();
+  const { status, state, buy, saveAvatar, refresh } = useBigocuk();
   const live = status === "ready" && !!state;
   const [draft, setDraft] = useState<AvatarConfig>(DEFAULT_AVATAR);
   const [tab, setTab] = useState<Slot>("species");
@@ -57,6 +57,34 @@ export default function AvatarSayfasi() {
   const showSets = tab !== "species";
   const list = itemsOf(tab).filter((i) => setFilter === "all" || i.set === setFilter);
 
+  const showBar = live && (dirty || !!msg);
+
+  // kaydedilmemiş değişiklik varken sekmeyi kapatma/yenileme uyarısı
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+
+  // başarı mesajı birkaç saniye sonra kaybolur
+  useEffect(() => {
+    if (!msg?.ok) return;
+    const t = setTimeout(() => setMsg(null), 4500);
+    return () => clearTimeout(t);
+  }, [msg]);
+
+  // kilitli (satın alınmamış) parçaları son kaydedilen / varsayılan haline döndürür
+  const dropLocked = () => {
+    setMsg(null);
+    setFocus(null);
+    setDraft((d) => {
+      const next = { ...d };
+      for (const s of SLOT_IDS) if (!has(d[s])) next[s] = has(saved[s]) ? saved[s] : DEFAULT_AVATAR[s];
+      return next;
+    });
+  };
+
   const setLook = (k: "color" | "pattern" | "eyes" | "feature", v: string) => {
     setMsg(null);
     setDraft((d) => ({ ...d, [k]: v }));
@@ -80,10 +108,10 @@ export default function AvatarSayfasi() {
     }
   }
   const doBuy = () => focusItem && run(async () => { await buy(focusItem.id); setFocus(null); }, `${focusItem.name} senin oldu.`);
-  const doSave = () => run(() => saveAvatar(draft), "Avatarın kaydedildi.");
+  const doSave = () => run(() => saveAvatar(draft), "Avatarın kaydedildi. Arkadaşların da yeni görünümünü görecek.");
 
   return (
-    <main className="pb-10">
+    <main className={showBar ? "pb-44 lg:pb-10" : "pb-10"}>
       <header className="rounded-b-[24px] bg-sea px-5 pb-5 pt-[max(1.25rem,env(safe-area-inset-top))] text-white shadow-lg">
         <Link href="/bigocuk" className="mb-3 inline-flex items-center gap-2 text-sm font-bold text-white/75">
           <FontAwesomeIcon icon={faArrowLeft} /> Bigocuk
@@ -103,6 +131,20 @@ export default function AvatarSayfasi() {
           )}
         </div>
       </header>
+
+      {(status === "error" || status === "loading") && (
+        <div role="status" className="mx-5 mt-5 flex items-center gap-3 rounded-2xl bg-card p-4 shadow-sm">
+          <FontAwesomeIcon icon={status === "error" ? faTriangleExclamation : faPaw} className={status === "error" ? "text-coral" : "text-sea"} />
+          <p className="min-w-0 flex-1 text-sm font-bold">
+            {status === "error" ? "Avatar bilgilerin yüklenemedi, bu yüzden kaydedemezsin." : "Avatar bilgilerin yükleniyor…"}
+          </p>
+          {status === "error" && (
+            <button onClick={() => void refresh()} className="rounded-xl bg-sea px-3.5 py-2 text-sm font-bold text-white">
+              Tekrar dene
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="grid gap-5 px-5 pt-5 lg:grid-cols-[320px_1fr] lg:items-start">
         {/* Önizleme */}
@@ -162,9 +204,14 @@ export default function AvatarSayfasi() {
             </div>
           )}
           {live && dirty && lockedInDraft.length > 0 && (
-            <p className="mt-2 text-center text-xs font-bold text-ink/65">
-              Kaydetmek için denediğin kilitli parçaları satın al ya da çıkar.
-            </p>
+            <div className="mt-2 text-center">
+              <p className="text-xs font-bold text-ink/65">
+                Kaydetmek için denediğin kilitli parçaları satın al ya da çıkar.
+              </p>
+              <button onClick={dropLocked} disabled={busy} className="mt-1.5 rounded-full bg-foam px-3 py-1.5 text-xs font-extrabold text-ink">
+                Kilitlileri çıkar
+              </button>
+            </div>
           )}
           {msg && (
             <p role="status" className={`mt-2 text-center text-sm font-bold ${msg.ok ? "text-sea" : "text-coral"}`}>
@@ -276,6 +323,54 @@ export default function AvatarSayfasi() {
           )}
         </section>
       </div>
+
+      {/* Mobilde her zaman görünen kaydetme çubuğu (masaüstünde önizleme kartı zaten sabit) */}
+      {showBar && (
+        <div
+          className="fixed inset-x-0 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-50 mx-auto w-full max-w-[440px] px-3 md:max-w-[520px] lg:hidden"
+          role="region"
+          aria-label="Avatarı kaydet"
+        >
+          <div className="rounded-[24px] bg-card p-3 shadow-[0_12px_38px_rgba(14,58,91,.28)] ring-1 ring-ink/5">
+            {msg && (
+              <p role="status" className={`mb-2 text-center text-sm font-bold ${msg.ok ? "text-sea" : "text-coral"}`}>
+                {msg.text}
+              </p>
+            )}
+            {dirty && (
+              <>
+                {lockedInDraft.length > 0 ? (
+                  <div className="mb-2 flex items-center justify-between gap-2 text-xs font-bold text-ink/70">
+                    <span>Kilitli parça denedin, kaydetmek için satın al.</span>
+                    <button onClick={dropLocked} disabled={busy} className="shrink-0 rounded-full bg-foam px-3 py-1.5 font-extrabold text-ink">
+                      Kilitlileri çıkar
+                    </button>
+                  </div>
+                ) : (
+                  <p className="mb-2 text-center text-xs font-bold text-ink/70">Kaydedilmemiş değişiklikler var.</p>
+                )}
+                <div className="grid grid-cols-[1fr_auto] gap-2">
+                  <button
+                    onClick={doSave}
+                    disabled={busy || lockedInDraft.length > 0}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-sea px-4 py-3 font-bold text-white disabled:opacity-45"
+                  >
+                    <FontAwesomeIcon icon={faCheck} /> {busy ? "Kaydediliyor…" : "Kaydet"}
+                  </button>
+                  <button
+                    onClick={() => { setDraft(saved); setFocus(null); setMsg(null); }}
+                    disabled={busy}
+                    aria-label="Değişiklikleri geri al"
+                    className="grid w-12 place-items-center rounded-xl bg-foam text-ink disabled:opacity-45"
+                  >
+                    <FontAwesomeIcon icon={faRotateLeft} />
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }

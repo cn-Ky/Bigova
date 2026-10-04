@@ -45,6 +45,7 @@ export default function Profil() {
   const [streak, setStreak] = useState(0);
   const [friends, setFriends] = useState<{ id: string; name: string; mutual: boolean }[]>([]);
   const [busy, setBusy] = useState(false);
+  const [setupMissing, setSetupMissing] = useState(false); // profiles_upgrade.sql çalıştırılmamış
   const [notice, setNotice] = useState<{ t: string; ok: boolean } | null>(null);
 
   const targetId = id === "ben" && user ? user.id : id;
@@ -56,8 +57,10 @@ export default function Profil() {
     const { data, error } = await sb.rpc("profile_card", { p_id: targetId });
     const row = (data as Card[] | null)?.[0];
     if (error || !row) {
-      // SQL kurulmadıysa en azından ismi göster
+      // SQL kurulmadıysa en azından ismi göster (avatar yerine kurulum uyarısı çıkar)
       if (error) {
+        console.warn("profile_card çağrısı başarısız:", error.message);
+        setSetupMissing(true);
         const { data: p } = await sb.from("profiles").select("id,name,created_at").eq("id", targetId).maybeSingle();
         if (p)
           return setCard({
@@ -72,6 +75,7 @@ export default function Profil() {
       }
       return setCard(null);
     }
+    setSetupMissing(false);
     const avatar = { ...DEFAULT_AVATAR, ...row.avatar };
     if (!row.locked) rememberAvatar(row.id, avatar);
     setCard({ ...row, avatar });
@@ -177,7 +181,7 @@ export default function Profil() {
       <section className="relative z-10 -mt-20 px-5 lg:grid lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-8">
         <div className="min-w-0">
         <div className="mx-auto grid w-52 place-items-center overflow-hidden rounded-[32px] bg-card shadow-lg ring-4 ring-foam">
-          {card.locked ? (
+          {card.locked || setupMissing ? (
             <span className="grid aspect-[200/270] w-full place-items-center bg-ink/5 text-5xl text-ink/30">
               <FontAwesomeIcon icon={faLock} />
             </span>
@@ -188,6 +192,11 @@ export default function Profil() {
         <h1 className="mt-4 text-center font-display text-2xl font-extrabold">{card.name || "Öğrenci"}</h1>
         {joined && <p className="text-center text-sm text-ink/60">{joined} tarihinden beri Bigova'da</p>}
 
+        {setupMissing && (
+          <p role="alert" className="mt-3 text-center text-sm font-bold text-coral">
+            Avatarlar yüklenemedi: Supabase'de <code>supabase/profiles_upgrade.sql</code> dosyası çalıştırılmamış olabilir.
+          </p>
+        )}
         {card.locked && (
           <p className="mt-3 text-center text-sm text-ink/60">
             Bu profil gizli. Avatarı ve arkadaş sayısı sadece arkadaşlara görünür.

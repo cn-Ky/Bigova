@@ -12,7 +12,11 @@ async function fetchAvatars(ids: string[]) {
   const sb = supabaseBrowser();
   for (let i = 0; i < ids.length; i += 100) {
     const { data, error } = await sb.rpc("get_avatars", { p_ids: ids.slice(i, i + 100) });
-    if (error) return;
+    if (error) {
+      // get_avatars yoksa (profiles_upgrade.sql çalıştırılmamış) listelerde baş harf gösterilir
+      console.warn("get_avatars çağrısı başarısız:", error.message);
+      return;
+    }
     for (const row of (data as { id: string; avatar: Partial<AvatarConfig> }[]) ?? [])
       cache.set(row.id, { avatar: { ...DEFAULT_AVATAR, ...row.avatar }, at: Date.now() });
   }
