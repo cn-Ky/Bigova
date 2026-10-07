@@ -84,7 +84,7 @@ const tiles = [
     t: "Dergi",
     d: "Okulun dergisi",
     href: "/dergi",
-    c: "bg-card text-ink",
+    c: "bg-tide text-deep",
   },
   {
     kind: "schedule",
@@ -126,7 +126,7 @@ const tiles = [
     t: "ÜBYS",
     d: "ÇOMÜ öğrenci bilgi sistemi",
     href: "https://ubys.comu.edu.tr/",
-    c: "bg-card text-ink",
+    c: "bg-sun text-deep",
     external: true,
   },
 ];
@@ -694,7 +694,7 @@ function CategoryMenu() {
                     variants={list}
                     initial="hidden"
                     animate={isOpen ? "show" : "hidden"}
-                    className="grid grid-cols-2 gap-3 px-3 pb-4 pt-1 md:grid-cols-3 lg:gap-4"
+                    className="grid grid-cols-2 gap-3 px-3 pb-4 pt-3 md:grid-cols-3 lg:gap-4"
                   >
                     {items.map((x, i) => (
                       <Tile key={x.t} x={x} n={i + 1} />
