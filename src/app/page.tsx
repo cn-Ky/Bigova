@@ -1,10 +1,17 @@
 "use client";
 import Mascot from "@/components/Mascot";
 import Weather from "@/components/Weather";
+import { useUnread } from "@/components/NotificationProvider";
+import PushControl from "@/components/PushControl";
+import UnreadBadge from "@/components/UnreadBadge";
+import { CATEGORIES, TONE_BG } from "@/lib/menuData";
+import { useOpenCats } from "@/lib/useOpenCats";
 import { useUser } from "@/lib/useUser";
 import {
   faArrowRight,
   faCalendarDays,
+  faChevronDown,
+  faMessage,
   faHand,
   faLocationDot,
   faMagnifyingGlass,
@@ -125,6 +132,7 @@ const tiles = [
 ];
 const words = ["Kafe", "Kırtasiye", "Eczane", "Çamaşırhane", "Market"];
 const list = {
+  hidden: {},
   show: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } },
 };
 const item = {
@@ -543,7 +551,7 @@ function TileArt({ kind }: { kind: string }) {
   }
 }
 
-function Tile({ x }: { x: (typeof tiles)[number] }) {
+function Tile({ x, n }: { x: (typeof tiles)[number]; n: number }) {
   const ref = useRef<HTMLAnchorElement>(null);
   const rx = useSpring(useMotionValue(0), { stiffness: 200, damping: 18 });
   const ry = useSpring(useMotionValue(0), { stiffness: 200, damping: 18 });
@@ -590,12 +598,7 @@ function Tile({ x }: { x: (typeof tiles)[number] }) {
           className={`group relative flex h-36 flex-col justify-between overflow-hidden rounded-[22px] p-4 shadow-sm transition-shadow hover:shadow-[0_18px_40px_rgba(14,58,91,.28)] lg:h-44 ${x.c}`}
         >
           <span className="tile-glare pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-          <span className="tile-number relative z-10">
-            {String(tiles.findIndex((tile) => tile.t === x.t) + 1).padStart(
-              2,
-              "0",
-            )}
-          </span>
+          <span className="tile-number relative z-10">{String(n).padStart(2, "0")}</span>
           <TileArt kind={x.kind} />
           {rip.map((r) => (
             <span
@@ -613,6 +616,7 @@ function Tile({ x }: { x: (typeof tiles)[number] }) {
             icon={faArrowRight}
             className="absolute bottom-4 right-4 -translate-x-3 opacity-0 transition duration-300 group-hover:translate-x-0 group-hover:opacity-80"
           />
+          {x.kind === "friends" && <UnreadBadge className="absolute left-4 top-9 z-10 ring-2 ring-sky" />}
           <span>
             <b className="block font-display text-lg leading-tight">{x.t}</b>
             <span className="text-[13px] opacity-75">{x.d}</span>
@@ -620,6 +624,127 @@ function Tile({ x }: { x: (typeof tiles)[number] }) {
         </Link>
       </motion.div>
     </motion.li>
+  );
+}
+
+const tileByHref = (href: string) => tiles.find((t) => t.href === href)!;
+
+/** Keşfet kutularını kategorilere ayıran, animasyonlu açılır/kapanır menü. */
+function CategoryMenu() {
+  const { open, toggle, setAll } = useOpenCats("bigova-cats-home", ["city"]);
+  const { total } = useUnread();
+  const allOpen = CATEGORIES.every((c) => open.has(c.id));
+  return (
+    <section aria-label="Kategoriler" className="mt-6 px-5">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="font-display text-xl font-extrabold">Neye bakıyorsun?</h2>
+        <button
+          type="button"
+          onClick={() => setAll(allOpen ? [] : CATEGORIES.map((c) => c.id))}
+          className="rounded-full bg-card px-3 py-1.5 text-xs font-extrabold shadow-sm"
+        >
+          {allOpen ? "Hepsini kapat" : "Hepsini aç"}
+        </button>
+      </div>
+      <div className="grid gap-3">
+        {CATEGORIES.map((cat, ci) => {
+          const items = cat.hrefs.map(tileByHref);
+          const isOpen = open.has(cat.id);
+          const panel = `cat-panel-${cat.id}`;
+          return (
+            <motion.div
+              key={cat.id}
+              initial={{ opacity: 0, y: 22 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.06 * ci, type: "spring", stiffness: 260, damping: 24 }}
+              className="overflow-hidden rounded-[26px] bg-card shadow-sm"
+              style={{ ["--cat" as string]: `var(--${cat.tone})` }}
+            >
+              <button
+                type="button"
+                aria-expanded={isOpen}
+                aria-controls={panel}
+                onClick={() => toggle(cat.id)}
+                className="cat-head relative flex w-full items-center gap-3 overflow-hidden p-4 text-left"
+              >
+                <span className="cat-wave" aria-hidden="true">
+                  <svg viewBox="0 0 1200 60" preserveAspectRatio="none" className="wave-a absolute bottom-0 left-0 h-full w-[200%]">
+                    <path d="M0 30 Q150 0 300 30 T600 30 T900 30 T1200 30 V60 H0Z" style={{ fill: "rgb(var(--cat) / .22)" }} />
+                  </svg>
+                  <svg viewBox="0 0 1200 60" preserveAspectRatio="none" className="wave-b absolute bottom-0 left-0 h-[85%] w-[200%]">
+                    <path d="M0 30 Q150 0 300 30 T600 30 T900 30 T1200 30 V60 H0Z" style={{ fill: "rgb(var(--cat) / .18)" }} />
+                  </svg>
+                </span>
+                <span className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-xl ${TONE_BG[cat.tone]}`}>
+                  <FontAwesomeIcon icon={cat.icon} />
+                </span>
+                <span className="relative min-w-0 flex-1 leading-tight">
+                  <b className="block font-display text-lg">{cat.label}</b>
+                  <span className="block truncate text-[13px] text-ink/65">{cat.blurb}</span>
+                </span>
+                <span className="relative flex shrink-0 items-center gap-2">
+                  {cat.id === "social" && !isOpen && total > 0 && <UnreadBadge />}
+                  <span className="rounded-full bg-foam px-2.5 py-1 text-xs font-extrabold">{items.length}</span>
+                  <FontAwesomeIcon icon={faChevronDown} className="cat-chevron text-sm opacity-60" />
+                </span>
+              </button>
+              <div id={panel} className="cat-body" data-open={isOpen} role="region" aria-label={cat.label}>
+                <div className="cat-inner">
+                  <motion.ul
+                    variants={list}
+                    initial="hidden"
+                    animate={isOpen ? "show" : "hidden"}
+                    className="grid grid-cols-2 gap-3 px-3 pb-4 pt-1 md:grid-cols-3 lg:gap-4"
+                  >
+                    {items.map((x, i) => (
+                      <Tile key={x.t} x={x} n={i + 1} />
+                    ))}
+                  </motion.ul>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function UnreadCard() {
+  const { total, items } = useUnread();
+  if (total <= 0) return null;
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      aria-label="Yeni mesajlar"
+      className="mx-5 mt-4 overflow-hidden rounded-[22px] bg-card shadow-sm"
+    >
+      <div className="flex items-center gap-3 p-4 pb-2">
+        <span className="grid h-10 w-10 place-items-center rounded-full bg-coral text-deep">
+          <FontAwesomeIcon icon={faMessage} />
+        </span>
+        <b className="flex-1 font-display text-base">
+          {total} yeni mesajın var
+        </b>
+        <Link href="/arkadaslar" className="text-sm font-extrabold text-sea">
+          Tümü
+        </Link>
+      </div>
+      <ul className="px-2 pb-2">
+        {items.slice(0, 3).map((i) => (
+          <li key={i.friend_id}>
+            <Link href={`/arkadaslar/${i.friend_id}`} className="flex items-center gap-3 rounded-2xl px-2 py-2 hover:bg-foam">
+              <span className="min-w-0 flex-1 leading-tight">
+                <b className="block truncate">{i.name || "Arkadaşın"}</b>
+                <span className="block truncate text-sm text-ink/65">{i.last_body}</span>
+              </span>
+              <span className="unread-badge">{i.unread}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </motion.section>
   );
 }
 
@@ -719,6 +844,9 @@ export default function Home() {
         </motion.button>
       </motion.form>
 
+      <UnreadCard />
+      <PushControl variant="banner" />
+
       <motion.section
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -812,17 +940,7 @@ export default function Home() {
         </svg>
       </motion.section>
 
-      <motion.ul
-        variants={list}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, amount: 0.1 }}
-        className="mt-6 grid grid-cols-2 gap-3 px-5 md:grid-cols-3 lg:gap-4"
-      >
-        {tiles.map((x) => (
-          <Tile key={x.t} x={x} />
-        ))}
-      </motion.ul>
+      <CategoryMenu />
 
       {user === null && (
         <motion.div

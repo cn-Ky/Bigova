@@ -1,7 +1,7 @@
 "use client";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useUser } from "@/lib/useUser";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_AVATAR, type AvatarConfig } from "./items";
 import { rememberAvatar } from "./useAvatars";
 
@@ -36,6 +36,7 @@ const isMissing = (e: unknown) => {
 /** Bigocuk cüzdanı, envanter ve avatar. Tüm değişiklikler sunucu fonksiyonlarından (RPC) geçer. */
 export function useBigocuk() {
   const { user } = useUser();
+  const uid = user?.id; // oturum nesnesi her token yenilemede değişir; yenilemeyi kimliğe bağla
   const sb = useMemo(() => {
     try {
       return supabaseBrowser();
@@ -45,6 +46,10 @@ export function useBigocuk() {
   }, []);
   const [state, setState] = useState<BigocukState | null>(null);
   const [status, setStatus] = useState<BigocukStatus>("loading");
+  const [loadError, setLoadError] = useState<string | null>(null);
+  // Her yazma (kaydet/satın al/adım) sürüm numarasını artırır. Daha eski bir okuma geç dönerse
+  // yeni durumu eski veriyle ezmesin (avatar "kaydedildi" deyip eskiye dönme hatasının nedeni).
+  const version = useRef(0);
 
   const rpc = useCallback(
     async (fn: string, args?: Record<string, unknown>) => {
@@ -58,34 +63,61 @@ export function useBigocuk() {
 
   const refresh = useCallback(async () => {
     if (user === undefined) return;
-    if (!user || !sb) {
+    if (!uid || !sb) {
       setState(null);
       setStatus("guest");
       return;
     }
+    const mine = ++version.current;
     try {
-      setState(normalize(await rpc("bigocuk_state")));
+      const next = normalize(await rpc("bigocuk_state"));
+      if (mine !== version.current) return; // arada bir yazma oldu; bu yanıt bayat
+      setState(next);
+      setLoadError(null);
       setStatus("ready");
     } catch (e) {
+      if (mine !== version.current) return;
+      setLoadError(errMsg(e));
       setStatus(isMissing(e) ? "setup" : "error");
     }
-  }, [user, sb, rpc]);
+  }, [user, uid, sb, rpc]);
   useEffect(() => {
     void refresh();
-  }, [refresh]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uid, sb, user === undefined]);
 
   /** Adımları gönderir. Durumu kendisi değiştirmez; çağıran `commit` ile uygular (tek seferde render için). */
   const addSteps = async (n: number) => {
     const raw = await rpc("bigocuk_add_steps", { p_steps: n });
     return { accepted: Number(raw?.accepted) || 0, earned: Number(raw?.earned) || 0, next: normalize(raw) };
   };
-  const commit = (next: BigocukState) => setState(next);
-  const buy = async (itemId: string) => setState(normalize(await rpc("bigocuk_buy", { p_item_id: itemId })));
-  const saveAvatar = async (cfg: AvatarConfig) => {
-    const next = normalize(await rpc("bigocuk_save_avatar", { p_avatar: cfg }));
+  const commit = (next: BigocukState) => {
+    version.current++;
     setState(next);
-    if (user) rememberAvatar(user.id, next.avatar); // arkadaş listesi hemen güncel görsün
+  };
+  const buy = async (itemId: string) => {
+    version.current++;
+    const next = normalize(await rpc("bigocuk_buy", { p_item_id: itemId }));
+    version.current++;
+    setState(next);
+  };
+  const saveAvatar = async (cfg: AvatarConfig) => {
+    version.current++;
+    const next = normalize(await rpc("bigocuk_save_avatar", { p_avatar: cfg }));
+    version.current++;
+    // Sunucu çağrıyı kabul etti ama dönen avatar gönderdiğimizden farklıysa kayıt gerçekten yazılmamıştır
+    // (eski/yarım kurulmuş SQL fonksiyonu). Sessizce başarılı göstermek yerine açıkça söyle.
+    const keys = Object.keys(cfg) as (keyof AvatarConfig)[];
+    const lost = keys.filter((k) => next.avatar[k] !== cfg[k]);
+    if (lost.length) {
+      setState(next);
+      throw new Error(
+        "Sunucu avatarı eksik kaydetti (" + lost.join(", ") + "). Supabase'de supabase/bigova_v3_upgrade.sql dosyasını çalıştırman gerekiyor.",
+      );
+    }
+    setState(next);
+    if (uid) rememberAvatar(uid, next.avatar); // arkadaş listesi hemen güncel görsün
   };
 
-  return { user, status, state, refresh, addSteps, commit, buy, saveAvatar };
+  return { user, status, state, loadError, refresh, addSteps, commit, buy, saveAvatar };
 }

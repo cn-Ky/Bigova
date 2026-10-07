@@ -1,4 +1,5 @@
 "use client";
+import SearchBox from "@/components/SearchBox";
 import Mascot from "@/components/Mascot";
 import { openPdfReader, pdfReaderHref } from "@/lib/pdfReader";
 import { supabaseBrowser } from "@/lib/supabase/client";
@@ -7,7 +8,6 @@ import {
     faArrowUpRightFromSquare,
     faCloudArrowUp,
     faFilePdf,
-    faMagnifyingGlass,
     faPlus,
     faTrash,
     faXmark,
@@ -141,16 +141,7 @@ export default function Notlar() {
           )}
         </div>
         <>
-          <label className="mt-3 flex items-center gap-2 rounded-full bg-card px-4 py-3 text-ink">
-            <FontAwesomeIcon icon={faMagnifyingGlass} className="opacity-50" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Not veya ders ara"
-              aria-label="Not ara"
-              className="w-full bg-transparent outline-none"
-            />
-          </label>
+          <SearchBox className="mt-3" value={q} onChange={setQ} placeholder="Not veya ders ara" label="Not ara" />
           <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
             {courses.map((c) => (
               <motion.button

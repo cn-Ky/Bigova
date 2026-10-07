@@ -10,7 +10,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef } from "react";
 import Mascot from "./Mascot";
-import { isOn, settingsTab, sideTabs, type SideTab } from "./tabs";
+import CategoryGroup from "./CategoryGroup";
+import UnreadBadge from "./UnreadBadge";
+import { categoryOf, groupedTabs, home } from "@/lib/menuData";
+import { useOpenCats } from "@/lib/useOpenCats";
+import { isOn, settingsTab, type SideTab } from "./tabs";
 
 const WAVE = "M0 30 Q150 0 300 30 T600 30 T900 30 T1200 30 V60 H0Z";
 const Wave = ({ c, cls }: { c: string; cls: string }) => (
@@ -74,9 +78,10 @@ function Item({ t, on }: { t: SideTab; on: boolean }) {
           <motion.span
             whileHover={{ rotate: [0, -14, 12, 0], scale: 1.2 }}
             transition={{ duration: 0.5 }}
-            className={`grid h-9 w-9 place-items-center rounded-xl ${on ? "bg-sun text-deep" : "bg-white/10"}`}
+            className={`relative grid h-9 w-9 place-items-center rounded-xl ${on ? "bg-sun text-deep" : "bg-white/10"}`}
           >
             <FontAwesomeIcon icon={t.i} />
+            {t.href === "/arkadaslar" && <UnreadBadge className="absolute -right-1.5 -top-1.5 !h-4 !min-w-4 !text-[10px]" />}
           </motion.span>
           <span className="side-item-label leading-tight">
             <b className="block font-display text-[17px]">{t.l}</b>
@@ -93,6 +98,8 @@ function Item({ t, on }: { t: SideTab; on: boolean }) {
 export default function SideNav() {
   const p = usePathname();
   const { user, name, email, signOut } = useUser();
+  const active = categoryOf(p);
+  const { open, toggle } = useOpenCats("bigova-cats-nav", ["city"], active);
   const glow = (e: React.MouseEvent<HTMLElement>) => {
     const b = e.currentTarget.getBoundingClientRect();
     e.currentTarget.style.setProperty("--mx", `${e.clientX - b.left}px`);
@@ -130,11 +137,26 @@ export default function SideNav() {
         Biga'da öğrenci olmak kolay
       </p>
 
-      <ul className="relative z-10 mt-8 min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]">
-        {sideTabs.map((t) => (
-          <Item key={t.href} t={t} on={isOn(p, t.href)} />
+      <nav aria-label="Sayfalar" className="relative z-10 mt-6 min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]">
+        <ul className="pb-1">
+          <Item t={home} on={isOn(p, home.href)} />
+        </ul>
+        {groupedTabs.map(({ cat, items }) => (
+          <CategoryGroup
+            key={cat.id}
+            cat={cat}
+            open={open.has(cat.id)}
+            onToggle={() => toggle(cat.id)}
+            badge={cat.id === "social" ? <UnreadBadge /> : undefined}
+          >
+            <ul className="space-y-1 pb-2">
+              {items.map((t) => (
+                <Item key={t.href} t={t} on={isOn(p, t.href)} />
+              ))}
+            </ul>
+          </CategoryGroup>
         ))}
-      </ul>
+      </nav>
 
       <div className="absolute inset-x-0 bottom-0 h-44" aria-hidden>
         <Wave c="rgba(255,255,255,.07)" cls="wave-a" />

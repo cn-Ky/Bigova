@@ -1,6 +1,8 @@
 import AdaptiveNavigation from "@/components/AdaptiveNavigation";
 import ClickSounds from "@/components/ClickSounds";
 import ConsoleBanner from "@/components/ConsoleBanner";
+import NotificationProvider from "@/components/NotificationProvider";
+import ReferralSync from "@/components/ReferralSync";
 import Splash from "@/components/Splash";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
@@ -58,8 +60,11 @@ export default function RootLayout({
         <ConsoleBanner />
         <ClickSounds />
         <Splash />
-        <AdaptiveNavigation />
-        <div className="shell pb-28 lg:pb-10">{children}</div>
+        <NotificationProvider>
+          <AdaptiveNavigation />
+          <div className="shell pb-28 lg:pb-10">{children}</div>
+          <ReferralSync />
+        </NotificationProvider>
       </body>
     </html>
   );

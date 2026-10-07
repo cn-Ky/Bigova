@@ -1,6 +1,7 @@
 "use client";
 import Avatar from "@/components/bigocuk/Avatar";
 import Coin from "@/components/bigocuk/Coin";
+import InviteCard from "@/components/bigocuk/InviteCard";
 import { useBigocuk } from "@/lib/bigocuk/api";
 import { COIN_NAME } from "@/lib/bigocuk/config";
 import { GAMES } from "@/lib/bigocuk/games";
@@ -71,6 +72,9 @@ export default function Bigocuk() {
             )}
           </div>
         </div>
+
+        {/* Arkadaş daveti */}
+        {status === "ready" && <InviteCard />}
 
         {/* Oyun kataloğu */}
         <h2 className="mt-7 font-display text-xl font-extrabold">Oyunlar</h2>

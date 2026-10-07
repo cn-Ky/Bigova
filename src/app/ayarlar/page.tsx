@@ -1,5 +1,6 @@
 "use client";
 import AccountSettings from "@/components/AccountSettings";
+import PushControl from "@/components/PushControl";
 import {
     CLICK_SOUND_ENABLED_KEY,
     CLICK_SOUND_STYLE_KEY,
@@ -75,6 +76,9 @@ export default function Ayarlar() {
       </header>
       <section className="px-5 pt-6">
         <AccountSettings />
+        <div className="mt-4">
+          <PushControl variant="card" />
+        </div>
         <section className="mt-7 border-b border-ink/10 pb-6">
           <div className="flex items-center justify-between gap-4">
             <div>

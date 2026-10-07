@@ -1,4 +1,5 @@
 "use client";
+import SearchBox from "@/components/SearchBox";
 import Mascot from "@/components/Mascot";
 import {
   JOB_CATEGORIES,
@@ -18,7 +19,6 @@ import {
   faEnvelope,
   faGraduationCap,
   faLocationDot,
-  faMagnifyingGlass,
   faPhone,
   faPlus,
   faSackDollar,
@@ -29,7 +29,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const inputClass =
-  "w-full rounded-xl bg-foam px-4 py-3 outline-none focus:ring-2 focus:ring-tide";
+  "w-full rounded-xl bg-foam px-4 py-3 field-ring";
 const LOCAL_KEY = "bigova-demo-jobs";
 const emptyForm = {
   title: "",
@@ -180,16 +180,7 @@ export default function IsIlanlari() {
             <FontAwesomeIcon icon={faPlus} />
           </button>
         </div>
-        <label className="mt-3 flex items-center gap-2 rounded-full bg-card px-4 py-3 text-ink transition-shadow focus-within:ring-2 focus-within:ring-tide focus-within:ring-offset-2 focus-within:ring-offset-sea">
-          <FontAwesomeIcon icon={faMagnifyingGlass} className="opacity-50" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Pozisyon, işletme veya konum ara"
-            aria-label="İlan ara"
-            className="w-full bg-transparent outline-none focus-visible:outline-none focus-visible:ring-0"
-          />
-        </label>
+        <SearchBox className="mt-3" value={q} onChange={setQ} placeholder="Pozisyon, işletme veya konum ara" label="İlan ara" />
         <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
           {["Tümü", ...JOB_TYPES].map((t) => (
             <motion.button

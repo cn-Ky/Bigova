@@ -11,8 +11,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const field = "rounded-2xl bg-foam p-4 outline-none focus:ring-2 focus:ring-tide";
+const field = "rounded-2xl bg-foam p-4 field-ring";
 const clean = (s: string) => s.trim().replace(/\s+/g, " ");
+const REF_KEY = "bigova-ref";
+const cleanRef = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
 
 export default function Giris() {
   const router = useRouter();
@@ -26,6 +28,19 @@ export default function Giris() {
   const [busy, setBusy] = useState(false);
   const [canResend, setCanResend] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [refCode, setRefCode] = useState("");
+
+  useEffect(() => {
+    // Davet bağlantısı: /giris?ref=KOD → kayıt formu açılır, kod hazır gelir
+    const ref = cleanRef(new URLSearchParams(window.location.search).get("ref") ?? "");
+    if (ref) {
+      setRefCode(ref);
+      setMode("register");
+      try { localStorage.setItem(REF_KEY, ref); } catch {}
+    } else {
+      try { setRefCode(cleanRef(localStorage.getItem(REF_KEY) ?? "")); } catch {}
+    }
+  }, []);
 
   useEffect(() => {
     const hata = new URLSearchParams(window.location.search).get("hata");
@@ -127,7 +142,13 @@ export default function Giris() {
           email: mail,
           password,
           options: {
-            data: { first_name: first, last_name: last, name: `${first} ${last}` },
+            data: {
+              first_name: first,
+              last_name: last,
+              name: `${first} ${last}`,
+              // Davet kodu kullanıcı meta verisinde saklanır: e-posta başka cihazda doğrulansa da kaybolmaz
+              ...(refCode.length === 8 ? { ref_code: refCode } : {}),
+            },
             emailRedirectTo: `${location.origin}/auth/callback`,
           },
         });
@@ -232,6 +253,26 @@ export default function Giris() {
             {show ? "Gizle" : "Göster"}
           </button>
         </div>
+        {mode === "register" && (
+          <div>
+            <input
+              value={refCode}
+              onChange={(e) => setRefCode(cleanRef(e.target.value))}
+              placeholder="Davet kodu (varsa)"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              maxLength={8}
+              aria-describedby="ref-help"
+              className={`${field} w-full font-display font-extrabold uppercase tracking-[.2em] placeholder:font-body placeholder:font-normal placeholder:normal-case placeholder:tracking-normal`}
+            />
+            <p id="ref-help" className="mt-1.5 px-1 text-xs font-bold text-ink/65">
+              {refCode.length === 8
+                ? "Kayıt olup e-postanı doğruladığında sen de arkadaşın da +30 Bigcoin kazanırsınız."
+                : "Bir arkadaşın davet ettiyse kodunu yaz; ikiniz de +30 Bigcoin kazanırsınız."}
+            </p>
+          </div>
+        )}
         <button
           type="submit"
           disabled={busy}

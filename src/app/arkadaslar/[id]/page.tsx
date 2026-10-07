@@ -1,5 +1,6 @@
 "use client";
 import UserAvatar from "@/components/bigocuk/UserAvatar";
+import { useUnread } from "@/components/NotificationProvider";
 import { useAvatars } from "@/lib/bigocuk/useAvatars";
 import { demoFriends } from "@/lib/demoData";
 import { supabaseBrowser } from "@/lib/supabase/client";
@@ -29,6 +30,7 @@ export default function DirectMessage() {
   const params = useParams<{ id: string }>();
   const friendId = params.id;
   const { user } = useUser();
+  const { markRead } = useUnread();
   const sb = useMemo(() => supabaseBrowser(), []);
   const [friend, setFriend] = useState<Profile | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -172,6 +174,12 @@ export default function DirectMessage() {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length]);
+
+  // sohbet açıkken (ve yeni mesaj geldikçe) okundu işaretle
+  const lastIncoming = [...messages].reverse().find((m) => m.from_id === friendId)?.created_at;
+  useEffect(() => {
+    if (user && isFriend && UUID_RE.test(friendId)) void markRead(friendId);
+  }, [user, isFriend, friendId, lastIncoming, markRead]);
 
   async function send(e?: React.FormEvent) {
     e?.preventDefault();
@@ -407,7 +415,7 @@ export default function DirectMessage() {
           rows={1}
           placeholder="Mesaj yaz (Enter ile gönder)"
           aria-label="Mesaj yaz"
-          className="max-h-28 min-h-12 flex-1 resize-y rounded-2xl bg-card px-4 py-3 outline-none focus:ring-2 focus:ring-tide"
+          className="max-h-28 min-h-12 flex-1 resize-y rounded-2xl bg-card px-4 py-3 field-ring"
         />
         <button
           type="submit"

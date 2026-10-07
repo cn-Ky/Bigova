@@ -28,7 +28,7 @@ const SLOT_IDS = SLOTS.map((s) => s.id);
 const TIER_TONE: Record<string, string> = { Yaygın: "bg-foam text-ink/70", Nadir: "bg-tide/25 text-ink", Efsanevi: "bg-sun/40 text-deep" };
 
 export default function AvatarSayfasi() {
-  const { status, state, buy, saveAvatar, refresh } = useBigocuk();
+  const { status, state, loadError, buy, saveAvatar, refresh } = useBigocuk();
   const live = status === "ready" && !!state;
   const [draft, setDraft] = useState<AvatarConfig>(DEFAULT_AVATAR);
   const [tab, setTab] = useState<Slot>("species");
@@ -137,6 +137,7 @@ export default function AvatarSayfasi() {
           <FontAwesomeIcon icon={status === "error" ? faTriangleExclamation : faPaw} className={status === "error" ? "text-coral" : "text-sea"} />
           <p className="min-w-0 flex-1 text-sm font-bold">
             {status === "error" ? "Avatar bilgilerin yüklenemedi, bu yüzden kaydedemezsin." : "Avatar bilgilerin yükleniyor…"}
+            {status === "error" && loadError && <span className="mt-1 block text-xs font-semibold text-ink/60">Ayrıntı: {loadError}</span>}
           </p>
           {status === "error" && (
             <button onClick={() => void refresh()} className="rounded-xl bg-sea px-3.5 py-2 text-sm font-bold text-white">

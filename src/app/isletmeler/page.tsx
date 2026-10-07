@@ -1,27 +1,21 @@
 "use client";
+import SearchBox from "@/components/SearchBox";
 import Mascot from "@/components/Mascot";
 import { demoBusinesses } from "@/lib/demoData";
+import { isDemo, openState, telUrl, type Business } from "@/lib/business";
 import {
+    faChevronRight,
     faClock,
-    faMagnifyingGlass,
     faPhone,
     faRestroom,
+    faUtensils,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-type B = {
-  id: string;
-  name: string;
-  category: string;
-  phone?: string;
-  price_info?: string;
-  has_toilet: boolean;
-  opens_at?: string;
-  closes_at?: string;
-  address?: string;
-};
+type B = Business;
 
 export default function Isletmeler() {
   const [q, setQ] = useState("");
@@ -62,16 +56,7 @@ export default function Isletmeler() {
     <main>
       <header className="sticky top-0 z-20 rounded-b-[28px] bg-sea px-5 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))] text-white shadow-lg">
         <h1 className="font-display text-2xl font-extrabold">İşletmeler</h1>
-        <label className="mt-3 flex items-center gap-2 rounded-full bg-card px-4 py-3 text-ink transition-shadow focus-within:ring-2 focus-within:ring-tide focus-within:ring-offset-2 focus-within:ring-offset-sea">
-          <FontAwesomeIcon icon={faMagnifyingGlass} className="opacity-50" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="İşletme ara"
-            aria-label="İşletme ara"
-            className="w-full bg-transparent outline-none focus-visible:outline-none focus-visible:ring-0"
-          />
-        </label>
+        <SearchBox className="mt-3" value={q} onChange={setQ} placeholder="İşletme ara" label="İşletme ara" />
         <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
           {cats.map((c) => (
             <motion.button
@@ -101,46 +86,64 @@ export default function Isletmeler() {
               whileTap={{ scale: 0.97 }}
               whileHover={{ y: -3 }}
               transition={{ type: "spring", stiffness: 300, damping: 24 }}
-              className="rounded-[24px] bg-card p-4 shadow-sm"
+              className="group relative rounded-[24px] bg-card p-4 shadow-sm transition-shadow hover:shadow-lg"
             >
-              <div className="flex items-start justify-between gap-2">
-                <b className="font-display text-lg leading-tight">{b.name}</b>
-                <span className="rounded-full bg-tide/20 px-3 py-0.5 text-xs font-bold">
-                  {b.category}
-                </span>
-              </div>
-              {(b.id.startsWith("demo-") || b.name.startsWith("Örnek ")) && (
-                <p className="mt-1 text-xs font-bold text-coral">
-                  Temsili örnek veri · gerçek işletme bilgisi değildir
-                </p>
-              )}
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink/80">
-                {b.opens_at && (
-                  <span>
-                    <FontAwesomeIcon icon={faClock} /> {b.opens_at}–
-                    {b.closes_at}
+              {/* Kartın tamamı detay sayfasına gider; telefon düğmesi bağlantının üstünde kalır */}
+              <Link
+                href={`/isletmeler/${b.id}`}
+                aria-label={`${b.name} detaylarını aç`}
+                className="absolute inset-0 z-0 rounded-[24px]"
+              />
+              <div className="pointer-events-none relative z-10">
+                <div className="flex items-start justify-between gap-2">
+                  <b className="font-display text-lg leading-tight">{b.name}</b>
+                  <span className="shrink-0 rounded-full bg-tide/20 px-3 py-0.5 text-xs font-bold">
+                    {b.category}
                   </span>
+                </div>
+                {isDemo(b) && (
+                  <p className="mt-1 text-xs font-bold text-coral">
+                    Temsili örnek veri · gerçek işletme bilgisi değildir
+                  </p>
                 )}
-                <span>
-                  <FontAwesomeIcon icon={faRestroom} />{" "}
-                  {b.has_toilet ? "Tuvalet var" : "Tuvalet yok"}
-                </span>
-                {b.price_info && (
-                  <span className="font-bold text-coral">{b.price_info}</span>
-                )}
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink/80">
+                  {b.opens_at && (
+                    <span>
+                      <FontAwesomeIcon icon={faClock} /> {b.opens_at}–{b.closes_at}
+                      {(() => {
+                        const st = openState(b);
+                        return st ? (
+                          <span className={`ml-2 rounded-full px-2 py-0.5 text-[11px] font-extrabold ${st.isOpen ? "bg-tide/25 text-ink" : "bg-coral/20 text-ink"}`}>
+                            {st.isOpen ? "Açık" : "Kapalı"}
+                          </span>
+                        ) : null;
+                      })()}
+                    </span>
+                  )}
+                  <span>
+                    <FontAwesomeIcon icon={faRestroom} /> {b.has_toilet ? "Tuvalet var" : "Tuvalet yok"}
+                  </span>
+                  {b.price_info && <span className="font-bold text-coral">{b.price_info}</span>}
+                </div>
+                {b.address && <p className="mt-2 text-sm text-ink/70">{b.address}</p>}
               </div>
-              {b.address && (
-                <p className="mt-2 text-sm text-ink/70">{b.address}</p>
-              )}
-              {b.phone && (
-                <motion.a
-                  whileTap={{ scale: 0.9 }}
-                  href={`tel:${b.phone.replace(/\s/g, "")}`}
-                  className="mt-3 inline-flex items-center gap-2 rounded-full bg-sea px-4 py-2 text-sm font-bold text-white"
-                >
-                  <FontAwesomeIcon icon={faPhone} /> Ara
-                </motion.a>
-              )}
+              <div className="relative z-10 mt-3 flex items-center justify-between gap-2">
+                {b.phone ? (
+                  <motion.a
+                    whileTap={{ scale: 0.9 }}
+                    href={telUrl(b.phone)}
+                    className="inline-flex items-center gap-2 rounded-full bg-sea px-4 py-2 text-sm font-bold text-white"
+                  >
+                    <FontAwesomeIcon icon={faPhone} /> Ara
+                  </motion.a>
+                ) : (
+                  <span />
+                )}
+                <span className="pointer-events-none inline-flex items-center gap-2 text-sm font-extrabold text-sea">
+                  <FontAwesomeIcon icon={faUtensils} /> Menü ve detaylar
+                  <FontAwesomeIcon icon={faChevronRight} className="transition group-hover:translate-x-1" />
+                </span>
+              </div>
             </motion.li>
           ))}
         </AnimatePresence>

@@ -2,7 +2,11 @@
 import BottomNav from "@/components/BottomNav";
 import Mascot from "@/components/Mascot";
 import SideNav from "@/components/SideNav";
-import { isOn, settingsTab, sideTabs, type SideTab } from "@/components/tabs";
+import CategoryGroup from "@/components/CategoryGroup";
+import UnreadBadge from "@/components/UnreadBadge";
+import { isOn, settingsTab, type SideTab } from "@/components/tabs";
+import { categoryOf, flatLinks, groupedTabs, home } from "@/lib/menuData";
+import { useOpenCats } from "@/lib/useOpenCats";
 import { useUser } from "@/lib/useUser";
 import { faBars, faRightFromBracket, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -11,7 +15,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const links = [...sideTabs, settingsTab as SideTab];
 
 function TopLink({
   item,
@@ -37,6 +40,7 @@ function TopLink({
     >
       <span className="adaptive-top-icon">
         <FontAwesomeIcon icon={item.i} />
+        {item.href === "/arkadaslar" && <UnreadBadge />}
       </span>
       {labeled && <span className="adaptive-top-label">{item.l}</span>}
     </Link>
@@ -47,6 +51,8 @@ export default function AdaptiveNavigation() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { user, signOut } = useUser();
+  const active = categoryOf(pathname);
+  const { open: openCats, toggle } = useOpenCats("bigova-cats-nav", ["city"], active);
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
@@ -70,13 +76,11 @@ export default function AdaptiveNavigation() {
           <Mascot size={34} />
         </Link>
         <div className="adaptive-top-items">
-          {links.map((item) => (
-            <TopLink
-              key={item.href}
-              item={item}
-              active={isOn(pathname, item.href)}
-              labeled={false}
-            />
+          {flatLinks.map(({ item, group }, i) => (
+            <span key={item.href} className="contents">
+              {i > 0 && flatLinks[i - 1].group !== group && <span className="adaptive-top-sep" aria-hidden="true" />}
+              <TopLink item={item} active={isOn(pathname, item.href)} labeled={false} />
+            </span>
           ))}
         </div>
       </nav>
@@ -89,13 +93,11 @@ export default function AdaptiveNavigation() {
           <b className="font-display text-xl">Bigova</b>
         </Link>
         <div className="adaptive-top-items">
-          {links.map((item) => (
-            <TopLink
-              key={item.href}
-              item={item}
-              active={isOn(pathname, item.href)}
-              labeled
-            />
+          {flatLinks.map(({ item, group }, i) => (
+            <span key={item.href} className="contents">
+              {i > 0 && flatLinks[i - 1].group !== group && <span className="adaptive-top-sep" aria-hidden="true" />}
+              <TopLink item={item} active={isOn(pathname, item.href)} labeled />
+            </span>
           ))}
         </div>
       </nav>
@@ -145,15 +147,29 @@ export default function AdaptiveNavigation() {
                   </button>
                 </div>
                 <div className="grid gap-1">
-                  {links.map((item) => (
-                    <TopLink
-                      key={item.href}
-                      item={item}
-                      active={isOn(pathname, item.href)}
-                      labeled
-                      onNavigate={() => setOpen(false)}
-                    />
+                  <TopLink item={home} active={isOn(pathname, home.href)} labeled onNavigate={() => setOpen(false)} />
+                  {groupedTabs.map(({ cat, items }) => (
+                    <CategoryGroup
+                      key={cat.id}
+                      cat={cat}
+                      open={openCats.has(cat.id)}
+                      onToggle={() => toggle(cat.id)}
+                      badge={cat.id === "social" ? <UnreadBadge /> : undefined}
+                    >
+                      <div className="grid gap-1 pb-2">
+                        {items.map((item) => (
+                          <TopLink
+                            key={item.href}
+                            item={item}
+                            active={isOn(pathname, item.href)}
+                            labeled
+                            onNavigate={() => setOpen(false)}
+                          />
+                        ))}
+                      </div>
+                    </CategoryGroup>
                   ))}
+                  <TopLink item={settingsTab as SideTab} active={isOn(pathname, settingsTab.href)} labeled onNavigate={() => setOpen(false)} />
                 </div>
                 {user && (
                   <button

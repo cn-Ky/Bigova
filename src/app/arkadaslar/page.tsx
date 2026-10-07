@@ -1,5 +1,8 @@
 "use client";
+import SearchBox from "@/components/SearchBox";
 import UserAvatar from "@/components/bigocuk/UserAvatar";
+import UnreadBadge from "@/components/UnreadBadge";
+import { useUnread } from "@/components/NotificationProvider";
 import { useAvatars } from "@/lib/bigocuk/useAvatars";
 import { demoFriends } from "@/lib/demoData";
 import { supabaseBrowser } from "@/lib/supabase/client";
@@ -9,7 +12,6 @@ import {
   faFire,
   faPaw,
   faTrophy,
-  faMagnifyingGlass,
   faMessage,
   faPaperPlane,
   faUser,
@@ -56,6 +58,7 @@ function Highlight({ name, term }: { name: string; term: string }) {
 
 export default function Arkadaslar() {
   const { user } = useUser();
+  const { byFriend } = useUnread();
   const sb = useMemo(() => supabaseBrowser(), []);
   const [people, setPeople] = useState<Person[]>([]);
   const [query, setQuery] = useState("");
@@ -310,22 +313,7 @@ export default function Arkadaslar() {
             </li>
           )}
         </ul>
-        <label className="mt-4 flex items-center gap-2 rounded-full bg-card px-4 py-3 text-ink focus-within:ring-2 focus-within:ring-tide focus-within:ring-offset-2 focus-within:ring-offset-sea">
-          <FontAwesomeIcon icon={faMagnifyingGlass} className="opacity-50" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="İsim yaz: C, Ca, Can…"
-            aria-label="Adıyla arkadaş ara"
-            autoComplete="off"
-            className="w-full bg-transparent outline-none"
-          />
-          {searching && (
-            <button onClick={() => setQuery("")} aria-label="Aramayı temizle" className="grid h-6 w-6 place-items-center rounded-full bg-foam text-xs">
-              <FontAwesomeIcon icon={faXmark} />
-            </button>
-          )}
-        </label>
+        <SearchBox className="mt-4" value={query} onChange={setQuery} placeholder="İsim yaz: C, Ca, Can…" label="Adıyla arkadaş ara" />
       </header>
       <div className="grid gap-6 px-5 py-5 lg:grid-cols-3">
         {notice && (
@@ -422,7 +410,7 @@ export default function Arkadaslar() {
                     >
                     <span className="min-w-0 flex-1">
                       <b className="block truncate">{person.name || "Öğrenci"}</b>
-                      <span className="block truncate text-sm text-ink/65">
+                      <span className={`block truncate text-sm ${(byFriend[person.id] ?? 0) > 0 ? "font-extrabold text-ink" : "text-ink/65"}`}>
                         {person.last ? `${person.last.mine ? "Sen: " : ""}${person.last.body}` : "Henüz mesaj yok · ilk mesajı sen yaz"}
                       </span>
                       {person.streak > 0 && (
@@ -431,8 +419,9 @@ export default function Arkadaslar() {
                         </span>
                       )}
                     </span>
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sea text-white">
+                    <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sea text-white">
                       <FontAwesomeIcon icon={faMessage} />
+                      <UnreadBadge friendId={person.id} className="absolute -right-1.5 -top-1.5 ring-2 ring-card" />
                     </span>
                     </Link>
                   </div>
@@ -556,16 +545,7 @@ function DemoFriends() {
         <p className="text-sm text-white/75">
           Deneme modu · örnek profiller bu tarayıcıda çalışır.
         </p>
-        <label className="mt-4 flex items-center gap-2 rounded-full bg-card px-4 py-3 text-ink">
-          <FontAwesomeIcon icon={faMagnifyingGlass} className="opacity-50" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Örnek ad ara"
-            aria-label="Demo arkadaş ara"
-            className="w-full bg-transparent outline-none"
-          />
-        </label>
+        <SearchBox className="mt-4" value={query} onChange={setQuery} placeholder="Örnek ad ara" label="Demo arkadaş ara" />
       </header>
       <div className="grid gap-6 px-5 py-5">
         {friends.length > 0 && (

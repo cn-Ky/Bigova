@@ -1,10 +1,10 @@
 "use client";
+import SearchBox from "@/components/SearchBox";
 import { demoBooks } from "@/lib/demoData";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useUser } from "@/lib/useUser";
 import {
     faBook,
-    faMagnifyingGlass,
     faPlus,
     faUser,
     faXmark,
@@ -25,7 +25,7 @@ type Book = {
   profiles: { name: string } | null;
 };
 const inputClass =
-  "w-full rounded-xl bg-foam px-4 py-3 outline-none focus:ring-2 focus:ring-tide";
+  "w-full rounded-xl bg-foam px-4 py-3 field-ring";
 
 export default function KitapPazari() {
   const { user } = useUser();
@@ -152,16 +152,7 @@ export default function KitapPazari() {
             <FontAwesomeIcon icon={faPlus} />
           </button>
         </div>
-        <label className="mt-3 flex items-center gap-2 rounded-full bg-card px-4 py-3 text-ink">
-          <FontAwesomeIcon icon={faMagnifyingGlass} className="opacity-50" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Kitap, yazar veya ders ara"
-            aria-label="Kitap ara"
-            className="w-full bg-transparent outline-none"
-          />
-        </label>
+        <SearchBox className="mt-3" value={query} onChange={setQuery} placeholder="Kitap, yazar veya ders ara" label="Kitap ara" />
       </header>
       {notice && !showForm && (
         <p role="status" className="mx-5 mt-4 text-sm font-bold text-coral">
