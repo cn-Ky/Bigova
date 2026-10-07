@@ -96,7 +96,7 @@ export default function Ayarlar() {
               className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${soundEnabled ? "bg-tide" : "bg-ink/25"}`}
             >
               <span
-                className={`absolute top-1 grid h-6 w-6 place-items-center rounded-full bg-white shadow transition-transform ${soundEnabled ? "translate-x-7" : "translate-x-1"}`}
+                className={`absolute left-0 top-1 grid h-6 w-6 place-items-center rounded-full bg-white shadow transition-transform ${soundEnabled ? "translate-x-7" : "translate-x-1"}`}
               />
             </button>
           </div>

@@ -267,7 +267,7 @@ function PrivacyToggle({ userId }: { userId: string }) {
           onClick={toggle}
           className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${friendsOnly ? "bg-tide" : "bg-ink/25"}`}
         >
-          <span className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-transform ${friendsOnly ? "translate-x-7" : "translate-x-1"}`} />
+          <span className={`absolute left-0 top-1 h-6 w-6 rounded-full bg-white shadow transition-transform ${friendsOnly ? "translate-x-7" : "translate-x-1"}`} />
         </button>
       </div>
       <div className="mt-2"><Status msg={msg} /></div>
