@@ -31,6 +31,13 @@ import { useEffect, useRef, useState } from "react";
 
 const tiles = [
   {
+    kind: "news",
+    t: "Biga Gündemi",
+    d: "Haberler ve duyurular",
+    href: "/haberler",
+    c: "bg-coral text-deep",
+  },
+  {
     kind: "business",
     t: "İşletmeler",
     d: "Fiyat, saat, tuvalet",
@@ -341,6 +348,41 @@ function TileArt({ kind }: { kind: string }) {
             stroke="currentColor"
             strokeWidth="2"
           />
+        </svg>
+      );
+    case "news":
+      return (
+        <svg {...shared}>
+          <path
+            d="M24 24h50q5 0 5 5v44H30q-6 0-6-6z"
+            fill="currentColor"
+            opacity=".18"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M79 40h10q4 0 4 4v26q0 6-6 6H30"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+          <path d="M33 34h34v10H33z" fill="currentColor" opacity=".55" />
+          <path
+            d="M33 53h34M33 61h34M33 69h22"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <path
+            d="M88 18a14 14 0 0 1 10 10M84 25a8 8 0 0 1 6 6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <circle cx="82" cy="31" r="3" fill="currentColor" />
         </svg>
       );
     case "ustalar":

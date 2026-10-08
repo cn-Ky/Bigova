@@ -15,6 +15,7 @@ import {
   faPoll,
   faScrewdriverWrench,
   faStore,
+  faTowerBroadcast,
   faUserGroup,
 } from "@fortawesome/free-solid-svg-icons";
 export const tabs = [
@@ -31,6 +32,12 @@ export const tabs = [
 ];
 export const sideTabs = [
   ...tabs.slice(0, 4),
+  {
+    href: "/haberler",
+    l: "Biga Gündemi",
+    i: faTowerBroadcast,
+    hint: "Biga'dan haberler ve duyurular",
+  },
   {
     href: "/harita",
     l: "Biga Haritası",

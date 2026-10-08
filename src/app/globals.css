@@ -381,6 +381,9 @@ select:focus-visible {
 .tile-art--jobs {
   animation: art-sway 4.2s ease-in-out infinite;
 }
+.tile-art--news {
+  animation: art-page 4.6s ease-in-out infinite;
+}
 .tile-art--ustalar {
   animation: art-sway 4.4s ease-in-out infinite;
 }
@@ -4264,4 +4267,50 @@ html[data-chat] .adaptive-mobile-dock {
   .chat-dot {
     animation: none;
   }
+}
+
+/* ═════════ Haberler (Biga Gündemi) ═════════ */
+.news-ticker-viewport {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+}
+.news-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: news-ticker 46s linear infinite;
+}
+.news-ticker:hover .news-ticker-track,
+.news-ticker:focus-within .news-ticker-track {
+  animation-play-state: paused;
+}
+@keyframes news-ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .news-ticker-viewport {
+    overflow-x: auto;
+    mask-image: none;
+  }
+  .news-ticker-track {
+    animation: none;
+  }
+}
+.news-dropcap::first-letter {
+  float: left;
+  margin: 0.08em 0.12em 0 0;
+  font-family: var(--f-display), sans-serif;
+  font-size: 3.4em;
+  font-weight: 800;
+  line-height: 0.82;
+  color: rgb(var(--sea));
+}
+.news-cover-icon {
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.group:hover .news-cover-icon {
+  scale: 1.08;
 }
