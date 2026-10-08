@@ -13,6 +13,7 @@ import {
   faMapLocationDot,
   faNewspaper,
   faPoll,
+  faScrewdriverWrench,
   faStore,
   faUserGroup,
 } from "@fortawesome/free-solid-svg-icons";
@@ -47,6 +48,12 @@ export const sideTabs = [
     l: "İş İlanları",
     i: faBriefcase,
     hint: "İş, staj ve ek gelir",
+  },
+  {
+    href: "/ustalar",
+    l: "Usta Bul",
+    i: faScrewdriverWrench,
+    hint: "Tesisatçı, elektrikçi, mobilyacı",
   },
   {
     href: "/arkadaslar",

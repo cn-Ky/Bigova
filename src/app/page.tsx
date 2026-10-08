@@ -73,6 +73,13 @@ const tiles = [
     c: "bg-tide text-deep",
   },
   {
+    kind: "ustalar",
+    t: "Usta Bul",
+    d: "Tesisatçı, elektrikçi, mobilyacı",
+    href: "/ustalar",
+    c: "bg-sun text-deep",
+  },
+  {
     kind: "friends",
     t: "Arkadaşlar",
     d: "Arkadaş ekle, bire bir sohbet",
@@ -334,6 +341,50 @@ function TileArt({ kind }: { kind: string }) {
             stroke="currentColor"
             strokeWidth="2"
           />
+        </svg>
+      );
+    case "ustalar":
+      return (
+        <svg {...shared}>
+          <path
+            d="M30 70 66 34"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="9"
+            strokeLinecap="round"
+            opacity=".28"
+          />
+          <path
+            d="M30 70 66 34"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <path
+            d="M62 38a14 14 0 1 1 14-14l-7 3-6-6 3-7a14 14 0 0 0-10 24z"
+            fill="currentColor"
+            opacity=".3"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M84 76 52 44"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <path
+            d="m80 80 8-8 6 6-8 8z"
+            fill="currentColor"
+            opacity=".55"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+          <circle cx="24" cy="76" r="4" fill="currentColor" />
         </svg>
       );
     case "friends":

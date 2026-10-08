@@ -24,10 +24,10 @@ export const CATEGORIES: Category[] = [
   {
     id: "city",
     label: "Şehir & Günlük Hayat",
-    blurb: "İşletmeler, ulaşım, harita, iş ilanları",
+    blurb: "İşletmeler, ulaşım, harita, iş ilanları, usta bul",
     icon: faCity,
     tone: "tide",
-    hrefs: ["/isletmeler", "/ulasim", "/harita", "/is-ilanlari"],
+    hrefs: ["/isletmeler", "/ulasim", "/harita", "/is-ilanlari", "/ustalar"],
   },
   {
     id: "school",

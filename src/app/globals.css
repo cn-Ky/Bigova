@@ -381,6 +381,9 @@ select:focus-visible {
 .tile-art--jobs {
   animation: art-sway 4.2s ease-in-out infinite;
 }
+.tile-art--ustalar {
+  animation: art-sway 4.4s ease-in-out infinite;
+}
 .tile-art--friends {
   animation: art-float 3.6s ease-in-out infinite;
 }
