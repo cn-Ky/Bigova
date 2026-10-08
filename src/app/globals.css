@@ -4215,3 +4215,53 @@ html[data-mobile-nav="bottom"] .adaptive-drawer-bar {
 .adaptive-drawer-panel .side-cat-head {
   padding-inline: 0.5rem;
 }
+
+/* ═════════ Sohbet ekranı (arkadaslar/[id]) ═════════ */
+/* .shell overflow:hidden olduğu için sticky başlık/yazma alanı yapışmıyordu; sohbette overflow:clip kullanılır. */
+html[data-chat] .shell {
+  overflow: clip;
+  padding-bottom: 0 !important;
+}
+/* Sohbette alt menü yazma alanını kapatmasın */
+html[data-chat] .adaptive-mobile-dock {
+  display: none !important;
+}
+@media (max-width: 1023px) {
+  html[data-chat][data-mobile-nav="top"] .chat-head,
+  html[data-chat][data-mobile-nav="drawer"] .chat-head {
+    top: 3.75rem;
+  }
+}
+@media (min-width: 1024px) {
+  html[data-chat][data-desktop-nav="top"] .chat-head {
+    top: 4.25rem;
+  }
+}
+.chat-composer {
+  position: sticky;
+}
+.chat-dot {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgb(var(--ink) / 0.45);
+  animation: chat-dot 1s ease-in-out infinite;
+}
+@keyframes chat-dot {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-dot {
+    animation: none;
+  }
+}
