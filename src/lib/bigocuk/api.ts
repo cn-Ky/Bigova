@@ -26,6 +26,36 @@ const normalize = (raw: any): BigocukState => ({
   avatar: { ...DEFAULT_AVATAR, ...(raw?.avatar ?? {}) },
 });
 
+export type PomodoroServer = {
+  today: { n: number; min: number };
+  week: { day: string; n: number }[];
+  streak: number;
+  earnedToday: number;
+  cap: number;
+  perCoin: number;
+  minReward: number;
+};
+/** complete: ok = sayıldı · too_early = süre dolmadı (wait sn sonra tekrar dene) · expired · no_session */
+export type PomodoroClaim = {
+  status: "ok" | "too_early" | "expired" | "no_session";
+  earned: number;
+  note: "" | "short" | "cap";
+  wait: number;
+  next: BigocukState;
+  pomodoro: PomodoroServer;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const normalizePomodoro = (raw: any): PomodoroServer => ({
+  today: { n: Number(raw?.today?.n) || 0, min: Number(raw?.today?.min) || 0 },
+  week: Array.isArray(raw?.week) ? raw.week.map((w: { day: string; n: number }) => ({ day: String(w.day), n: Number(w.n) || 0 })) : [],
+  streak: Number(raw?.streak) || 0,
+  earnedToday: Number(raw?.earnedToday) || 0,
+  cap: Number(raw?.cap) || 0,
+  perCoin: Number(raw?.perCoin) || 0,
+  minReward: Number(raw?.minReward) || 0,
+});
+
 export const errMsg = (e: unknown) =>
   (e as { message?: string })?.message || "Bir şeyler ters gitti. Tekrar dene.";
 const isMissing = (e: unknown) => {
@@ -119,5 +149,24 @@ export function useBigocuk() {
     if (uid) rememberAvatar(uid, next.avatar); // arkadaş listesi hemen güncel görsün
   };
 
-  return { user, status, state, loadError, refresh, addSteps, commit, buy, saveAvatar };
+  /** Pomodoro istatistikleri (SQL kurulu değilse hata fırlatır). */
+  const pomodoroState = async () => normalizePomodoro(await rpc("pomodoro_state"));
+  /** Odak oturumunu sunucuda başlatır (süreyi sunucu saati sayar). */
+  const pomodoroStart = async (minutes: number, task: string) => {
+    await rpc("pomodoro_start", { p_minutes: minutes, p_task: task });
+  };
+  /** Oturumu tamamlar; sunucu geçen süreyi doğrular ve Bigcoin yazar. Durumu kendisi değiştirmez. */
+  const pomodoroComplete = async (): Promise<PomodoroClaim> => {
+    const raw = await rpc("pomodoro_complete");
+    return {
+      status: raw?.status ?? "no_session",
+      earned: Number(raw?.earned) || 0,
+      note: raw?.note ?? "",
+      wait: Number(raw?.wait) || 0,
+      next: normalize(raw),
+      pomodoro: normalizePomodoro(raw?.pomodoro),
+    };
+  };
+
+  return { user, status, state, loadError, refresh, addSteps, commit, buy, saveAvatar, pomodoroState, pomodoroStart, pomodoroComplete };
 }

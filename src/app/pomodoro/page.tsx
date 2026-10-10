@@ -1,7 +1,11 @@
 "use client";
+import Coin from "@/components/bigocuk/Coin";
 import Mascot from "@/components/Mascot";
+import { useBigocuk, type PomodoroServer } from "@/lib/bigocuk/api";
+import { POMODORO_DAILY_COIN_CAP, POMODORO_MIN_PER_COIN, POMODORO_MIN_REWARD_MIN } from "@/lib/bigocuk/config";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import {
+  faArrowRight,
   faBell,
   faBellSlash,
   faBrain,
@@ -27,6 +31,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 
 /* ───────── Tipler ve sabitler ───────── */
@@ -51,6 +56,7 @@ type Timer = {
   cycle: number;
 };
 type Day = { n: number; min: number };
+type Notice = { text: string; coins?: number; extra?: string };
 
 const KEY = "bigova-pomodoro";
 const DEFAULTS: Settings = {
@@ -228,9 +234,46 @@ export default function Pomodoro() {
   const [task, setTask] = useState("");
   const [days, setDays] = useState<Record<string, Day>>({});
   const [now, setNow] = useState(0);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const { status, state, commit, pomodoroState, pomodoroStart, pomodoroComplete } = useBigocuk();
+  const [srv, setSrv] = useState<PomodoroServer | null>(null);
+  const [srvMissing, setSrvMissing] = useState(false);
+  const live = status === "ready";
+  const server = live ? srv : null; // sunucu istatistikleri (giriş yapılmış ve SQL kurulu)
   const [showSettings, setShowSettings] = useState(false);
   const audio = useRef<AudioContext | null>(null);
+  // Callback'ler (finish gibi) en güncel değerleri okusun diye ref'lerde tutulur
+  const api = useRef({ pomodoroStart, pomodoroComplete, commit });
+  api.current = { pomodoroStart, pomodoroComplete, commit };
+  const rewardsRef = useRef(false);
+  rewardsRef.current = !!server;
+  const taskRef = useRef(task);
+  taskRef.current = task;
+
+  /* Giriş yapılmışsa sunucu istatistiklerini yükle */
+  useEffect(() => {
+    if (!live) {
+      setSrv(null);
+      setSrvMissing(false);
+      return;
+    }
+    let off = false;
+    pomodoroState()
+      .then((v) => {
+        if (off) return;
+        setSrv(v);
+        setSrvMissing(false);
+      })
+      .catch(() => {
+        if (off) return;
+        setSrv(null);
+        setSrvMissing(true); // pomodoro_upgrade.sql henüz çalıştırılmamış
+      });
+    return () => {
+      off = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live]);
 
   /* Kayıtlı durumu yükle */
   useEffect(() => {
@@ -292,6 +335,30 @@ export default function Pomodoro() {
     });
   };
 
+  /* Sunucuda odak oturumunu başlat (süreyi sunucu saati doğrular) */
+  const registerStart = useCallback((minutes: number) => {
+    if (!rewardsRef.current) return;
+    api.current.pomodoroStart(minutes, taskRef.current).catch(() => {
+      setNotice({ text: "Sunucuya bağlanılamadı. Süre çalışıyor ama bu tur Bigcoin kazandırmayabilir." });
+    });
+  }, []);
+
+  /* Oturum bitince Bigcoin talep et. Sunucu süre dolmadıysa kalan saniyeyi söyler, biz bekleyip yeniden deneriz. */
+  const claim = useCallback(async (tries = 0): Promise<void> => {
+    try {
+      const r = await api.current.pomodoroComplete();
+      if (r.status === "too_early" && tries < 2) {
+        setTimeout(() => void claim(tries + 1), (r.wait + 1) * 1000);
+        return;
+      }
+      api.current.commit(r.next);
+      setSrv(r.pomodoro);
+      if (r.earned > 0) setNotice((n) => ({ text: n?.text ?? "Pomodoro tamam.", coins: r.earned }));
+      else if (r.note === "cap") setNotice((n) => (n ? { ...n, extra: "Günlük Bigcoin sınırına ulaştın." } : n));
+      else if (r.note === "short") setNotice((n) => (n ? { ...n, extra: `Bigcoin için en az ${r.pomodoro.minReward} dk odak gerekir.` } : n));
+    } catch {}
+  }, []);
+
   /* Oturum bitişi / atlama */
   const finish = useCallback(
     (skipped: boolean) => {
@@ -310,6 +377,7 @@ export default function Pomodoro() {
       const start = Date.now();
       setTimer({ mode: nextMode, running: auto, endAt: auto ? start + total : 0, leftMs: total, totalMs: total, cycle });
       setNow(start);
+      if (auto && nextMode === "focus") registerStart(Math.round(total / 60000));
       if (skipped) return;
       const mins = Math.round(t.totalMs / 60000);
       if (t.mode === "focus") {
@@ -323,14 +391,15 @@ export default function Pomodoro() {
         t.mode === "focus"
           ? `${mins} dk odak tamam. ${nextMode === "long" ? "Uzun molayı hak ettin." : "Kısa bir mola ver."}`
           : "Mola bitti. Yeni tura hazır mısın?";
-      setNotice(message);
+      setNotice({ text: message });
+      if (t.mode === "focus" && rewardsRef.current) void claim();
       if (settings.sound) chime(t.mode === "focus" ? "done" : "back");
       try {
         navigator.vibrate?.([180, 80, 180]);
       } catch {}
       if (settings.notify) void notifyNow(message);
     },
-    [timer, settings],
+    [timer, settings, registerStart, claim],
   );
 
   /* Geri sayım: bitiş zamanına göre hesaplanır, sekme arka planda kalsa da kaymaz */
@@ -402,6 +471,7 @@ export default function Pomodoro() {
   const start = () => {
     unlockAudio();
     const t = Date.now();
+    if (timer.mode === "focus" && timer.leftMs === timer.totalMs) registerStart(Math.round(timer.totalMs / 60000));
     setNow(t);
     setTimer((p) => ({ ...p, running: true, endAt: t + p.leftMs }));
   };
@@ -427,26 +497,33 @@ export default function Pomodoro() {
   const toggleNotify = async () => {
     if (settings.notify) return update({ notify: false });
     try {
-      if (typeof Notification === "undefined") return setNotice("Bu tarayıcı bildirimleri desteklemiyor.");
+      if (typeof Notification === "undefined") return setNotice({ text: "Bu tarayıcı bildirimleri desteklemiyor." });
       const perm = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
       if (perm === "granted") update({ notify: true });
-      else setNotice("Bildirim izni verilmedi. Tarayıcı ayarlarından açabilirsin.");
+      else setNotice({ text: "Bildirim izni verilmedi. Tarayıcı ayarlarından açabilirsin." });
     } catch {}
   };
 
   /* İstatistikler (tarih kullandığı için yalnızca istemcide hesaplanır) */
-  const today = ready ? (days[dayKey()] ?? { n: 0, min: 0 }) : { n: 0, min: 0 };
+  const localToday = ready ? (days[dayKey()] ?? { n: 0, min: 0 }) : { n: 0, min: 0 };
+  const today = server ? server.today : localToday;
   const goalPct = clamp(today.n / settings.goal, 0, 1);
-  const week = ready
-    ? Array.from({ length: 7 }, (_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() - (6 - i));
-        return { n: days[dayKey(d)]?.n ?? 0, label: d.toLocaleDateString("tr-TR", { weekday: "short" }), today: i === 6 };
-      })
-    : [];
+  const week = server
+    ? server.week.map((w, i, a) => ({
+        n: w.n,
+        label: new Date(`${w.day}T12:00:00`).toLocaleDateString("tr-TR", { weekday: "short" }),
+        today: i === a.length - 1,
+      }))
+    : ready
+      ? Array.from({ length: 7 }, (_, i) => {
+          const d = new Date();
+          d.setDate(d.getDate() - (6 - i));
+          return { n: days[dayKey(d)]?.n ?? 0, label: d.toLocaleDateString("tr-TR", { weekday: "short" }), today: i === 6 };
+        })
+      : [];
   const maxN = Math.max(4, ...week.map((w) => w.n));
-  let streak = 0;
-  if (ready) {
+  let streak = server ? server.streak : 0;
+  if (ready && !server) {
     for (let i = 0; i < 30; i++) {
       const d = new Date();
       d.setDate(d.getDate() - i);
@@ -456,6 +533,9 @@ export default function Pomodoro() {
   }
 
   const accentStyle = { ["--accent" as string]: m.accent } as CSSProperties;
+  const perCoin = server?.perCoin || POMODORO_MIN_PER_COIN;
+  const minReward = server?.minReward || POMODORO_MIN_REWARD_MIN;
+  const cap = server?.cap || POMODORO_DAILY_COIN_CAP;
   const dotColor = timer.mode === "long" ? "--coral" : "--sun";
 
   return (
@@ -469,6 +549,11 @@ export default function Pomodoro() {
             <h1 className="font-display text-2xl font-extrabold">Pomodoro</h1>
             <p className="text-sm text-white/75">Dalgayla birlikte odaklan, mola ver</p>
           </div>
+          {live && state && (
+            <Link href="/bigocuk" aria-label={`${state.coins} Bigcoin, Bigocuk'a git`} className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-sm font-extrabold">
+              <Coin size={18} /> {state.coins.toLocaleString("tr-TR")}
+            </Link>
+          )}
         </div>
         <div className="mt-4 grid grid-cols-3 gap-1 rounded-xl bg-black/10 p-1" role="tablist" aria-label="Oturum türü">
           {(Object.keys(MODES) as Mode[]).map((k) => {
@@ -639,6 +724,56 @@ export default function Pomodoro() {
 
         {/* ── Yan paneller ── */}
         <div className="grid gap-4">
+          <section aria-label="Bigcoin ödülü" className="relative overflow-hidden rounded-[24px] bg-card p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-sun">
+                <Coin size={28} />
+              </span>
+              <div className="min-w-0 flex-1 leading-tight">
+                <b className="block font-display text-lg">Odaklan, Bigcoin kazan</b>
+                <span className="block text-[13px] text-ink/65">
+                  {perCoin} dk odak = 1 Bigcoin · en az {minReward} dk · günde en fazla {cap}
+                </span>
+              </div>
+            </div>
+            {server ? (
+              <div className="mt-3">
+                <div className="h-3 overflow-hidden rounded-full bg-foam" role="progressbar" aria-valuemin={0} aria-valuemax={cap} aria-valuenow={Math.min(server.earnedToday, cap)} aria-label="Bugün kazanılan Bigcoin">
+                  <motion.div
+                    className="h-full rounded-full bg-sun"
+                    initial={false}
+                    animate={{ width: `${clamp(server.earnedToday / cap, 0, 1) * 100}%` }}
+                    transition={{ type: "spring", stiffness: 160, damping: 22 }}
+                  />
+                </div>
+                <p className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-ink/60">
+                  <Coin size={14} /> Bugün {server.earnedToday} / {cap} Bigcoin kazandın
+                </p>
+                {settings.focus < minReward && (
+                  <p className="mt-2 rounded-xl bg-coral/15 px-3 py-2 text-xs font-bold">
+                    Odak süren {minReward} dk&apos;nın altında; bu turlar Bigcoin kazandırmaz.
+                  </p>
+                )}
+              </div>
+            ) : status === "guest" ? (
+              <Link href="/giris" className="mt-3 inline-flex items-center gap-2 rounded-xl bg-sea px-3.5 py-2 text-sm font-bold text-white">
+                Giriş yap, Bigcoin kazan <FontAwesomeIcon icon={faArrowRight} />
+              </Link>
+            ) : srvMissing ? (
+              <p className="mt-3 text-sm font-bold text-coral">
+                Kurulum eksik: <code>supabase/pomodoro_upgrade.sql</code> dosyasını çalıştır.
+              </p>
+            ) : status === "setup" ? (
+              <p className="mt-3 text-sm font-bold text-coral">
+                Kurulum eksik: <code>supabase/bigocuk_upgrade.sql</code> dosyasını çalıştır.
+              </p>
+            ) : status === "error" ? (
+              <p className="mt-3 text-sm font-bold text-coral">Bigcoin bilgilerin yüklenemedi. Sayfayı yenile.</p>
+            ) : (
+              <p className="mt-3 text-sm text-ink/60">Yükleniyor…</p>
+            )}
+          </section>
+
           <section aria-label="Bugünün özeti" className="rounded-[24px] bg-card p-4 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <h2 className="font-display text-lg font-extrabold">Bugün</h2>
@@ -783,7 +918,15 @@ export default function Pomodoro() {
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sun text-deep">
                 <FontAwesomeIcon icon={faCheck} />
               </span>
-              <p className="min-w-0 flex-1 text-sm font-bold leading-snug">{notice}</p>
+              <div className="min-w-0 flex-1 leading-snug">
+                <p className="text-sm font-bold">{notice.text}</p>
+                {notice.coins ? (
+                  <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-sun/25 px-2.5 py-0.5 text-xs font-extrabold">
+                    <Coin size={14} /> +{notice.coins} Bigcoin
+                  </span>
+                ) : null}
+                {notice.extra && <p className="mt-0.5 text-xs font-semibold text-ink/65">{notice.extra}</p>}
+              </div>
               <button type="button" onClick={() => setNotice(null)} aria-label="Kapat" className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-ink/55">
                 <FontAwesomeIcon icon={faXmark} />
               </button>

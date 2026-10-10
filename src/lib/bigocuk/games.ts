@@ -1,4 +1,4 @@
-import { faPersonWalking, type IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import { faPersonWalking, faStopwatch, type IconDefinition } from "@fortawesome/free-solid-svg-icons";
 
 /**
  * Bigocuk oyun kataloğu. Yeni oyun eklemek için bu diziye bir kayıt eklemek yeterli;
@@ -23,5 +23,14 @@ export const GAMES: Game[] = [
     href: "/bigocuk/yuruyus",
     icon: faPersonWalking,
     tone: "bg-sun text-deep",
+  },
+  {
+    id: "pomodoro",
+    title: "Pomodoro",
+    blurb: "Odaklan, ders çalış, Bigcoin kazan.",
+    reward: "5 dk odak = 1 Bigcoin",
+    href: "/pomodoro",
+    icon: faStopwatch,
+    tone: "bg-tide text-deep",
   },
 ];
