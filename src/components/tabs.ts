@@ -14,6 +14,7 @@ import {
   faNewspaper,
   faPoll,
   faScrewdriverWrench,
+  faStopwatch,
   faStore,
   faTowerBroadcast,
   faUserGroup,
@@ -79,6 +80,12 @@ export const sideTabs = [
     l: "Ders Programı",
     i: faCalendarWeek,
     hint: "Bölüm ve sınıf çizelgeleri",
+  },
+  {
+    href: "/pomodoro",
+    l: "Pomodoro",
+    i: faStopwatch,
+    hint: "Odaklan, mola ver, hedefe ulaş",
   },
   {
     href: "/anketler",

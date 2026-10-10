@@ -108,6 +108,13 @@ const tiles = [
     c: "bg-sky text-deep",
   },
   {
+    kind: "pomodoro",
+    t: "Pomodoro",
+    d: "Odaklan, mola ver, hedefe ulaş",
+    href: "/pomodoro",
+    c: "bg-sun text-deep",
+  },
+  {
     kind: "poll",
     t: "Anketler",
     d: "Haftanın sorusuna oy ver",
@@ -503,6 +510,20 @@ function TileArt({ kind }: { kind: string }) {
             strokeWidth="3"
             strokeLinecap="round"
           />
+        </svg>
+      );
+    case "pomodoro":
+      return (
+        <svg {...shared}>
+          <circle cx="56" cy="48" r="26" fill="currentColor" opacity=".16" stroke="currentColor" strokeWidth="3" />
+          <path d="M56 22c-1-6-6-10-12-10 1 5 5 9 12 10z" fill="currentColor" opacity=".7" />
+          <path d="M56 22c2-6 8-9 14-8-2 5-7 8-14 8z" fill="currentColor" opacity=".7" />
+          <g className="pomo-tile-hand">
+            <path d="M56 48V33" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
+          </g>
+          <circle cx="56" cy="48" r="3.5" fill="currentColor" />
+          <path d="M26 78q7-6 14 0t14 0 14 0 14 0" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" opacity=".55" />
+          <path d="m96 20 2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5 6-2.5z" fill="currentColor" opacity=".7" />
         </svg>
       );
     case "poll":

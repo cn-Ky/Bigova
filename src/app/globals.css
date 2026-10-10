@@ -4314,3 +4314,49 @@ html[data-chat] .adaptive-mobile-dock {
 .group:hover .news-cover-icon {
   scale: 1.08;
 }
+
+/* ───────── Pomodoro ───────── */
+.pomo-wave-a {
+  animation: wavex 7s linear infinite;
+}
+.pomo-wave-b {
+  animation: wavex 11s linear infinite reverse;
+}
+.pomo-halo {
+  animation: pomo-halo 2.4s ease-out infinite;
+}
+@keyframes pomo-halo {
+  from {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  to {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+.pomo-dot-now {
+  animation: pomo-dot 1.6s ease-in-out infinite;
+}
+@keyframes pomo-dot {
+  50% {
+    transform: scale(1.4);
+  }
+}
+.tile-art--pomodoro {
+  animation: art-breathe 4s ease-in-out infinite;
+}
+.pomo-tile-hand {
+  transform-origin: 56px 48px;
+  animation: spin 7s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pomo-wave-a,
+  .pomo-wave-b,
+  .pomo-halo,
+  .pomo-dot-now,
+  .tile-art--pomodoro,
+  .pomo-tile-hand {
+    animation: none;
+  }
+}
