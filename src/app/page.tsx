@@ -709,7 +709,7 @@ function Tile({ x, n }: { x: (typeof tiles)[number]; n: number }) {
           onMouseMove={move}
           onMouseLeave={leave}
           onPointerDown={press}
-          className={`group relative flex h-36 flex-col justify-between overflow-hidden rounded-[22px] p-4 shadow-sm transition-shadow hover:shadow-[0_18px_40px_rgba(14,58,91,.28)] lg:h-44 ${x.c}`}
+          className={`home-tile group relative flex h-36 flex-col justify-between overflow-hidden rounded-[22px] p-4 shadow-sm transition-shadow hover:shadow-[0_18px_40px_rgba(14,58,91,.28)] lg:h-44 ${x.c}`}
         >
           <span className="tile-glare pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
           <span className="tile-number relative z-10">{String(n).padStart(2, "0")}</span>
@@ -771,7 +771,7 @@ function CategoryMenu() {
               initial={{ opacity: 0, y: 22 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.06 * ci, type: "spring", stiffness: 260, damping: 24 }}
-              className="overflow-hidden rounded-[26px] bg-card shadow-sm"
+              className="home-cat overflow-hidden rounded-[26px] bg-card shadow-sm"
               style={{ ["--cat" as string]: `var(--${cat.tone})` }}
             >
               <button

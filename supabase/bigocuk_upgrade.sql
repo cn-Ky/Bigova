@@ -98,7 +98,7 @@ end $$;
 
 alter table public.bigocuk_items drop constraint if exists bigocuk_items_slot_check;
 alter table public.bigocuk_items add constraint bigocuk_items_slot_check
-  check (slot in ('species','hat','glasses','neck','top','hand','back','bg'));
+  check (slot in ('species','hat','glasses','neck','top','hand','back','bg','theme'));
 
 insert into public.bigocuk_items (id, slot, name, price) values
   ('sp-marti', 'species', 'Martı', 0),

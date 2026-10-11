@@ -1,0 +1,67 @@
+/* ═════════ Özel temalar: ortak iskelet ═════════
+   Her tema kendi dosyasında (defter, piksel, cizgi, truva, fener).
+   Seçiciler `:is(html[data-theme="x"], [data-tp="x"])` biçimindedir:
+   birincisi gerçek uygulama, ikincisi Ayarlar'daki canlı önizleme içindir.
+   Önizleme: <div data-tp="x"><div class="tp-screen">…</div></div> */
+
+.tp-screen {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: rgb(var(--foam));
+  color: rgb(var(--ink));
+  font-family: var(--f-body), sans-serif;
+}
+.tp-head {
+  padding: 14px 14px 12px;
+  color: #fff;
+}
+.tp-head h3 {
+  font-family: var(--f-display), sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.tp-head p {
+  margin-top: 2px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+.tp-body {
+  padding: 4px 10px 0;
+}
+.tp-card {
+  margin: 10px 10px 12px;
+  padding: 10px 12px;
+  background: rgb(var(--card));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.tp-card b {
+  font-family: var(--f-display), sans-serif;
+  font-size: 15px;
+}
+.tp-card i {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  background: rgb(var(--sun));
+  display: block;
+}
+.tp-screen .chat-stage {
+  padding: 4px 10px 4px;
+}
+.tp-screen .chat-composer {
+  position: relative;
+  padding: 8px 10px 10px;
+}
+
+/* Tema geçişi yumuşak olsun (hareket azaltma tercihi saygı görür) */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-theme] .shell,
+  html[data-theme] .chat-bubble {
+    transition: background-color 0.3s, color 0.3s;
+  }
+}

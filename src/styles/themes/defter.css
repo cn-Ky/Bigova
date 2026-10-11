@@ -1,0 +1,226 @@
+/* ═════════ KARELİ DEFTER ═════════
+   Okul sırası: kareli sayfa, kırmızı kenar çizgisi, spiral cilt, yapışkan not mesajlar.
+   Tek vurgu: sohbetteki sarı yapışkan notlar ve işaretleyici ile boyanmış gün etiketleri. */
+
+html[data-theme="defter"],
+[data-tp="defter"] {
+  color-scheme: light;
+  --foam: 248 250 255;
+  --card: 255 255 255;
+  --ink: 27 42 107;
+  --sea: 35 71 200;
+  --sea2: 74 108 224;
+  --deep: 18 28 78;
+  --tide: 47 163 122;
+  --sun: 255 228 94;
+  --coral: 229 72 77;
+  --sky: 205 220 255;
+  --page: 33 48 120;
+  --f-display: "Kalam";
+  --f-body: "Patrick Hand";
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) body,
+:is(html[data-theme="defter"], [data-tp="defter"]) .tp-screen {
+  font-size: 1.04rem;
+}
+
+/* — Kareli sayfa + kenar çizgisi — */
+:is(html[data-theme="defter"], [data-tp="defter"]) .shell,
+:is(html[data-theme="defter"], [data-tp="defter"]) .tp-screen {
+  isolation: isolate;
+  background-color: rgb(var(--foam));
+  background-image:
+    linear-gradient(rgb(var(--sea) / 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--sea) / 0.1) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .shell::before,
+:is(html[data-theme="defter"], [data-tp="defter"]) .tp-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 26px;
+  width: 2px;
+  z-index: -1;
+  pointer-events: none;
+  background: rgb(var(--coral) / 0.4);
+  box-shadow: 4px 0 0 rgb(var(--coral) / 0.2);
+}
+
+/* — Başlık: spiral ciltli kapak — */
+/* Sticky/relative başlıklara dokunulmaz (yapışkan kalmaları gerekir); yalnızca konumsuz olanlar relative olur. */
+:is(html[data-theme="defter"], [data-tp="defter"]) .shell main > header:not([class~="sticky"], [class~="relative"], [class~="absolute"], [class~="fixed"]),
+:is(html[data-theme="defter"], [data-tp="defter"]) .tp-head {
+  position: relative;
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .shell main > header,
+:is(html[data-theme="defter"], [data-tp="defter"]) .tp-head {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 27px, rgb(255 255 255 / 0.07) 27px 28px),
+    rgb(var(--sea));
+  border-radius: 0 0 10px 12px;
+  border-bottom: 4px solid rgb(var(--deep) / 0.35);
+  box-shadow: 0 5px 0 rgb(var(--sea) / 0.22);
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .shell main > header::before,
+:is(html[data-theme="defter"], [data-tp="defter"]) .tp-head::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 14px;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 5px 4px at 50% 50%, rgb(var(--foam)) 70%, transparent 72%) 0 0 / 22px 14px repeat-x,
+    linear-gradient(rgb(var(--deep) / 0.28), transparent);
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .shell main > header h1,
+:is(html[data-theme="defter"], [data-tp="defter"]) .tp-head h3 {
+  transform: rotate(-0.6deg);
+  transform-origin: left center;
+}
+
+/* — Kartlar: elle çizilmiş çerçeve — */
+:is(html[data-theme="defter"], [data-tp="defter"])
+  .shell [class~="bg-card"]:is([class*="rounded-["], [class~="rounded-2xl"], [class~="rounded-3xl"]):not(.chat-bubble, .chat-form, .chat-starter, .chat-jump),
+:is(html[data-theme="defter"], [data-tp="defter"]) .tp-card {
+  border: 1.5px solid rgb(var(--sea) / 0.35);
+  border-radius: 7px 16px 9px 14px / 14px 8px 15px 7px;
+  box-shadow: 3px 4px 0 rgb(var(--sea) / 0.16);
+}
+
+/* — Gezinme çubukları — */
+:is(html[data-theme="defter"], [data-tp="defter"]) .adaptive-mobile-dock ul {
+  background: rgb(var(--sun) / 0.96);
+  backdrop-filter: none;
+  border: 2px dashed rgb(var(--sea) / 0.5);
+  border-radius: 10px 16px 10px 16px / 16px 10px 16px 10px;
+  box-shadow: 3px 4px 0 rgb(var(--sea) / 0.28);
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .adaptive-topbar {
+  background: rgb(var(--sun) / 0.97);
+  border-bottom: 2px dashed rgb(var(--sea) / 0.5);
+  backdrop-filter: none;
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .side-bg {
+  background-color: rgb(var(--sea));
+  background-image:
+    radial-gradient(circle at calc(100% - 13px) 15px, rgb(var(--foam)) 6px, rgb(var(--deep) / 0.4) 6.6px, transparent 7px);
+  background-size: 100% 32px;
+}
+
+/* ═════ SOHBET: yapışkan notlar ═════ */
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-stage {
+  padding-left: 0.9rem;
+  padding-right: 0.9rem;
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-day {
+  background: linear-gradient(transparent 18%, rgb(var(--sun)) 18%, rgb(var(--sun)) 88%, transparent 88%);
+  border-radius: 3px;
+  box-shadow: none;
+  padding: 2px 12px;
+  color: rgb(var(--ink));
+  font-family: var(--f-display), cursive;
+  font-size: 14px;
+  font-weight: 700;
+  transform: rotate(-1.6deg);
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-bubble {
+  position: relative;
+  border-radius: 3px;
+  padding: 9px 14px 7px;
+  font-family: var(--f-body), sans-serif;
+  box-shadow: 2px 3px 0 rgb(var(--ink) / 0.16);
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-bubble--mine {
+  background: #fff0a0;
+  color: rgb(var(--ink));
+  transform: rotate(0.5deg);
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-bubble--theirs {
+  background:
+    repeating-linear-gradient(transparent 0 23px, rgb(var(--sea) / 0.2) 23px 24px),
+    #fff;
+  color: rgb(var(--ink));
+  transform: rotate(-0.5deg);
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-text {
+  font-size: 17px;
+  line-height: 24px;
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-bubble .chat-meta {
+  color: rgb(var(--ink) / 0.5);
+  font-size: 11px;
+}
+/* bant */
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-bubble.is-first::before {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  width: 46px;
+  height: 16px;
+  background: rgb(var(--sky) / 0.75);
+  box-shadow: 0 1px 0 rgb(var(--ink) / 0.1);
+  transform: translateX(-50%) rotate(-3deg);
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-bubble--mine.is-first::before {
+  background: rgb(var(--coral) / 0.35);
+  transform: translateX(-50%) rotate(3deg);
+}
+/* katlanmış köşe */
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-bubble.is-last::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 13px;
+  height: 13px;
+  background: linear-gradient(135deg, transparent 50%, rgb(var(--sea) / 0.2) 50%);
+  pointer-events: none;
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-bubble.is-failed {
+  outline: 2px solid rgb(var(--coral));
+  outline-offset: 2px;
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-dot {
+  background: rgb(var(--ink) / 0.55);
+}
+
+/* yazma alanı: çizgili kâğıt şerit */
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-composer {
+  background: rgb(var(--foam));
+  border-top: 2px dashed rgb(var(--sea) / 0.4);
+  backdrop-filter: none;
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-form {
+  border-radius: 6px 12px 7px 11px / 11px 7px 12px 6px;
+  background: #fff;
+  border: 2px solid rgb(var(--sea));
+  box-shadow: 3px 3px 0 rgb(var(--sea) / 0.32);
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-input {
+  font-family: var(--f-body), sans-serif;
+  font-size: 18px;
+  color: rgb(var(--ink));
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-send {
+  border-radius: 5px;
+  transform: rotate(-5deg);
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-send.is-ready {
+  background: rgb(var(--sea));
+  box-shadow: 2px 2px 0 rgb(var(--ink) / 0.35);
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-starter {
+  border-radius: 4px;
+  background: #fff0a0;
+  border: 1.5px dashed rgb(var(--sea) / 0.55);
+  box-shadow: 2px 2px 0 rgb(var(--ink) / 0.14);
+  font-family: var(--f-body), sans-serif;
+  font-size: 16px;
+}
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-starter:nth-child(odd) { transform: rotate(-2deg); }
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-starter:nth-child(even) { transform: rotate(1.6deg); }
+:is(html[data-theme="defter"], [data-tp="defter"]) .chat-jump {
+  border-radius: 6px;
+  border: 2px solid rgb(var(--sea));
+}

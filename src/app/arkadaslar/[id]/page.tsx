@@ -498,7 +498,7 @@ export default function DirectMessage() {
   const failedCount = outbox.filter((m) => m.status === "failed").length;
 
   return (
-    <main className="flex min-h-[calc(100dvh-1rem)] flex-col">
+    <main className="chat-page flex min-h-[calc(100dvh-1rem)] flex-col">
       <header className="chat-head sticky top-0 z-20 rounded-b-[20px] bg-sea px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top))] text-white shadow-lg">
         <div className="flex items-center gap-3">
           <Link
@@ -557,13 +557,13 @@ export default function DirectMessage() {
         role="log"
         aria-live="polite"
         aria-label="Mesajlar"
-        className="flex flex-1 flex-col px-3 pb-4 pt-3"
+        className="chat-stage flex flex-1 flex-col px-3 pb-4 pt-3"
       >
         {timeline.map((item) => {
           if (item.type === "day")
             return (
-              <li key={item.key} className="my-3 flex justify-center first:mt-1">
-                <span className="rounded-full bg-card/80 px-3 py-1 text-[11px] font-extrabold text-ink/60 shadow-sm">
+              <li key={item.key} className="chat-day-row my-3 flex justify-center first:mt-1">
+                <span className="chat-day rounded-full bg-card/80 px-3 py-1 text-[11px] font-extrabold text-ink/60 shadow-sm">
                   {item.label}
                 </span>
               </li>
@@ -580,7 +580,7 @@ export default function DirectMessage() {
               initial={animateIn ? { opacity: 0, y: 10, scale: 0.97 } : false}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ type: "spring", stiffness: 420, damping: 30 }}
-              className={`flex items-end gap-2 ${first ? "mt-3" : "mt-0.5"} ${mine ? "justify-end" : "justify-start"}`}
+              className={`chat-row ${mine ? "chat-row--mine justify-end" : "chat-row--theirs justify-start"} ${first ? "is-first mt-3" : "mt-0.5"} ${last ? "is-last" : ""} flex items-end gap-2`}
             >
               {!mine &&
                 (last ? (
@@ -588,19 +588,20 @@ export default function DirectMessage() {
                 ) : (
                   <span className="w-[30px] shrink-0" aria-hidden />
                 ))}
-              <div className={`flex min-w-0 max-w-[80%] flex-col ${mine ? "items-end" : "items-start"}`}>
+              <div className={`chat-col flex min-w-0 max-w-[80%] flex-col ${mine ? "items-end" : "items-start"}`}>
                 <div
                   title={fullStamp(m.created_at)}
-                  className={`rounded-[20px] px-3.5 py-2 shadow-sm ${corner} ${
+                  data-from={mine ? "Sen" : friendName}
+                  className={`chat-bubble ${mine ? "chat-bubble--mine" : "chat-bubble--theirs"} ${first ? "is-first" : ""} ${last ? "is-last" : ""} ${failed ? "is-failed" : ""} ${pending ? "is-pending" : ""} rounded-[20px] px-3.5 py-2 shadow-sm ${corner} ${
                     mine ? "bg-sea text-white" : "bg-card text-ink"
                   } ${pending ? "opacity-70" : ""} ${failed ? "ring-2 ring-coral" : ""}`}
                 >
-                  <p className="whitespace-pre-wrap break-words text-[15px] leading-snug">
+                  <p className="chat-text whitespace-pre-wrap break-words text-[15px] leading-snug">
                     <Linkified text={m.body} />
                   </p>
                   {last && (
                     <span
-                      className={`mt-1 flex items-center justify-end gap-1.5 text-[10px] ${mine ? "text-white/70" : "text-ink/50"}`}
+                      className={`chat-meta mt-1 flex items-center justify-end gap-1.5 text-[10px] ${mine ? "text-white/70" : "text-ink/50"}`}
                     >
                       <time dateTime={m.created_at}>{clock(m.created_at)}</time>
                       {mine && (
@@ -629,9 +630,9 @@ export default function DirectMessage() {
           );
         })}
         {typing && (
-          <li className="mt-3 flex items-end gap-2" aria-label={`${friendName} yazıyor`}>
+          <li className="chat-row chat-row--theirs chat-row--typing mt-3 flex items-end gap-2" aria-label={`${friendName} yazıyor`}>
             <UserAvatar name={friend.name} avatar={avatars[friend.id]} size={30} />
-            <span className="flex gap-1 rounded-[20px] rounded-bl-md bg-card px-4 py-3 shadow-sm">
+            <span className="chat-bubble chat-bubble--theirs chat-typing flex gap-1 rounded-[20px] rounded-bl-md bg-card px-4 py-3 shadow-sm">
               {[0, 1, 2].map((i) => (
                 <i key={i} className="chat-dot" style={{ animationDelay: `${i * 0.16}s` }} />
               ))}
@@ -639,7 +640,7 @@ export default function DirectMessage() {
           </li>
         )}
         {timeline.length === 0 && (
-          <li className="m-auto max-w-xs py-10 text-center">
+          <li className="chat-empty m-auto max-w-xs py-10 text-center">
             <Mascot size={88} className="mx-auto" />
             <p className="mt-2 font-display text-lg font-bold">Sohbeti sen başlat</p>
             <p className="text-sm text-ink/65">{friendName} ile ilk mesajı gönder ya da bir cümle seç.</p>
@@ -652,7 +653,7 @@ export default function DirectMessage() {
                     setMessage(t);
                     inputRef.current?.focus();
                   }}
-                  className="rounded-full bg-card px-3.5 py-2 text-sm font-bold shadow-sm transition active:scale-95"
+                  className="chat-starter rounded-full bg-card px-3.5 py-2 text-sm font-bold shadow-sm transition active:scale-95"
                 >
                   {t}
                 </button>
@@ -675,7 +676,7 @@ export default function DirectMessage() {
                 setUnseen(0);
               }}
               aria-label={unseen ? `${unseen} yeni mesaj, en alta git` : "En alta git"}
-              className="absolute -top-12 right-3 flex h-10 items-center gap-2 rounded-full bg-card px-3.5 text-sm font-extrabold text-sea shadow-lg ring-1 ring-ink/10"
+              className="chat-jump absolute -top-12 right-3 flex h-10 items-center gap-2 rounded-full bg-card px-3.5 text-sm font-extrabold text-sea shadow-lg ring-1 ring-ink/10"
             >
               {unseen > 0 && <span>{unseen} yeni</span>}
               <FontAwesomeIcon icon={faArrowDown} />
@@ -693,7 +694,7 @@ export default function DirectMessage() {
         {failedCount > 0 && !notice && (
           <p className="mb-2 text-xs font-bold text-coral">{failedCount} mesaj gönderilemedi. Üzerindeki “Tekrar dene” ile yeniden gönder.</p>
         )}
-        <form onSubmit={send} className="flex items-end gap-2 rounded-[26px] bg-card p-1.5 shadow-sm ring-1 ring-ink/5 focus-within:ring-2 focus-within:ring-sun">
+        <form onSubmit={send} className="chat-form flex items-end gap-2 rounded-[26px] bg-card p-1.5 shadow-sm ring-1 ring-ink/5 focus-within:ring-2 focus-within:ring-sun">
           <textarea
             ref={inputRef}
             value={message}
@@ -710,14 +711,14 @@ export default function DirectMessage() {
             autoComplete="off"
             placeholder="Mesaj yaz…"
             aria-label="Mesaj yaz"
-            className="max-h-36 min-h-11 flex-1 resize-none bg-transparent px-3.5 py-2.5 text-base leading-snug outline-none placeholder:text-ink/45"
+            className="chat-input max-h-36 min-h-11 flex-1 resize-none bg-transparent px-3.5 py-2.5 text-base leading-snug outline-none placeholder:text-ink/45"
           />
           <motion.button
             type="submit"
             disabled={!canSend}
             whileTap={{ scale: 0.88 }}
             aria-label="Mesajı gönder"
-            className={`grid h-11 w-11 shrink-0 place-items-center rounded-full transition-colors ${canSend ? "bg-sea text-white" : "bg-ink/10 text-ink/35"}`}
+            className={`chat-send ${canSend ? "is-ready" : ""} grid h-11 w-11 shrink-0 place-items-center rounded-full transition-colors ${canSend ? "bg-sea text-white" : "bg-ink/10 text-ink/35"}`}
           >
             <FontAwesomeIcon icon={faPaperPlane} />
           </motion.button>

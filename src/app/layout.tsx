@@ -3,12 +3,15 @@ import ClickSounds from "@/components/ClickSounds";
 import ConsoleBanner from "@/components/ConsoleBanner";
 import NotificationProvider from "@/components/NotificationProvider";
 import ReferralSync from "@/components/ReferralSync";
+import ThemeGuard from "@/components/ThemeGuard";
+import { THEME_FONT_URLS } from "@/lib/themes";
 import Splash from "@/components/Splash";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import "leaflet/dist/leaflet.css";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "../styles/themes/index.css";
 import "./weather-fx.css";
 config.autoAddCss = false;
 
@@ -52,7 +55,7 @@ export default function RootLayout({
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var d=document.documentElement;var t=localStorage.getItem("bigova-theme");if(!t)t=matchMedia("(prefers-color-scheme: dark)").matches?"gece":"sabah";d.dataset.theme=t;var m=localStorage.getItem("bigova-mobile-nav");d.dataset.mobileNav=["bottom","drawer","top"].includes(m)?m:"bottom";var x=localStorage.getItem("bigova-desktop-nav");d.dataset.desktopNav=["sidebar","top","rail"].includes(x)?x:"sidebar"}catch(e){}`,
+            __html: `try{var d=document.documentElement;var t=localStorage.getItem("bigova-theme");if(!t)t=matchMedia("(prefers-color-scheme: dark)").matches?"gece":"sabah";d.dataset.theme=t;var F=${JSON.stringify(THEME_FONT_URLS)};if(F[t]){var k=document.createElement("link");k.rel="stylesheet";k.href=F[t];k.setAttribute("data-theme-font",t);document.head.appendChild(k)}var m=localStorage.getItem("bigova-mobile-nav");d.dataset.mobileNav=["bottom","drawer","top"].includes(m)?m:"bottom";var x=localStorage.getItem("bigova-desktop-nav");d.dataset.desktopNav=["sidebar","top","rail"].includes(x)?x:"sidebar"}catch(e){}`,
           }}
         />
       </head>
@@ -64,6 +67,7 @@ export default function RootLayout({
           <AdaptiveNavigation />
           <div className="shell pb-28 lg:pb-10">{children}</div>
           <ReferralSync />
+          <ThemeGuard />
         </NotificationProvider>
       </body>
     </html>

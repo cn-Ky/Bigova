@@ -1,6 +1,7 @@
 "use client";
 import AccountSettings from "@/components/AccountSettings";
 import PushControl from "@/components/PushControl";
+import ThemeShop from "@/components/ThemeShop";
 import {
     CLICK_SOUND_ENABLED_KEY,
     CLICK_SOUND_STYLE_KEY,
@@ -201,7 +202,7 @@ export default function Ayarlar() {
           </ul>
         </section>
         )}
-        <h2 className="mb-1 mt-7 font-display text-xl font-bold">Tema</h2>
+        <h2 className="mb-1 mt-7 font-display text-xl font-bold">Renk temaları</h2>
         <p className="mb-3 text-sm opacity-70">
           Seçimin bu cihazda kayıtlı kalır.
         </p>
@@ -269,6 +270,7 @@ export default function Ayarlar() {
             );
           })}
         </ul>
+        <ThemeShop current={cur} onApply={pick} />
       </section>
     </main>
   );
