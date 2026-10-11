@@ -95,15 +95,37 @@ export default function Safari() {
       return;
     }
     setGeo("asking");
-    const id = navigator.geolocation.watchPosition(
-      (p) => {
-        setReal({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy || 50 });
-        setGeo("ok");
-      },
-      (err) => setGeo(err.code === 1 ? "denied" : "error"),
-      { enableHighAccuracy: true, maximumAge: 4000, timeout: 20000 },
-    );
-    return () => navigator.geolocation.clearWatch(id);
+    let id: number | null = null;
+    let hasFix = false;
+    let stopped = false;
+    // Hata kodu 2 (POSITION_UNAVAILABLE; macOS'ta kCLErrorLocationUnknown) ve 3 (zaman aşımı) geçicidir:
+    // konum bir kez alındıysa hata göstermeyiz; hiç alınamadıysa önce yüksek doğruluk, sonra düşük doğrulukla (Wi‑Fi/IP) deneriz.
+    const start = (high: boolean) => {
+      id = navigator.geolocation.watchPosition(
+        (p) => {
+          hasFix = true;
+          setReal({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy || 50 });
+          setGeo("ok");
+        },
+        (err) => {
+          if (stopped) return;
+          if (err.code === 1) return setGeo("denied");
+          if (hasFix) return; // geçici hata: son bilinen konum geçerli
+          if (high) {
+            if (id !== null) navigator.geolocation.clearWatch(id);
+            start(false);
+          } else setGeo("error");
+        },
+        high
+          ? { enableHighAccuracy: true, maximumAge: 4000, timeout: 15000 }
+          : { enableHighAccuracy: false, maximumAge: 60000, timeout: 30000 },
+      );
+    };
+    start(true);
+    return () => {
+      stopped = true;
+      if (id !== null) navigator.geolocation.clearWatch(id);
+    };
   }, [geoNonce]);
 
   /* ───────── Sunucudan hayvanları al ───────── */

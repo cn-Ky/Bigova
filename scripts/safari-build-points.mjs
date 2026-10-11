@@ -23,9 +23,12 @@
  *   --require "Biga,Karabiga,Ağaköy"  bu bölgelerde yeterli nokta var mı denetle   --strict  eksikse hata ver
  *   --fixture <klasör>     ağ yerine kayıtlı Overpass yanıtlarını kullan (test için)
  *   --endpoint <url>       tek bir Overpass sunucusu kullan     --print-queries  sorguları yazdır ve çık
+ *   --tile 0.15            ağır sorguları bu boyutta (derece) parçala; 0 = parçalama (Overpass 500/504 verirse küçült: 0.1)
+ *   --no-cache             indirilen parçaları önbelleğe alma/kullanma (node_modules/.cache/safari-overpass)
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { createHash } from "node:crypto";
 
 /* ───────────────────────── Seçenekler ───────────────────────── */
 function parseArgs(argv) {
@@ -65,10 +68,15 @@ const log = (...a) => console.log(...a);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /* ───────────────────────── Overpass sorguları ───────────────────────── */
+// Herkese açık Overpass sunucuları. Biri 500/504 verirse (aşırı yük) sıradakine geçilir.
 const ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
+  "https://lz4.overpass-api.de/api/interpreter",
+  "https://z.overpass-api.de/api/interpreter",
   "https://overpass.private.coffee/api/interpreter",
   "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.openstreetmap.fr/api/interpreter",
+  "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
 ];
 
 // ilçe sınırı (admin_level=6) içindeki her şey; sınır bulunamazsa --bbox kullan
@@ -81,43 +89,147 @@ const scope = opt.bbox
         `map_to_area->.scope;\n`,
       f: "(area.scope)",
     };
-const head = `[out:json][timeout:300][maxsize:1073741824];\n${scope.setup}`;
 
 // Yürünebilir yollar. Otoyol/devlet yolu/il yolu (primary, secondary…) bilerek YOK; özel, yasak, tünel, yaya geçidi yok.
 const WALK_HIGHWAYS = "residential|living_street|pedestrian|footway|path|cycleway|unclassified|tertiary|service";
-const QUERIES = {
-  ways:
-    head +
-    `way${scope.f}["highway"~"^(${WALK_HIGHWAYS})$"]` +
-    `["access"!~"^(private|no)$"]["foot"!~"^(no|private)$"]` +
-    `["service"!~"^(driveway|parking_aisle|drive-through|private|emergency_access)$"]` +
-    `["footway"!="crossing"]["tunnel"!~"^(yes|culvert|building_passage)$"]["area"!="yes"];\n` +
-    `out geom;`,
-  pois:
-    head +
-    `(\n` +
-    `  nwr${scope.f}["leisure"~"^(park|garden|playground|common|dog_park|recreation_ground)$"];\n` +
-    `  nwr${scope.f}["place"="square"];\n` +
-    `  nwr${scope.f}["natural"="beach"];\n` +
-    `  nwr${scope.f}["tourism"~"^(attraction|viewpoint|picnic_site|museum)$"];\n` +
-    `  nwr${scope.f}["amenity"~"^(university|college|marketplace|townhall)$"];\n` +
-    `  nwr${scope.f}["historic"~"^(monument|memorial|castle|archaeological_site|ruins)$"];\n` +
-    `);\nout center;`,
-  exclude:
-    head +
-    `(\n` +
-    `  way${scope.f}["landuse"~"^(military|industrial|quarry|landfill|cemetery|railway|construction|farmyard|reservoir)$"];\n` +
-    `  way${scope.f}["military"];\n` +
-    `  way${scope.f}["amenity"="grave_yard"];\n` +
-    `  way${scope.f}["aeroway"];\n` +
-    `  way${scope.f}["natural"~"^(water|wetland)$"];\n` +
-    `);\nout geom;`,
-  places: head + `node${scope.f}["place"~"^(city|town|village|hamlet|suburb)$"]["name"];\nout;`,
-};
+
+/**
+ * Sorgu üretici. `tile` verilirse sorgu o dikdörtgenle sınırlanır (s,w,n,e):
+ * tek devasa sorgu yerine küçük parçalar → Overpass 500/504 vermez.
+ */
+function buildQuery(name, tile) {
+  const t = tile ? `(${tile.map((n) => n.toFixed(4)).join(",")})` : "";
+  const f = scope.f + t;
+  const head = `[out:json][timeout:${tile ? 120 : 180}][maxsize:536870912];\n${scope.setup}`;
+  switch (name) {
+    case "ways":
+      return (
+        head +
+        `way${f}["highway"~"^(${WALK_HIGHWAYS})$"]` +
+        `["access"!~"^(private|no)$"]["foot"!~"^(no|private)$"]` +
+        `["service"!~"^(driveway|parking_aisle|drive-through|private|emergency_access)$"]` +
+        `["footway"!="crossing"]["tunnel"!~"^(yes|culvert|building_passage)$"]["area"!="yes"];\n` +
+        `out geom;`
+      );
+    case "pois":
+      return (
+        head +
+        `(\n` +
+        `  nwr${f}["leisure"~"^(park|garden|playground|common|dog_park|recreation_ground)$"];\n` +
+        `  nwr${f}["place"="square"];\n` +
+        `  nwr${f}["natural"="beach"];\n` +
+        `  nwr${f}["tourism"~"^(attraction|viewpoint|picnic_site|museum)$"];\n` +
+        `  nwr${f}["amenity"~"^(university|college|marketplace|townhall)$"];\n` +
+        `  nwr${f}["historic"~"^(monument|memorial|castle|archaeological_site|ruins)$"];\n` +
+        `);\nout center;`
+      );
+    case "exclude":
+      return (
+        head +
+        `(\n` +
+        `  way${f}["landuse"~"^(military|industrial|quarry|landfill|cemetery|railway|construction|farmyard|reservoir)$"];\n` +
+        `  way${f}["military"];\n` +
+        `  way${f}["amenity"="grave_yard"];\n` +
+        `  way${f}["aeroway"];\n` +
+        `  way${f}["natural"~"^(water|wetland)$"];\n` +
+        `);\nout geom;`
+      );
+    case "places":
+      return head + `node${f}["place"~"^(city|town|village|hamlet|suburb)$"]["name"];\nout;`;
+  }
+  throw new Error(`Bilinmeyen sorgu: ${name}`);
+}
+
+// Biga ilçesini (Karabiga, Ağaköy, köyler dahil) kapsayan dikdörtgen: s,w,n,e
+const DEFAULT_BOUNDS = [40.0, 26.7, 40.6, 27.6];
+const TILE_DEG = num(A.tile, 0.15); // parça boyutu (derece). 0 → parçalama yok
+const HEAVY = new Set(["ways", "exclude"]); // yalnızca ağır sorgular parçalanır
+
+function tilesFor() {
+  const [s, w, n, e] = opt.bbox ?? DEFAULT_BOUNDS;
+  if (!TILE_DEG || TILE_DEG <= 0) return [null];
+  const out = [];
+  for (let la = s; la < n - 1e-9; la += TILE_DEG)
+    for (let lo = w; lo < e - 1e-9; lo += TILE_DEG) out.push([la, lo, Math.min(la + TILE_DEG, n), Math.min(lo + TILE_DEG, e)]);
+  return out;
+}
 
 if (opt.printQueries) {
-  for (const [k, q] of Object.entries(QUERIES)) log(`── ${k} ──\n${q}\n`);
+  for (const k of ["ways", "pois", "exclude", "places"]) log(`── ${k} ──\n${buildQuery(k, HEAVY.has(k) ? tilesFor()[0] : null)}\n`);
   process.exit(0);
+}
+
+/* Disk önbelleği: betik yarıda kesilirse tamamlanan parçalar tekrar indirilmez. */
+const CACHE_DIR = join("node_modules", ".cache", "safari-overpass");
+const cacheKey = (q) => createHash("sha1").update(q).digest("hex");
+function cacheGet(q) {
+  if (A["no-cache"]) return null;
+  const f = join(CACHE_DIR, cacheKey(q) + ".json");
+  try {
+    return existsSync(f) ? JSON.parse(readFileSync(f, "utf8")) : null;
+  } catch {
+    return null;
+  }
+}
+function cachePut(q, elements) {
+  try {
+    mkdirSync(CACHE_DIR, { recursive: true });
+    writeFileSync(join(CACHE_DIR, cacheKey(q) + ".json"), JSON.stringify(elements));
+  } catch {}
+}
+
+const dead = new Map(); // ağ hatası veren sunucuların hata sayısı (2'den sonra atlanır)
+
+/** Tek bir sorguyu sunucuları dönüp, artan beklemeyle birkaç tur dener. */
+async function runQuery(label, query) {
+  const cached = cacheGet(query);
+  if (cached) {
+    log(`  ${label}: önbellekten (${cached.length})`);
+    return cached;
+  }
+  const eps = opt.endpoint ? [opt.endpoint] : ENDPOINTS;
+  let last;
+  for (let round = 0; round < 3; round++) {
+    // her turda sıra değişsin ki aynı yüklü sunucuya takılmayalım
+    const order = eps.slice(round % eps.length).concat(eps.slice(0, round % eps.length));
+    for (const ep of order) {
+      if ((dead.get(ep) ?? 0) >= 2 && !opt.endpoint) continue;
+      try {
+        log(`  ${label}: ${new URL(ep).host} (tur ${round + 1})…`);
+        const res = await fetch(ep, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            Accept: "application/json",
+            "User-Agent": "Bigova-Safari-points/1.1 (https://bigova.vercel.app)",
+          },
+          body: "data=" + encodeURIComponent(query),
+          signal: AbortSignal.timeout(200_000),
+        });
+        if (!res.ok) {
+          const wait = res.status === 429 ? 15000 : 2000;
+          await sleep(wait);
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const j = await res.json();
+        if (j.remark && /error|timed out|out of memory/i.test(j.remark) && !(j.elements ?? []).length) throw new Error(j.remark);
+        const els = j.elements ?? [];
+        cachePut(query, els);
+        return els;
+      } catch (e) {
+        last = e;
+        if (/fetch failed|ENOTFOUND|ECONN|certificate/i.test(String(e.message) + String(e.cause?.code ?? ""))) dead.set(ep, (dead.get(ep) ?? 0) + 1);
+        log(`    olmadı: ${e.message}`);
+        await sleep(1500);
+      }
+    }
+    if (round < 2) {
+      log(`    tüm sunucular denendi, ${10 * (round + 1)} sn beklenip tekrar denenecek…`);
+      dead.clear();
+      await sleep(10_000 * (round + 1));
+    }
+  }
+  throw new Error(`${label}: ${last?.message}`);
 }
 
 async function overpass(name) {
@@ -127,30 +239,30 @@ async function overpass(name) {
     const j = JSON.parse(readFileSync(file, "utf8"));
     return Array.isArray(j) ? j : (j.elements ?? []);
   }
-  const query = QUERIES[name];
-  let last;
-  for (const ep of opt.endpoint ? [opt.endpoint] : ENDPOINTS) {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        log(`  ${name}: ${new URL(ep).host} (deneme ${attempt + 1})…`);
-        const res = await fetch(ep, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": "Bigova-Safari-points/1.0" },
-          body: "data=" + encodeURIComponent(query),
-          signal: AbortSignal.timeout(330_000),
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const j = await res.json();
-        if (j.remark && /error|timed out|out of memory/i.test(j.remark) && !(j.elements ?? []).length) throw new Error(j.remark);
-        return j.elements ?? [];
-      } catch (e) {
-        last = e;
-        log(`    olmadı: ${e.message}`);
-        await sleep(3000 * (attempt + 1));
+  if (!HEAVY.has(name) || !TILE_DEG) return runQuery(name, buildQuery(name, null));
+
+  // ağır sorgular: dikdörtgen parçalara böl, sonuçları (id'ye göre tekrarsız) birleştir
+  const tiles = tilesFor();
+  const seen = new Set();
+  const all = [];
+  let failed = 0;
+  for (let i = 0; i < tiles.length; i++) {
+    try {
+      const els = await runQuery(`${name} ${i + 1}/${tiles.length}`, buildQuery(name, tiles[i]));
+      for (const e of els) {
+        const k = `${e.type}${e.id}`;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        all.push(e);
       }
+    } catch (e) {
+      failed++;
+      log(`    parça ${i + 1} alınamadı, atlanıyor: ${e.message}`);
     }
   }
-  throw new Error(`Overpass'e ulaşılamadı (${name}): ${last?.message}`);
+  if (failed === tiles.length) throw new Error(`Overpass'e ulaşılamadı (${name}). İnternetini kontrol et ya da biraz sonra tekrar dene.`);
+  if (failed) throw new Error(`${name}: ${failed}/${tiles.length} parça alınamadı. Aynı komutu tekrar çalıştır; tamamlanan parçalar önbellekten gelir, yalnızca eksikler indirilir.`);
+  return all;
 }
 
 /* ───────────────────────── Geometri ───────────────────────── */
