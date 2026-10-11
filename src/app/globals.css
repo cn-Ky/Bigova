@@ -2905,6 +2905,193 @@ html[data-mobile-nav="bottom"] .adaptive-drawer-bar {
   }
 }
 
+/* ───────── Biga Safari ───────── */
+.sf-marker {
+  overflow: visible;
+  background: none;
+  border: 0;
+}
+.sf-pin {
+  animation: sf-pin-bob 2.4s ease-in-out infinite;
+}
+@keyframes sf-pin-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+.sf-spark {
+  animation: sf-twinkle 1.4s ease-in-out infinite;
+}
+@keyframes sf-twinkle {
+  0%,
+  100% {
+    transform: scale(0.8) rotate(0);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.2) rotate(18deg);
+    opacity: 1;
+  }
+}
+.sf-hot {
+  animation: sf-hot 1.8s ease-in-out infinite;
+}
+@keyframes sf-hot {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.7;
+  }
+}
+.sf-me-pulse {
+  animation: sf-me 2s ease-out infinite;
+}
+@keyframes sf-me {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* yakalama ekranı */
+.sf-bob {
+  animation: sf-bob 2.2s ease-in-out infinite;
+}
+@keyframes sf-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1.5deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(1.5deg);
+  }
+}
+.sf-pop {
+  animation:
+    sf-pop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both,
+    sf-bob 2.2s ease-in-out 0.5s infinite;
+}
+@keyframes sf-pop {
+  from {
+    transform: scale(0.1) rotate(-20deg);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.sf-absorb {
+  animation: sf-absorb 0.42s ease-in forwards;
+}
+@keyframes sf-absorb {
+  to {
+    transform: scale(0.05) rotate(25deg);
+    opacity: 0;
+  }
+}
+.sf-escape {
+  animation: sf-escape 0.8s ease-in forwards;
+}
+@keyframes sf-escape {
+  to {
+    transform: translate(120%, -12%) rotate(16deg) scale(0.7);
+    opacity: 0;
+  }
+}
+.sf-gone {
+  opacity: 0;
+}
+.sf-shake {
+  transform-origin: 50% 90%;
+  animation: sf-shake 0.5s ease-in-out 3;
+}
+@keyframes sf-shake {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-24deg);
+  }
+  60% {
+    transform: rotate(22deg);
+  }
+  85% {
+    transform: rotate(-8deg);
+  }
+}
+.sf-float {
+  transform: translateX(-50%);
+  animation: sf-float 1.3s ease-out forwards;
+}
+@keyframes sf-float {
+  0% {
+    transform: translate(-50%, 10px) scale(0.7);
+    opacity: 0;
+  }
+  15% {
+    transform: translate(-50%, 0) scale(1.1);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -34px) scale(1);
+    opacity: 0;
+  }
+}
+.sf-card {
+  animation: sf-card-in 0.45s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+@keyframes sf-card-in {
+  from {
+    transform: scale(0.85) translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.sf-confetti {
+  animation-name: sf-fall;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes sf-fall {
+  to {
+    transform: translateY(105vh) rotate(540deg);
+    opacity: 0.9;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sf-pin,
+  .sf-spark,
+  .sf-hot,
+  .sf-me-pulse,
+  .sf-bob,
+  .sf-confetti {
+    animation: none;
+  }
+  .sf-pop {
+    animation: none;
+  }
+}
+
 /* ───────── Hava paneli (wx-*) ─────────
    Kompakt kart: şimdiki hava + önümüzdeki 3 gün. Dokununca aşağı doğru açılır (grid-template-rows 0fr → 1fr). */
 .wx {

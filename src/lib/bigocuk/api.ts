@@ -3,6 +3,7 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 import { useUser } from "@/lib/useUser";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_AVATAR, type AvatarConfig } from "./items";
+import { normalizeNearby, normalizeStats, type Nearby, type Rarity, type SafariStats, type ThrowStatus } from "./safari";
 import { rememberAvatar } from "./useAvatars";
 
 export type BigocukState = {
@@ -56,9 +57,26 @@ const normalizePomodoro = (raw: any): PomodoroServer => ({
   minReward: Number(raw?.minReward) || 0,
 });
 
+/** Safari: bir hayvana atılan topun sunucu sonucu (durum açıklamaları supabase/safari_upgrade.sql içinde). */
+export type SafariThrowResult = {
+  status: ThrowStatus;
+  earned: number; // cüzdana yazılan Bigcoin
+  reward: number; // sınırsız olsaydı kazanılacak Bigcoin
+  first: boolean; // defterde yeni tür mü
+  tries: number;
+  maxTries: number;
+  species: string | null;
+  rarity: Rarity | null;
+  dist: number;
+  need: number;
+  wait: number;
+  next: BigocukState;
+  stats: SafariStats;
+};
+
 export const errMsg = (e: unknown) =>
   (e as { message?: string })?.message || "Bir şeyler ters gitti. Tekrar dene.";
-const isMissing = (e: unknown) => {
+export const isMissing = (e: unknown) => {
   const x = e as { code?: string; message?: string };
   return x?.code === "PGRST202" || x?.code === "42883" || /Could not find the function/i.test(x?.message ?? "");
 };
@@ -168,5 +186,33 @@ export function useBigocuk() {
     };
   };
 
-  return { user, status, state, loadError, refresh, addSteps, commit, buy, saveAvatar, pomodoroState, pomodoroStart, pomodoroComplete };
+  /** Safari: çevredeki hayvanlar ve efsane noktaları (giriş yapmamış kullanıcı da görebilir). */
+  const safariNearby = async (lat: number, lng: number): Promise<Nearby> => normalizeNearby(await rpc("safari_nearby", { p_lat: lat, p_lng: lng }));
+  /** Safari: defter ve günlük istatistikler. */
+  const safariStats = async (): Promise<SafariStats> => normalizeStats(await rpc("safari_state"));
+  /** Safari: hayvana top at. Sunucu mesafeyi, hızı ve şansı doğrular. Durumu kendisi değiştirmez; çağıran `commit` ile uygular. */
+  const safariThrow = async (key: string, lat: number, lng: number, accuracy: number, bonus: number): Promise<SafariThrowResult> => {
+    const raw = await rpc("safari_throw", { p_key: key, p_lat: lat, p_lng: lng, p_acc: Math.round(accuracy), p_bonus: bonus });
+    return {
+      status: (raw?.status ?? "expired") as ThrowStatus,
+      earned: Number(raw?.earned) || 0,
+      reward: Number(raw?.reward) || 0,
+      first: !!raw?.first,
+      tries: Number(raw?.tries) || 0,
+      maxTries: Number(raw?.maxTries) || 0,
+      species: typeof raw?.species === "string" ? raw.species : null,
+      rarity: typeof raw?.rarity === "string" ? (raw.rarity as Rarity) : null,
+      dist: Number(raw?.dist) || 0,
+      need: Number(raw?.need) || 0,
+      wait: Number(raw?.wait) || 0,
+      next: normalize(raw),
+      stats: normalizeStats(raw?.safari),
+    };
+  };
+
+  return {
+    user, status, state, loadError, refresh, addSteps, commit, buy, saveAvatar,
+    pomodoroState, pomodoroStart, pomodoroComplete,
+    safariNearby, safariStats, safariThrow,
+  };
 }

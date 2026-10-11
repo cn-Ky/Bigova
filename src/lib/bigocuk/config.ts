@@ -16,3 +16,9 @@ export const SYNC_INTERVAL_MS = 30000; // yürürken en geç 30 sn'de bir kaydet
 export const POMODORO_MIN_PER_COIN = 5; // her 5 dk odak = 1 Bigcoin
 export const POMODORO_MIN_REWARD_MIN = 15; // ödül için en az 15 dk'lık oturum
 export const POMODORO_DAILY_COIN_CAP = 50; // günlük en fazla 50 Bigcoin
+
+/**
+ * Biga Safari ödülleri: yalnızca ekranda gösterim içindir. Gerçek hesap supabase/safari_upgrade.sql içindedir.
+ * Nadirlik başına ödül, hak ve şans değerleri için bkz. src/lib/bigocuk/safari.ts.
+ */
+export const SAFARI_DAILY_COINS = 80; // günlük en fazla 80 Bigcoin

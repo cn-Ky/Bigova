@@ -37,11 +37,11 @@ const commonHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   { key: "X-DNS-Prefetch-Control", value: "off" },
-  // Hareket sensörü (Bigocuk yürüyüş) ve konum (harita) kendi sitemizde açık; kamera/mikrofon vb. kapalı.
+  // Hareket sensörü (Bigocuk yürüyüş), konum (harita, Safari) ve kamera (Safari yakalama ekranı) kendi sitemizde açık; mikrofon vb. kapalı.
   {
     key: "Permissions-Policy",
     value:
-      "camera=(), microphone=(), payment=(), usb=(), accelerometer=(self), gyroscope=(self), geolocation=(self)",
+      "camera=(self), microphone=(), payment=(), usb=(), accelerometer=(self), gyroscope=(self), geolocation=(self)",
   },
 ];
 

@@ -1,4 +1,4 @@
-import { faPersonWalking, faStopwatch, type IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import { faBinoculars, faPersonWalking, faStopwatch, type IconDefinition } from "@fortawesome/free-solid-svg-icons";
 
 /**
  * Bigocuk oyun kataloğu. Yeni oyun eklemek için bu diziye bir kayıt eklemek yeterli;
@@ -32,5 +32,14 @@ export const GAMES: Game[] = [
     href: "/pomodoro",
     icon: faStopwatch,
     tone: "bg-tide text-deep",
+  },
+  {
+    id: "safari",
+    title: "Biga Safari",
+    blurb: "Biga'da dolaş, kameranı aç, efsanevi hayvanları yakala.",
+    reward: "Yakaladıkça 1–25 Bigcoin",
+    href: "/bigocuk/safari",
+    icon: faBinoculars,
+    tone: "bg-coral text-white",
   },
 ];
