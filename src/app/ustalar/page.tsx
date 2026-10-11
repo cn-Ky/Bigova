@@ -1,4 +1,5 @@
 "use client";
+import { safeTelUrl, safeWaUrl } from "@/lib/safeLinks";
 import SearchBox from "@/components/SearchBox";
 import Mascot from "@/components/Mascot";
 import {
@@ -51,7 +52,7 @@ const emptyForm = {
   description: "",
   consent: false,
 };
-const telUrl = (p: string) => `tel:${p.replace(/\s/g, "")}`;
+const telUrl = (p: string) => safeTelUrl(p) ?? "#";
 
 export default function Ustalar() {
   const { user } = useUser();
@@ -313,10 +314,10 @@ export default function Ustalar() {
                   >
                     <FontAwesomeIcon icon={faPhone} /> Ara
                   </motion.a>
-                  {u.whatsapp && (
+                  {safeWaUrl(u.whatsapp, `Merhaba ${u.first_name} Usta, Bigova'da ${u.category.toLocaleLowerCase("tr")} olarak gördüm. Müsait misiniz?`) && (
                     <motion.a
                       whileTap={{ scale: 0.9 }}
-                      href={`https://wa.me/${u.whatsapp}?text=${encodeURIComponent(`Merhaba ${u.first_name} Usta, Bigova'da ${u.category.toLocaleLowerCase("tr")} olarak gördüm. Müsait misiniz?`)}`}
+                      href={safeWaUrl(u.whatsapp, `Merhaba ${u.first_name} Usta, Bigova'da ${u.category.toLocaleLowerCase("tr")} olarak gördüm. Müsait misiniz?`)!}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 rounded-full bg-tide px-4 py-2 text-sm font-bold text-deep"

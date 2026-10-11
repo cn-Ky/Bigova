@@ -6,6 +6,7 @@ import ReferralSync from "@/components/ReferralSync";
 import ThemeGuard from "@/components/ThemeGuard";
 import { THEME_FONT_URLS } from "@/lib/themes";
 import Splash from "@/components/Splash";
+import MotionRoot from "@/components/MotionRoot";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import "leaflet/dist/leaflet.css";
@@ -60,15 +61,17 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <ConsoleBanner />
-        <ClickSounds />
-        <Splash />
-        <NotificationProvider>
-          <AdaptiveNavigation />
-          <div className="shell pb-28 lg:pb-10">{children}</div>
-          <ReferralSync />
-          <ThemeGuard />
-        </NotificationProvider>
+        <MotionRoot>
+          <ConsoleBanner />
+          <ClickSounds />
+          <Splash />
+          <NotificationProvider>
+            <AdaptiveNavigation />
+            <div className="shell pb-28 lg:pb-10">{children}</div>
+            <ReferralSync />
+            <ThemeGuard />
+          </NotificationProvider>
+        </MotionRoot>
       </body>
     </html>
   );

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabase/server";
+import { supabasePublic } from "@/lib/supabase/public";
 import {
   OVERPASS_ENDPOINTS,
   buildOverpassQuery,
@@ -15,6 +15,14 @@ export const maxDuration = 30;
 
 const FRESH_MS = 6 * 60 * 60 * 1000;
 let lastGood: { at: number; places: MapPlace[] } | null = null;
+// Önbellek soğukken eşzamanlı istekler her biri Overpass'a gitmesin (hem yavaş hem Overpass'ı kızdırır).
+let inflight: Promise<MapPlace[]> | null = null;
+const fetchOsmShared = () => {
+  inflight ??= fetchOsm().finally(() => {
+    inflight = null;
+  });
+  return inflight;
+};
 
 async function fetchOsm(): Promise<MapPlace[]> {
   const body = `data=${encodeURIComponent(buildOverpassQuery())}`;
@@ -58,7 +66,7 @@ async function fetchBigovaBusinesses(): Promise<MapPlace[]> {
       !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     )
       return [];
-    const { data, error } = await supabaseServer()
+    const { data, error } = await supabasePublic()
       .from("businesses")
       .select("*")
       .not("lat", "is", null)
@@ -95,7 +103,7 @@ async function fetchBigovaBusinesses(): Promise<MapPlace[]> {
 
 export async function GET() {
   const [osm, own] = await Promise.all([
-    fetchOsm().then(
+    fetchOsmShared().then(
       (places) => ({ places, ok: true as const }),
       () => ({ places: [] as MapPlace[], ok: false as const }),
     ),

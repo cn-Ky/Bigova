@@ -4547,3 +4547,13 @@ html[data-chat] .adaptive-mobile-dock {
     animation: none;
   }
 }
+
+/* Sayfa geçişi (template.tsx). Hareketi azalt tercihine saygı duyar. */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+.page-in { animation: page-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .page-in { animation: none; }
+}

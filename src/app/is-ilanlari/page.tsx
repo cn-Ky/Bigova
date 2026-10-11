@@ -1,4 +1,5 @@
 "use client";
+import { safeMailto, safeTelUrl, safeWaUrl } from "@/lib/safeLinks";
 import SearchBox from "@/components/SearchBox";
 import Mascot from "@/components/Mascot";
 import {
@@ -316,17 +317,17 @@ export default function IsIlanlari() {
                           <p className="text-ink/70">{j.contact_name}</p>
                         )}
                         <div className="mt-2 flex flex-wrap gap-2">
-                          {j.contact_phone && (
+                          {safeTelUrl(j.contact_phone) && (
                             <a
-                              href={`tel:${j.contact_phone.replace(/\s/g, "")}`}
+                              href={safeTelUrl(j.contact_phone)!}
                               className="inline-flex items-center gap-2 rounded-full bg-sea px-4 py-2 text-sm font-bold text-white"
                             >
                               <FontAwesomeIcon icon={faPhone} /> Ara
                             </a>
                           )}
-                          {j.contact_whatsapp && (
+                          {safeWaUrl(j.contact_whatsapp, `Merhaba, Bigova'daki "${j.title}" ilanı için yazıyorum.`) && (
                             <a
-                              href={`https://wa.me/${j.contact_whatsapp}?text=${encodeURIComponent(`Merhaba, Bigova'daki "${j.title}" ilanı için yazıyorum.`)}`}
+                              href={safeWaUrl(j.contact_whatsapp, `Merhaba, Bigova'daki "${j.title}" ilanı için yazıyorum.`)!}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-2 rounded-full bg-tide px-4 py-2 text-sm font-bold text-deep"
@@ -334,9 +335,9 @@ export default function IsIlanlari() {
                               <FontAwesomeIcon icon={faCommentDots} /> WhatsApp
                             </a>
                           )}
-                          {j.contact_email && (
+                          {safeMailto(j.contact_email, `${j.title} başvurusu`) && (
                             <a
-                              href={`mailto:${j.contact_email}?subject=${encodeURIComponent(`${j.title} başvurusu`)}`}
+                              href={safeMailto(j.contact_email, `${j.title} başvurusu`)!}
                               className="inline-flex items-center gap-2 rounded-full bg-sun px-4 py-2 text-sm font-bold text-deep"
                             >
                               <FontAwesomeIcon icon={faEnvelope} /> E-posta

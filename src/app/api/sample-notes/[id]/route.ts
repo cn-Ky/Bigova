@@ -74,7 +74,7 @@ export async function GET(
   _request: Request,
   { params }: { params: { id: string } },
 ) {
-  const sample = samples[params.id];
+  const sample = Object.prototype.hasOwnProperty.call(samples, params.id) ? samples[params.id] : undefined;
   if (!sample)
     return NextResponse.json(
       { error: "Örnek PDF bulunamadı." },
@@ -84,6 +84,7 @@ export async function GET(
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `inline; filename="${params.id}.pdf"`,
+      "X-Content-Type-Options": "nosniff",
       "Cache-Control": "public, max-age=3600",
     },
   });

@@ -37,6 +37,8 @@ const commonHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   { key: "X-DNS-Prefetch-Control", value: "off" },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+  { key: "Cross-Origin-Resource-Policy", value: "same-site" },
   // Hareket sensörü (Bigocuk yürüyüş), konum (harita, Safari) ve kamera (Safari yakalama ekranı) kendi sitemizde açık; mikrofon vb. kapalı.
   {
     key: "Permissions-Policy",
@@ -58,6 +60,15 @@ const pdfHeaders = [{ key: "X-Frame-Options", value: "SAMEORIGIN" }];
 module.exports = {
   reactStrictMode: true,
   poweredByHeader: false,
+  compress: true,
+  // Büyük paketlerde yalnızca kullanılan modülleri paketle (ilk yükleme JS'i küçülür, derleme hızlanır).
+  experimental: {
+    optimizePackageImports: [
+      "@fortawesome/free-solid-svg-icons",
+      "@fortawesome/free-brands-svg-icons",
+      "framer-motion",
+    ],
+  },
   // Uygulama next/image kullanmıyor; görsel optimizasyon uç noktasının saldırı yüzeyini daralt (yalnızca WebP, uzak kaynak yok).
   images: { formats: ["image/webp"], remotePatterns: [], minimumCacheTTL: 60 },
   env: {
@@ -72,6 +83,11 @@ module.exports = {
       { source: "/((?!api/pdf|api/sample-notes).*)", headers: pageHeaders },
       { source: "/api/pdf", headers: pdfHeaders },
       { source: "/api/sample-notes/:id", headers: pdfHeaders },
+      // Değişmeyen görseller: tarayıcıda 1 gün, CDN'de 1 hafta (dosya adı sabit olduğu için "immutable" değil)
+      {
+        source: "/:file(logo\\.png|icon-192\\.png|icon-512\\.png)",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400" }],
+      },
       // Service worker: önbelleğe alınmasın, kapsamı değişmesin
       {
         source: "/sw.js",
