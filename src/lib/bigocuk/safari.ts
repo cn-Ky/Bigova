@@ -35,8 +35,6 @@ export const GPS_SLACK_M = 25; // GPS oynaması için tanınan en fazla pay (sun
 export const MAX_GPS_ACCURACY_M = 100; // bundan kötü GPS ile atış yapılamaz
 export const VISIBLE_RADIUS_M = 450; // haritada gösterilen en uzak hayvan
 export const SAFARI_DAILY_COIN_CAP = 80;
-/** Hayvanlar yalnızca bu ilçede çıkar (OSM yürünebilir noktaları). Kapsam dışı uyarısında gösterilir. */
-export const SAFARI_AREA_LABEL = "Biga ilçesi (Biga, Karabiga, Ağaköy ve köyler)";
 export const REFETCH_DISTANCE_M = 50; // bu kadar yürüyünce hayvanları yenile
 export const REFETCH_INTERVAL_MS = 45_000;
 
@@ -52,7 +50,6 @@ export type Spawn = {
   end: number; // epoch sn
   radius: number; // yakalama yarıçapı (m)
   hotspot: string | null; // efsane noktasının adı
-  zone: string | null; // bölge adı (Biga, Karabiga, Ağaköy…)
 };
 export type Hotspot = {
   id: string;
@@ -65,17 +62,7 @@ export type Hotspot = {
   endsIn: number; // sn
   startsIn: number; // sn
 };
-export type Nearby = {
-  now: number;
-  spawns: Spawn[];
-  hotspots: Hotspot[];
-  /** Yürünebilir noktalar veritabanına yüklenmiş mi (yüklenmediyse hayvan çıkmaz) */
-  ready: boolean;
-  /** Yakınında (~3 km) Safari alanı var mı; false ise oyuncu Biga ilçesinin dışında */
-  covered: boolean;
-  /** Bulunduğun bölgenin adı */
-  zone: string | null;
-};
+export type Nearby = { now: number; spawns: Spawn[]; hotspots: Hotspot[] };
 
 export type DexEntry = { species: string; count: number; first: string; rarity: Rarity };
 export type SafariStats = { dex: DexEntry[]; total: number; catchesToday: number; earnedToday: number; cap: number };
@@ -103,7 +90,6 @@ export function normalizeNearby(raw: any): Nearby {
       end: num(s.end),
       radius: num(s.radius, CATCH_RADIUS_M),
       hotspot: typeof s.hotspot === "string" ? s.hotspot : null,
-      zone: typeof s.zone === "string" && s.zone ? s.zone : null,
     }));
   const hotspots: Hotspot[] = (Array.isArray(raw?.hotspots) ? raw.hotspots : []).map(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -119,14 +105,7 @@ export function normalizeNearby(raw: any): Nearby {
       startsIn: num(h.startsIn),
     }),
   );
-  return {
-    now: num(raw?.now, Date.now() / 1000),
-    spawns,
-    hotspots,
-    ready: raw?.ready !== false, // eski SQL sürümü bu alanı göndermez: hazır say
-    covered: raw?.covered !== false,
-    zone: typeof raw?.zone === "string" && raw.zone ? raw.zone : null,
-  };
+  return { now: num(raw?.now, Date.now() / 1000), spawns, hotspots };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

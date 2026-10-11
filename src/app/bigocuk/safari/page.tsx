@@ -9,7 +9,6 @@ import {
   RARITY_ORDER,
   REFETCH_DISTANCE_M,
   REFETCH_INTERVAL_MS,
-  SAFARI_AREA_LABEL,
   SAFARI_DAILY_COIN_CAP,
   SAFARI_SPECIES,
   VISIBLE_RADIUS_M,
@@ -95,37 +94,15 @@ export default function Safari() {
       return;
     }
     setGeo("asking");
-    let id: number | null = null;
-    let hasFix = false;
-    let stopped = false;
-    // Hata kodu 2 (POSITION_UNAVAILABLE; macOS'ta kCLErrorLocationUnknown) ve 3 (zaman aşımı) geçicidir:
-    // konum bir kez alındıysa hata göstermeyiz; hiç alınamadıysa önce yüksek doğruluk, sonra düşük doğrulukla (Wi‑Fi/IP) deneriz.
-    const start = (high: boolean) => {
-      id = navigator.geolocation.watchPosition(
-        (p) => {
-          hasFix = true;
-          setReal({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy || 50 });
-          setGeo("ok");
-        },
-        (err) => {
-          if (stopped) return;
-          if (err.code === 1) return setGeo("denied");
-          if (hasFix) return; // geçici hata: son bilinen konum geçerli
-          if (high) {
-            if (id !== null) navigator.geolocation.clearWatch(id);
-            start(false);
-          } else setGeo("error");
-        },
-        high
-          ? { enableHighAccuracy: true, maximumAge: 4000, timeout: 15000 }
-          : { enableHighAccuracy: false, maximumAge: 60000, timeout: 30000 },
-      );
-    };
-    start(true);
-    return () => {
-      stopped = true;
-      if (id !== null) navigator.geolocation.clearWatch(id);
-    };
+    const id = navigator.geolocation.watchPosition(
+      (p) => {
+        setReal({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy || 50 });
+        setGeo("ok");
+      },
+      (err) => setGeo(err.code === 1 ? "denied" : "error"),
+      { enableHighAccuracy: true, maximumAge: 4000, timeout: 20000 },
+    );
+    return () => navigator.geolocation.clearWatch(id);
   }, [geoNonce]);
 
   /* ───────── Sunucudan hayvanları al ───────── */
@@ -296,19 +273,6 @@ export default function Safari() {
         {tab === "map" ? (
           <>
             <GeoNotice geo={geo} acc={me?.acc} onRetry={() => setGeoNonce((n) => n + 1)} debug={DEBUG && !!fake} />
-            {nearby && !nearby.ready && (
-              <p className="mt-3 rounded-2xl bg-coral/15 p-3 text-sm font-bold text-coral">
-                Hayvan noktaları henüz yüklenmemiş. Yönetici: <code>npm run safari:points -- --upload</code> komutunu çalıştırmalı (ayrıntı README&apos;de).
-              </p>
-            )}
-            {nearby && nearby.ready && !nearby.covered && me && (
-              <p className="mt-3 flex items-start gap-3 rounded-2xl bg-sun/25 p-3 text-sm font-bold">
-                <FontAwesomeIcon icon={faLocationDot} className="mt-0.5 shrink-0" />
-                <span>
-                  Bulunduğun yerde Safari yok. Hayvanlar yalnızca {SAFARI_AREA_LABEL} sınırlarında çıkar. Biga&apos;ya geldiğinde haritada belirecekler!
-                </span>
-              </p>
-            )}
 
             {/* harita */}
             <div className="relative isolate mt-3 h-[56dvh] min-h-[340px] max-h-[560px] overflow-hidden rounded-[24px] shadow-sm" style={{ minHeight: 340 }}>
@@ -325,7 +289,7 @@ export default function Safari() {
               <div className="pointer-events-none absolute left-3 top-3 z-[800] flex flex-col gap-2">
                 <span className="rounded-full bg-card/90 px-3 py-1.5 text-xs font-extrabold shadow backdrop-blur">
                   <FontAwesomeIcon icon={faBinoculars} className="mr-1.5 text-sea" />
-                  {me ? `${nearby?.zone ? `${nearby.zone} · ` : ""}${nearbyHeld} hayvan yakında` : "Konum bekleniyor"}
+                  {me ? `${nearbyHeld} hayvan yakında` : "Konum bekleniyor"}
                 </span>
                 {DEBUG && fake && <span className="rounded-full bg-coral px-3 py-1 text-[11px] font-extrabold text-white shadow">TEST MODU · haritaya dokun</span>}
               </div>
@@ -371,9 +335,7 @@ export default function Safari() {
                   visible.length ? (
                     <>Haritadan ya da listeden bir hayvana dokun. Yakalamak için <b>{`40 m`}</b> yakınına gitmen gerekiyor.</>
                   ) : (
-                    nearby && !nearby.covered
-                      ? "Haritada hayvan görmek için Biga ilçesine gel."
-                      : "Çevrende şu an hayvan yok. Biraz yürü, her 15 dakikada yenileri çıkıyor."
+                    "Çevrende şu an hayvan yok. Biraz yürü, her 15 dakikada yenileri çıkıyor."
                   )
                 ) : (
                   "Hayvanları görmek için konumunu paylaş."
@@ -401,7 +363,7 @@ export default function Safari() {
                           <span className="text-xs font-extrabold" style={{ color: RARITY[s.rarity].color }}>
                             {RARITY[s.rarity].label}
                           </span>
-                          {(s.hotspot || s.zone) && <span className="ml-2 text-xs text-ink/55">· {s.hotspot ?? s.zone}</span>}
+                          {s.hotspot && <span className="ml-2 text-xs text-ink/55">· {s.hotspot}</span>}
                         </span>
                         <span className={`shrink-0 text-sm font-extrabold ${inRange(s) ? "text-tide" : "text-ink/55"}`}>{inRange(s) ? "Yakalanabilir" : fmtDist(s.dist)}</span>
                       </button>
@@ -505,7 +467,7 @@ function SelectedCard({
           </span>
           <p className="mt-1.5 text-xs text-ink/65">
             {fmtDist(spawn.dist)} uzakta · {fmtCountdown(left)} kaldı
-            {spawn.hotspot ? ` · ${spawn.hotspot}` : spawn.zone ? ` · ${spawn.zone}` : ""}
+            {spawn.hotspot ? ` · ${spawn.hotspot}` : ""}
           </p>
           <p className="mt-0.5 flex items-center gap-1 text-xs font-extrabold">
             <Coin size={14} /> {r.coins} {COIN_NAME} · ilk yakalamada +{r.firstBonus}
@@ -602,7 +564,7 @@ function HowTo() {
         <FontAwesomeIcon icon={faCircleInfo} className="text-sea" /> Nasıl oynanır?
       </summary>
       <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm text-ink/75">
-        <li>Konum iznini ver ve Biga ilçesinde (Biga, Karabiga, Ağaköy ve köyler) yürümeye başla. Hayvanlar sokaklarda, yaya yollarında, parklarda ve meydanlarda çıkar; haritada çevrendekiler görünür.</li>
+        <li>Konum iznini ver ve Biga&apos;da yürümeye başla. Haritada çevrendeki hayvanlar görünür.</li>
         <li>
           Bir hayvana <b>40 metre</b> yaklaş, ona dokun ve <b>Kamerayı aç ve yakala</b>&apos;ya bas.
         </li>
