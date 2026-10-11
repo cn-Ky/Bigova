@@ -4557,3 +4557,88 @@ html[data-chat] .adaptive-mobile-dock {
 @media (prefers-reduced-motion: reduce) {
   .page-in { animation: none; }
 }
+
+/* ───────── Safari yakalama ekranı: responsive düzen ─────────
+   Ekran body'ye portal edilir; böylece sayfa kabuğunun (.shell) yüksekliğine değil görünür alana oturur. */
+.sf-catch {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+}
+.sf-top {
+  padding: max(0.75rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) 0 max(1rem, env(safe-area-inset-left));
+}
+.sf-bottom {
+  padding: 0 max(1rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+}
+.sf-result {
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+}
+.sf-hint-mouse {
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .sf-hint-touch {
+    display: none;
+  }
+  .sf-hint-mouse {
+    display: inline;
+  }
+}
+/* Yatay telefon / kısa pencere */
+@media (max-height: 520px) {
+  .sf-top {
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+  }
+  .sf-bottom {
+    gap: 0.35rem;
+    padding-bottom: max(0.4rem, env(safe-area-inset-bottom));
+  }
+  .sf-card {
+    padding: 1rem;
+  }
+}
+.sf-catch button:focus-visible {
+  outline: 3px solid rgb(var(--sun));
+  outline-offset: 2px;
+}
+
+/* ───────── Safari sayfası: harita + yan panel ───────── */
+.sf-map-frame {
+  height: clamp(340px, 56dvh, 560px);
+}
+/* Yatay telefon: harita görünür alanı doldurur, bölümün geri kalanı aşağı kayar */
+@media (orientation: landscape) and (max-height: 520px) {
+  .sf-map-frame {
+    height: max(260px, calc(100dvh - 4.5rem));
+  }
+}
+/* Masaüstü / geniş tablet: harita solda, hayvan kartı ve listeler sağda */
+@media (min-width: 1024px) {
+  .sf-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr);
+    gap: 0 1.5rem;
+    align-items: start;
+  }
+  .sf-map-frame {
+    height: clamp(480px, calc(100dvh - 11rem), 760px);
+  }
+  .sf-sidecol > :first-child {
+    margin-top: 0.75rem;
+  }
+}
+/* Dokunmatik cihazda iki parmakla yakınlaştırma var; yakınlaştırma düğmeleri haritanın yarısını kaplamasın */
+@media (pointer: coarse) {
+  .sf-map-frame .leaflet-control-zoom {
+    display: none;
+  }
+}
+.sf-map-frame .leaflet-control-zoom a {
+  width: 2.5rem;
+  height: 2.5rem;
+  line-height: 2.5rem;
+}

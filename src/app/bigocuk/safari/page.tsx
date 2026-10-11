@@ -215,18 +215,29 @@ export default function Safari() {
 
   const nearbyHeld = me ? visible.length : 0;
 
+  // Dar ekranda kart haritanın altında kalır: bir hayvan seçilince kartı görünür alana getir.
+  const selKey = sel?.key;
+  useEffect(() => {
+    if (!selKey || typeof window === "undefined" || window.matchMedia("(min-width: 1024px)").matches) return;
+    const el = document.getElementById("sf-selected");
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    if (r.bottom > window.innerHeight || r.top < 0)
+      el.scrollIntoView({ block: "nearest", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }, [selKey]);
+
   return (
     <main className="pb-10">
-      <header className="rounded-b-[24px] bg-sea px-5 pb-5 pt-[max(1.25rem,env(safe-area-inset-top))] text-white shadow-lg">
+      <header className="rounded-b-[24px] bg-sea px-4 pb-5 sm:px-5 pt-[max(1.25rem,env(safe-area-inset-top))] text-white shadow-lg">
         <Link href="/bigocuk" className="mb-3 inline-flex items-center gap-2 text-sm font-bold text-white/75">
           <FontAwesomeIcon icon={faArrowLeft} /> Bigocuk
         </Link>
-        <div className="flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-xl bg-white/15">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/15">
             <FontAwesomeIcon icon={faBinoculars} />
           </span>
           <div className="min-w-0 flex-1">
-            <h1 className="font-display text-2xl font-extrabold">Biga Safari</h1>
+            <h1 className="truncate font-display text-2xl font-extrabold">Biga Safari</h1>
             <p className="text-sm text-white/75">Dolaş, bul, kameranla yakala</p>
           </div>
           {live && (
@@ -237,7 +248,7 @@ export default function Safari() {
         </div>
       </header>
 
-      <section className="px-5 pt-4">
+      <section className="px-4 pt-4 sm:px-5">
         {/* sekmeler */}
         <div role="tablist" className="grid grid-cols-2 gap-2 rounded-2xl bg-card p-1.5 shadow-sm">
           {(
@@ -251,7 +262,7 @@ export default function Safari() {
               role="tab"
               aria-selected={tab === id}
               onClick={() => setTab(id)}
-              className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-extrabold transition ${tab === id ? "bg-sea text-white" : "text-ink/70"}`}
+              className={`flex min-w-0 items-center justify-center gap-2 rounded-xl px-2 py-2.5 text-sm font-extrabold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-sea sm:px-3 ${tab === id ? "bg-sea text-white" : "text-ink/70"}`}
             >
               <FontAwesomeIcon icon={icon} /> {label}
               {id === "dex" && stats && (
@@ -274,8 +285,10 @@ export default function Safari() {
           <>
             <GeoNotice geo={geo} acc={me?.acc} onRetry={() => setGeoNonce((n) => n + 1)} debug={DEBUG && !!fake} />
 
+            <div className="sf-layout">
             {/* harita */}
-            <div className="relative isolate mt-3 h-[56dvh] min-h-[340px] max-h-[560px] overflow-hidden rounded-[24px] shadow-sm" style={{ minHeight: 340 }}>
+            <div className="sf-mapcol">
+            <div className="sf-map-frame relative isolate mt-3 overflow-hidden rounded-[24px] shadow-sm">
               <SafariMap
                 me={me}
                 spawns={visible}
@@ -318,7 +331,9 @@ export default function Safari() {
                 )}
               </div>
             </div>
+            </div>
 
+            <div className="sf-sidecol">
             {/* seçili hayvan */}
             {sel ? (
               <SelectedCard
@@ -398,6 +413,8 @@ export default function Safari() {
             )}
 
             <HowTo />
+            </div>
+            </div>
           </>
         ) : (
           <Dex stats={stats} guest={status === "guest"} ready={live} />
@@ -457,8 +474,8 @@ function SelectedCard({
   const ok = !!me && spawn.dist <= reach;
   const left = Math.max(0, spawn.end - serverNow);
   return (
-    <div className="mt-3 overflow-hidden rounded-[24px] bg-card shadow-sm" style={{ boxShadow: `0 0 0 2px ${r.color}` }}>
-      <div className="flex items-center gap-4 p-4" style={{ background: `radial-gradient(circle at 18% 50%, ${r.glow}, transparent 60%)` }}>
+    <div id="sf-selected" className="mt-3 scroll-mb-24 overflow-hidden rounded-[24px] bg-card shadow-sm" style={{ boxShadow: `0 0 0 2px ${r.color}` }}>
+      <div className="flex items-center gap-3 p-3.5 sm:gap-4 sm:p-4" style={{ background: `radial-gradient(circle at 18% 50%, ${r.glow}, transparent 60%)` }}>
         <WildAnimal species={spawn.species} variant={spawn.variant} size={84} view="bust" />
         <div className="min-w-0 flex-1 leading-tight">
           <p className="font-display text-xl font-extrabold">{speciesName(spawn.species)}</p>
@@ -537,7 +554,7 @@ function Dex({ stats, guest, ready }: { stats: SafariStats | null; guest: boolea
               {RARITY[rar].coins} {COIN_NAME} · ilk yakalamada +{RARITY[rar].firstBonus}
             </span>
           </h2>
-          <ul className="mt-2 grid grid-cols-3 gap-2.5 sm:grid-cols-4">
+          <ul className="mt-2 grid grid-cols-3 gap-2.5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
             {SAFARI_SPECIES[rar].map((id) => {
               const d = byId.get(id);
               return (

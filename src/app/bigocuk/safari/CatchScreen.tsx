@@ -7,7 +7,8 @@ import type { SafariThrowResult } from "@/lib/bigocuk/api";
 import { RARITY, fmtCountdown, type Spawn } from "@/lib/bigocuk/safari";
 import { faCamera, faCheck, faVideoSlash, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 type Phase = "aim" | "flying" | "shaking" | "result";
 type AnimalAnim = "idle" | "pop" | "absorbed" | "escaped" | "caught";
@@ -78,17 +79,23 @@ export default function CatchScreen({
 
   const W = box.w;
   const H = box.h;
-  const S = Math.round(Math.min(Math.max(Math.min(W * 0.6, H * 0.3), 150), 270));
+  // Kısa ekran (yatay telefon, küçük pencere): hayvan küçülür, top ve ipucu çubuğu alçalır.
+  const compact = H < 520;
+  const S = Math.round(Math.min(Math.max(Math.min(W * 0.55, H * (compact ? 0.4 : 0.3)), compact ? 104 : 150), 270));
   const ax = W / 2;
-  const ay = H * 0.4;
+  const ay = compact ? H * 0.46 : H * 0.4;
   const hitR = S * 0.36;
   const D0 = S * 1.25; // halkanın en büyük çapı
-  const start = { x: W / 2, y: H - 118 };
+  // Top, alttaki ipucu çubuğunun hemen üstünde başlar; ekran boyuna göre ölçeklenir (eskiden sabit 118 px'ti).
+  const startY = H - Math.min(Math.max(H * 0.16, compact ? 64 : 92), 130);
+  const start = { x: W / 2, y: startY };
   const [ball, setBall] = useState({ x: start.x, y: start.y, s: 1, anim: false, hidden: false });
   const resetBall = useCallback(
-    () => setBall({ x: W / 2, y: H - 118, s: 1, anim: false, hidden: false }),
-    [W, H],
+    () => setBall({ x: W / 2, y: startY, s: 1, anim: false, hidden: false }),
+    [W, startY],
   );
+  const [mounted, setMounted] = useState(false);
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   /* ───────── yaşam döngüsü ───────── */
   useEffect(() => {
@@ -101,6 +108,16 @@ export default function CatchScreen({
     };
   }, []);
 
+  useLayoutEffect(() => setMounted(true), []);
+
+  // Odak yönetimi: ekran açılınca kapat düğmesine odaklan, kapanınca önceki öğeye dön.
+  useEffect(() => {
+    if (!mounted) return;
+    const prev = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus({ preventScroll: true });
+    return () => prev?.focus?.({ preventScroll: true });
+  }, [mounted]);
+
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
@@ -112,7 +129,7 @@ export default function CatchScreen({
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [mounted]);
   useEffect(() => {
     if (phase === "aim" && !drag.current) resetBall();
   }, [box.w, box.h, phase, resetBall]);
@@ -175,10 +192,18 @@ export default function CatchScreen({
     if (!busy.current) onClose();
   }, [onClose]);
   useEffect(() => {
-    const k = (e: KeyboardEvent) => e.key === "Escape" && close();
+    const k = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+      else if ((e.key === " " || e.key === "Enter") && !(e.target as HTMLElement).closest("button, a")) {
+        e.preventDefault();
+        tapThrowRef.current();
+      }
+    };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   }, [close]);
+
+  const tapThrowRef = useRef<() => void>(() => {});
 
   const showPopup = (text: string, color: string) => {
     const id = ++popupId.current;
@@ -284,6 +309,8 @@ export default function CatchScreen({
     void hit(qualityOf(ringF(performance.now())));
   }
 
+  tapThrowRef.current = tapThrow;
+
   const local = (e: React.PointerEvent): Pt => {
     const b = rootRef.current!.getBoundingClientRect();
     return { x: e.clientX - b.left, y: e.clientY - b.top, t: e.timeStamp };
@@ -291,7 +318,7 @@ export default function CatchScreen({
   const onDown = (e: React.PointerEvent) => {
     if (busy.current || phase !== "aim" || (e.target as HTMLElement).closest("[data-nothrow]")) return;
     const p = local(e);
-    if (p.y < H * 0.42) return;
+    if (p.y < Math.min(H * 0.42, ay)) return;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     drag.current = { id: e.pointerId, start: { x: start.x, y: start.y, t: p.t }, samples: [p] };
     setBall({ x: p.x, y: p.y, s: 1.08, anim: false, hidden: false });
@@ -326,13 +353,14 @@ export default function CatchScreen({
   const info = result && !caught ? describe(result) : null;
   const capped = !!result && caught && result.earned < result.reward;
 
-  return (
+  if (!mounted) return null;
+  return createPortal(
     <div
       ref={rootRef}
       role="dialog"
       aria-modal="true"
       aria-label={`${speciesName(spawn.species)} yakalama ekranı`}
-      className="fixed inset-0 z-[1000] select-none overflow-hidden bg-black text-white"
+      className="sf-catch select-none overflow-hidden bg-black text-white"
       style={{ touchAction: "none" }}
       onPointerDown={onDown}
       onPointerMove={onMove}
@@ -355,8 +383,10 @@ export default function CatchScreen({
       />
 
       {/* üst çubuk */}
-      <div data-nothrow className="absolute inset-x-0 top-0 flex items-start gap-3 px-4 pt-[max(1rem,env(safe-area-inset-top))]">
+      <div data-nothrow className="sf-top absolute inset-x-0 top-0 flex flex-col items-center gap-2">
+       <div className="flex w-full max-w-xl items-start gap-3">
         <button
+          ref={closeRef}
           type="button"
           onClick={close}
           disabled={phase === "flying" || phase === "shaking"}
@@ -366,7 +396,7 @@ export default function CatchScreen({
           <FontAwesomeIcon icon={faXmark} />
         </button>
         <div className="min-w-0 flex-1 text-center leading-tight">
-          <p className="font-display text-xl font-extrabold drop-shadow">{speciesName(spawn.species)}</p>
+          <p className="truncate font-display text-xl font-extrabold drop-shadow">{speciesName(spawn.species)}</p>
           <span className="mt-0.5 inline-block rounded-full px-2.5 py-0.5 text-[11px] font-extrabold text-black" style={{ background: r.color }}>
             {r.label}
           </span>
@@ -381,12 +411,13 @@ export default function CatchScreen({
         >
           <FontAwesomeIcon icon={camWanted && cam !== "denied" && cam !== "unsupported" ? faCamera : faVideoSlash} />
         </button>
-      </div>
-      {(cam === "denied" || cam === "unsupported") && (
-        <p data-nothrow className="absolute inset-x-6 top-[calc(max(1rem,env(safe-area-inset-top))+4.6rem)] rounded-xl bg-black/50 px-3 py-2 text-center text-xs font-bold backdrop-blur">
+       </div>
+       {(cam === "denied" || cam === "unsupported") && (
+        <p className="max-w-md rounded-xl bg-black/50 px-3 py-2 text-center text-xs font-bold backdrop-blur">
           {cam === "denied" ? "Kamera izni verilmedi, sahne modunda oynuyorsun. İzin için adres çubuğundaki kilit simgesine dokun." : "Bu cihazda kamera kullanılamıyor, sahne modunda oynuyorsun."}
         </p>
-      )}
+       )}
+      </div>
 
       {/* hayvan */}
       <div className="pointer-events-none absolute" style={{ left: ax, top: ay, width: S, height: S * 1.35, transform: "translate(-50%,-50%)" }}>
@@ -438,8 +469,11 @@ export default function CatchScreen({
 
       {/* alt: ipucu, hak sayacı, düğme */}
       {showAim && (
-        <div data-nothrow className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <p className="rounded-full bg-black/45 px-3 py-1 text-xs font-bold backdrop-blur">Topu yukarı fırlat · halka küçükken bırak, bonus kazan</p>
+        <div data-nothrow className="sf-bottom absolute inset-x-0 bottom-0 flex flex-col items-center gap-2">
+          <p className="max-w-[92%] rounded-full bg-black/45 px-3 py-1 text-center text-xs font-bold backdrop-blur">
+            <span className="sf-hint-touch">Topu yukarı fırlat · halka küçükken bırak, bonus kazan</span>
+            <span className="sf-hint-mouse">Topu fareyle yukarı sürükle ve bırak · halka küçükken bırak, bonus kazan · Boşluk tuşuyla at</span>
+          </p>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5" aria-label={`Top hakkı ${used}/${maxTries}`}>
               {Array.from({ length: maxTries }, (_, i) => (
@@ -458,13 +492,14 @@ export default function CatchScreen({
 
       {/* sonuç kartı */}
       {phase === "result" && result && (
-        <div data-nothrow className="absolute inset-0 grid place-items-center bg-black/55 p-5 backdrop-blur-sm">
-          <div className="sf-card w-full max-w-sm rounded-[28px] bg-card p-6 text-center text-ink shadow-2xl">
+        <div data-nothrow className="sf-result absolute inset-0 overflow-y-auto overscroll-contain bg-black/55 backdrop-blur-sm" style={{ touchAction: "pan-y" }}>
+         <div className="flex min-h-full items-center justify-center">
+          <div className="sf-card w-full max-w-sm rounded-[28px] bg-card p-5 text-center text-ink shadow-2xl sm:p-6">
             {caught ? (
               <>
                 <p className="font-display text-3xl font-extrabold">Yakalandı!</p>
                 <div className="mx-auto mt-2 w-fit" style={{ filter: `drop-shadow(0 0 18px ${r.glow})` }}>
-                  <WildAnimal species={spawn.species} variant={spawn.variant} size={132} view="bust" />
+                  <WildAnimal species={spawn.species} variant={spawn.variant} size={compact ? 92 : 132} view="bust" />
                 </div>
                 <p className="font-display text-xl font-extrabold">{speciesName(spawn.species)}</p>
                 <span className="mt-1 inline-block rounded-full px-3 py-0.5 text-xs font-extrabold text-black" style={{ background: r.color }}>
@@ -491,20 +526,22 @@ export default function CatchScreen({
                   <p className="font-display text-2xl font-extrabold">{info.title}</p>
                   {result.status === "fled" && (
                     <div className="mx-auto mt-2 w-fit opacity-60">
-                      <WildAnimal species={spawn.species} variant={spawn.variant} size={110} view="bust" />
+                      <WildAnimal species={spawn.species} variant={spawn.variant} size={compact ? 80 : 110} view="bust" />
                     </div>
                   )}
                   <p className="mt-3 text-sm text-ink/75">{info.body}</p>
                 </>
               )
             )}
-            <button type="button" onClick={onClose} className="mt-5 w-full rounded-2xl bg-sea px-4 py-3 font-display text-lg font-extrabold text-white">
+            <button type="button" onClick={onClose} className="mt-4 w-full rounded-2xl bg-sea px-4 py-3 font-display text-lg font-extrabold text-white focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-sun">
               Haritaya dön
             </button>
           </div>
+         </div>
         </div>
       )}
-    </div>
+    </div>,
+    document.body,
   );
 }
 
