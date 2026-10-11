@@ -3,6 +3,7 @@ import Mascot from "@/components/Mascot";
 import Weather from "@/components/Weather";
 import { useUnread } from "@/components/NotificationProvider";
 import PushControl from "@/components/PushControl";
+import StudentHome from "@/components/student/StudentHome";
 import UnreadBadge from "@/components/UnreadBadge";
 import { CATEGORIES, TONE_BG } from "@/lib/menuData";
 import { useOpenCats } from "@/lib/useOpenCats";
@@ -960,6 +961,7 @@ export default function Home() {
 
       <UnreadCard />
       <PushControl variant="banner" />
+      <StudentHome />
 
       <motion.section
         initial={{ opacity: 0, y: 16 }}
