@@ -10,13 +10,18 @@
 --    deterministik üretilir (safari_resolve). Böylece herkes aynı hayvanı aynı yerde görür,
 --    sunucu yakalama anında hayvanın konumunu yeniden hesaplayıp oyuncunun yanında
 --    olup olmadığını denetler.
---  * Sıradan hayvanlar (Yaygın / Nadir / Epik) her yerde, 15 dakikalık aralıklarla çıkar.
+--  * Hayvanlar YALNIZCA yürünebilir noktalarda çıkar: safari_points tablosu OpenStreetMap'ten
+--    (scripts/safari-build-points.mjs) üretilir: sokaklar, yaya yolları, parklar, meydanlar, plajlar.
+--    Ana yollar (otoyol/devlet yolu), askerî alan, sanayi, mezarlık, su ve özel yollar dışarıda kalır.
+--    Noktalar Biga ilçesinin tamamını (Biga, Karabiga, Ağaköy, köyler…) kapsar. Hücrelerdeki
+--    hayvan sayısı o hücredeki yürünebilir nokta sayısına göre ayarlanır (kentte sık, kırda seyrek).
+--  * Sıradan hayvanlar (Yaygın / Nadir / Epik) 15 dakikalık aralıklarla çıkar, her turda farklı noktada.
 --  * Efsanevi hayvanlar yalnızca "efsane noktalarında" (safari_hotspots) belirli saatlerde çıkar.
 --  * Anti-hile: uzaklık denetimi, GPS doğruluğu, ışınlanma (hız) denetimi, atış hız sınırı,
 --    günlük Bigcoin sınırı.
 --
 -- Sabitler (src/lib/bigocuk/safari.ts ile aynı olmalı):
---   hücre: 0.0025° enlem x 0.0033° boylam (~280 m) · hücre başına 4 hayvan · ömür 15 dk
+--   hücre: 0.0025° enlem x 0.0033° boylam (~280 m) · hücre başına en çok 4 hayvan (6 noktada 1 hayvan) · ömür 15 dk
 --   nadirlik: yaygin %70 · nadir %25 · epik %5 · efsanevi: yalnızca efsane noktası
 --   yakalama yarıçapı 40 m (efsane noktasında nokta yarıçapı)
 --   ödül (Bigcoin): 1 / 3 / 8 / 25 · ilk kez yakalama bonusu: +4 / +7 / +12 / +25
@@ -24,6 +29,27 @@
 -- ============================================================================
 
 -- 1) Tablolar ---------------------------------------------------------------
+-- Yürünebilir noktalar (OpenStreetMap). Yükleme: scripts/safari-build-points.mjs -> supabase/safari_points/*.sql
+create table if not exists public.safari_points (
+  id bigint generated always as identity primary key,
+  lat double precision not null check (lat between -85 and 85),
+  lng double precision not null check (lng between -180 and 180),
+  kind text not null default 'street' check (kind in ('street','walk','park','poi','beach','place')),
+  zone text,                                                    -- mahalle / köy / kasaba adı (ör. Karabiga, Ağaköy)
+  cx integer generated always as (floor(lng / 0.0033)::integer) stored,
+  cy integer generated always as (floor(lat / 0.0025)::integer) stored,
+  rn integer                                                    -- hücre içindeki sıra (safari_reindex doldurur)
+);
+create index if not exists safari_points_cell_idx on public.safari_points (cx, cy, rn);
+
+-- Hücre başına nokta sayısı (safari_reindex doldurur)
+create table if not exists public.safari_cells (
+  cx integer not null,
+  cy integer not null,
+  n integer not null check (n > 0),
+  primary key (cx, cy)
+);
+
 -- Efsane noktaları: efsanevi hayvanın belirli saatlerde çıktığı gerçek yerler.
 create table if not exists public.safari_hotspots (
   id text primary key check (id !~ ':'),
@@ -75,12 +101,14 @@ create table if not exists public.safari_players (
 );
 
 -- 2) RLS ---------------------------------------------------------------------
+alter table public.safari_points enable row level security;
+alter table public.safari_cells enable row level security;
 alter table public.safari_hotspots enable row level security;
 alter table public.safari_catches enable row level security;
 alter table public.safari_attempts enable row level security;
 alter table public.safari_players enable row level security;
 
-revoke all on public.safari_hotspots, public.safari_catches, public.safari_attempts, public.safari_players from anon, authenticated;
+revoke all on public.safari_points, public.safari_cells, public.safari_hotspots, public.safari_catches, public.safari_attempts, public.safari_players from anon, authenticated;
 grant select on public.safari_hotspots to anon, authenticated;
 grant select on public.safari_catches to authenticated;
 
@@ -121,6 +149,43 @@ language sql immutable as $$
   end
 $$;
 
+-- Nokta yükleme (yalnızca SQL Editor / service role çalıştırır; istemci ÇAĞIRAMAZ).
+-- p: [[enlem, boylam, tür, bölge], ...]
+create or replace function public.safari_load_points(p jsonb) returns integer
+language plpgsql security definer set search_path = public as $$
+declare v_n integer;
+begin
+  insert into public.safari_points (lat, lng, kind, zone)
+  select (e->>0)::double precision, (e->>1)::double precision,
+         coalesce(nullif(e->>2, ''), 'street'), nullif(e->>3, '')
+    from jsonb_array_elements(p) e;
+  get diagnostics v_n = row_count;
+  return v_n;
+end $$;
+
+-- Noktaları siler (oyuncu verisine dokunmaz). Yükleme betiğinin ilk adımı.
+create or replace function public.safari_reset_points() returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  truncate table public.safari_points restart identity;
+  truncate table public.safari_cells;
+end $$;
+
+-- Tüm noktalar yüklendikten SONRA bir kez çalıştırılır: hücre içi sıra numaralarını ve hücre sayılarını yeniler.
+create or replace function public.safari_reindex() returns jsonb
+language plpgsql security definer set search_path = public as $$
+begin
+  update public.safari_points sp set rn = r.rn
+    from (select id, (row_number() over (partition by cx, cy order by id) - 1)::integer as rn from public.safari_points) r
+   where r.id = sp.id;
+  delete from public.safari_cells;
+  insert into public.safari_cells (cx, cy, n) select cx, cy, count(*)::integer from public.safari_points group by cx, cy;
+  return jsonb_build_object(
+    'points', (select count(*) from public.safari_points),
+    'cells', (select count(*) from public.safari_cells),
+    'zones', (select count(distinct zone) from public.safari_points));
+end $$;
+
 -- İki nokta arası metre (Haversine)
 create or replace function public.safari_dist(lat1 double precision, lng1 double precision, lat2 double precision, lng2 double precision)
 returns double precision language sql immutable as $$
@@ -143,6 +208,8 @@ declare
   v_phase double precision; v_start double precision; v_end double precision;
   r double precision; v_rar text; v_species text; v_variant integer;
   h public.safari_hotspots;
+  pt public.safari_points;
+  v_n integer;
 begin
   if p_key is null or p_key = '' or length(p_key) > 80 then return null; end if;
 
@@ -159,7 +226,7 @@ begin
       'key', p_key, 'species', v_species, 'rarity', 'efsanevi',
       'variant', 1 + floor(public.safari_u(p_key, 'v') * 8)::int,
       'lat', h.lat, 'lng', h.lng, 'start', v_start, 'end', v_end,
-      'radius', h.radius_m, 'hotspot', h.name);
+      'radius', h.radius_m, 'hotspot', h.name, 'zone', null);
   end if;
 
   if coalesce(array_length(parts, 1), 0) <> 4
@@ -174,14 +241,22 @@ begin
   v_end := v_start + c_period;
   if p_now < v_start or p_now > v_end + p_grace then return null; end if;
 
+  -- Hücredeki yürünebilir nokta sayısı: nokta yoksa hayvan yok; az noktalı hücrede daha az hayvan.
+  select n into v_n from public.safari_cells where cx = v_cx and cy = v_cy;
+  if v_n is null or v_idx >= least(4, ceil(v_n / 6.0)) then return null; end if;
+  -- Her turda hücre içinde başka bir yürünebilir nokta seçilir.
+  select * into pt from public.safari_points
+   where cx = v_cx and cy = v_cy and rn = floor(public.safari_u(p_key, 'pt') * v_n)::integer
+   limit 1;
+  if not found then return null; end if;
+
   r := public.safari_u(p_key, 'r');
   v_rar := case when r < 0.70 then 'yaygin' when r < 0.95 then 'nadir' else 'epik' end;
   v_species := public.safari_pick(v_rar, public.safari_u(p_key, 's'));
   v_variant := 1 + floor(public.safari_u(p_key, 'v') * 8)::int;
   return jsonb_build_object(
     'key', p_key, 'species', v_species, 'rarity', v_rar, 'variant', v_variant,
-    'lat', (v_cy + 0.1 + 0.8 * public.safari_u(p_key, 'la')) * 0.0025,
-    'lng', (v_cx + 0.1 + 0.8 * public.safari_u(p_key, 'lo')) * 0.0033,
+    'lat', pt.lat, 'lng', pt.lng, 'zone', pt.zone,
     'start', v_start, 'end', v_end, 'radius', 40, 'hotspot', null);
 end $$;
 
@@ -223,6 +298,7 @@ declare
   v_hots jsonb := '[]'::jsonb;
   h public.safari_hotspots;
   v_per double precision; v_rel double precision; v_hstart double precision; v_hactive boolean;
+  v_ready boolean; v_covered boolean; v_zone text;
 begin
   if p_lat is null or p_lng is null or p_lat not between -85 and 85 or p_lng not between -180 and 180 then
     raise exception 'Geçersiz konum.';
@@ -274,7 +350,16 @@ begin
       'startsIn', case when v_hactive then 0 else ceil(v_hstart + v_per - v_now) end));
   end loop;
 
-  return jsonb_build_object('now', v_now, 'spawns', v_spawns, 'hotspots', v_hots);
+  -- ready: noktalar yüklenmiş mi · covered: yakınında (~3 km) yürünebilir nokta var mı · zone: en yakın bölge adı
+  v_ready := exists (select 1 from public.safari_points limit 1);
+  v_covered := v_ready and exists (
+    select 1 from public.safari_cells where cx between v_cx - 10 and v_cx + 10 and cy between v_cy - 10 and v_cy + 10);
+  select pt.zone into v_zone from public.safari_points pt
+   where pt.cx between v_cx - 1 and v_cx + 1 and pt.cy between v_cy - 1 and v_cy + 1 and pt.zone is not null
+   order by power(pt.lat - p_lat, 2) + power((pt.lng - p_lng) * 0.76, 2) limit 1;
+
+  return jsonb_build_object('now', v_now, 'spawns', v_spawns, 'hotspots', v_hots,
+                            'ready', v_ready, 'covered', v_covered, 'zone', v_zone);
 end $$;
 
 create or replace function public.safari_state() returns jsonb
@@ -419,6 +504,9 @@ revoke all on function public.safari_u(text, text) from public, anon, authentica
 revoke all on function public.safari_pick(text, double precision) from public, anon, authenticated;
 revoke all on function public.safari_dist(double precision, double precision, double precision, double precision) from public, anon, authenticated;
 revoke all on function public.safari_resolve(text, double precision, double precision) from public, anon, authenticated;
+revoke all on function public.safari_load_points(jsonb) from public, anon, authenticated;
+revoke all on function public.safari_reindex() from public, anon, authenticated;
+revoke all on function public.safari_reset_points() from public, anon, authenticated;
 revoke all on function public.safari_build_state(uuid) from public, anon, authenticated;
 revoke all on function public.safari_nearby(double precision, double precision) from public;
 revoke all on function public.safari_state() from public, anon;
