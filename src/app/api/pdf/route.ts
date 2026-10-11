@@ -20,9 +20,38 @@ function isAllowedPdf(value: URL) {
   );
 }
 
+const MAX_REDIRECTS = 3;
+const RANGE_RE = /^bytes=\d{0,12}-\d{0,12}$/;
+
+/** Yönlendirmeleri elle izler: her adım beyaz listeye karşı doğrulanır (SSRF / açık yönlendirme koruması). */
+async function fetchAllowed(start: URL, init: RequestInit & { next?: { revalidate: number } }) {
+  let current = start;
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    if (!isAllowedPdf(current)) return null;
+    const response = await fetch(current, {
+      ...init,
+      redirect: "manual",
+      signal: AbortSignal.timeout(15000),
+    });
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      await response.body?.cancel();
+      if (!location) return null;
+      try {
+        current = new URL(location, current);
+      } catch {
+        return null;
+      }
+      continue;
+    }
+    return response;
+  }
+  return null;
+}
+
 export async function GET(request: Request) {
   const source = new URL(request.url).searchParams.get("src");
-  if (!source)
+  if (!source || source.length > 600)
     return NextResponse.json({ error: "PDF adresi gerekli." }, { status: 400 });
 
   let sourceUrl: URL;
@@ -40,23 +69,19 @@ export async function GET(request: Request) {
       { status: 403 },
     );
 
+  const rawRange = request.headers.get("range");
+  const range = rawRange && RANGE_RE.test(rawRange) ? rawRange : null;
+
   try {
-    const range = request.headers.get("range");
-    const upstream = await fetch(sourceUrl, {
+    const upstream = await fetchAllowed(sourceUrl, {
       headers: range ? { Range: range } : undefined,
-      redirect: "follow",
       ...(range
         ? { cache: "no-store" as const }
         : { next: { revalidate: 3600 } }),
     });
-    const finalUrl = new URL(upstream.url);
-    const contentType = upstream.headers.get("content-type") ?? "";
-    if (
-      !upstream.ok ||
-      !isAllowedPdf(finalUrl) ||
-      !contentType.includes("pdf")
-    ) {
-      await upstream.body?.cancel();
+    const contentType = upstream?.headers.get("content-type") ?? "";
+    if (!upstream || !upstream.ok || !contentType.includes("pdf")) {
+      await upstream?.body?.cancel();
       return NextResponse.json(
         { error: "PDF kaynağından dosya alınamadı." },
         { status: 502 },
@@ -66,6 +91,7 @@ export async function GET(request: Request) {
     const headers = new Headers({
       "Content-Type": "application/pdf",
       "Content-Disposition": "inline",
+      "X-Content-Type-Options": "nosniff",
       "Cache-Control": range ? "private, no-store" : "public, max-age=3600",
       "Accept-Ranges": upstream.headers.get("accept-ranges") ?? "bytes",
       Vary: "Range",

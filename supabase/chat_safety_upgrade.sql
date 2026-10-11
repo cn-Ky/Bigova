@@ -67,13 +67,39 @@ drop policy if exists "blocks: engelleyen okur" on public.user_blocks;
 -- Yalnızca engelleyen kendi listesini okur; engellenen kişi bunu GÖREMEZ.
 create policy "blocks: engelleyen okur" on public.user_blocks for select to authenticated using (blocker = auth.uid());
 
--- İki kişi arasında (hangi yönde olursa olsun) engel var mı? RLS'i aşar, istemciye açılmaz.
-create or replace function public.is_blocked_between(a uuid, b uuid) returns boolean
+-- İki kişi arasında (hangi yönde olursa olsun) engel var mı?
+-- ÖNEMLİ: RLS politikaları ve "security invoker" fonksiyonlar bu fonksiyonu GİRİŞ YAPAN KULLANICININ
+-- yetkisiyle çağırır. Bu yüzden `authenticated` rolünün EXECUTE yetkisi olmalıdır; yoksa mesaj gönderme
+-- ve öneri/arama "permission denied" (HTTP 403) ile çöker.
+-- Ama herkese açık `public` şemasında bırakılırsa istemci rpc('is_blocked_between') ile "beni engelledi mi?"
+-- diye yoklama yapabilir. Çözüm: API'ye AÇILMAYAN `private` şemasında tutmak (PostgREST yalnızca public'i sunar).
+create schema if not exists private;
+revoke all on schema private from public, anon;
+grant usage on schema private to authenticated;
+
+create or replace function private.is_blocked_between(a uuid, b uuid) returns boolean
 language sql security definer stable set search_path = public as $$
   select exists (
     select 1 from public.user_blocks
      where (blocker = a and blocked = b) or (blocker = b and blocked = a)
   )
+$$;
+revoke all on function private.is_blocked_between(uuid, uuid) from public, anon;
+grant execute on function private.is_blocked_between(uuid, uuid) to authenticated;
+
+-- Arkadaş mı? (aynı gerekçeyle private şemada: RLS içinde çağrılır, ama REST API'den yoklanamaz)
+create or replace function private.are_friends(a uuid, b uuid) returns boolean
+language sql security definer stable set search_path = public as $$
+  select exists (select 1 from public.friendships where status = 'accepted'
+    and ((requester = a and addressee = b) or (requester = b and addressee = a)))
+$$;
+revoke all on function private.are_friends(uuid, uuid) from public, anon;
+grant execute on function private.are_friends(uuid, uuid) to authenticated;
+
+-- public sürümü yalnızca diğer SECURITY DEFINER fonksiyonlar (sahip yetkisiyle) içindir; API'den çağrılamaz.
+create or replace function public.is_blocked_between(a uuid, b uuid) returns boolean
+language sql security definer stable set search_path = public as $$
+  select private.is_blocked_between(a, b)
 $$;
 revoke all on function public.is_blocked_between(uuid, uuid) from public, anon, authenticated;
 
@@ -126,8 +152,8 @@ drop policy if exists "msg: sadece arkadasa yazar" on public.messages;
 create policy "msg: sadece arkadasa yazar" on public.messages for insert to authenticated
   with check (
     from_id = auth.uid()
-    and public.are_friends(from_id, to_id)
-    and not public.is_blocked_between(from_id, to_id)
+    and private.are_friends(from_id, to_id)
+    and not private.is_blocked_between(from_id, to_id)
   );
 
 -- 4b) Arkadaşlık isteği: engel varsa gönderilemez
@@ -136,7 +162,7 @@ create policy "friends: istek gonderir" on public.friendships for insert to auth
   with check (
     requester = auth.uid()
     and status = 'pending'
-    and not public.is_blocked_between(requester, addressee)
+    and not private.is_blocked_between(requester, addressee)
   );
 
 -- 4c) Arama ve öneriler: engelli kişiler iki yönde de görünmez
@@ -151,7 +177,7 @@ language sql stable security invoker set search_path = public as $$
   where p.id <> auth.uid()
     and p.name <> ''
     and q.t <> ''
-    and not public.is_blocked_between(auth.uid(), p.id)
+    and not private.is_blocked_between(auth.uid(), p.id)
     and (public.tr_norm(p.name) like q.t || '%' escape '\'
       or public.tr_norm(p.name) like '% ' || q.t || '%' escape '\')
   order by (public.tr_norm(p.name) like q.t || '%' escape '\') desc, p.name
@@ -165,7 +191,7 @@ language sql stable security invoker set search_path = public as $$
   from public.profiles p
   where p.id <> auth.uid()
     and p.name <> ''
-    and not public.is_blocked_between(auth.uid(), p.id)
+    and not private.is_blocked_between(auth.uid(), p.id)
     and not exists (
       select 1 from public.friendships f
       where (f.requester = auth.uid() and f.addressee = p.id)

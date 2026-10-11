@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { isAllowedPushEndpoint } from "@/lib/pushEndpoint";
 import { supabaseServer } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const Sub = z.object({
-  endpoint: z.string().url().max(1000),
+  endpoint: z.string().url().max(1000).refine(isAllowedPushEndpoint, "Desteklenmeyen push servisi."),
   keys: z.object({ p256dh: z.string().min(10).max(300), auth: z.string().min(10).max(100) }),
 });
 
@@ -19,6 +20,9 @@ async function currentUser() {
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
+  // Aşırı büyük gövdeleri baştan reddet
+  if (Number(req.headers.get("content-length") ?? 0) > 5000)
+    return NextResponse.json({ error: "İstek çok büyük." }, { status: 413 });
   const parsed = Sub.safeParse((await req.json().catch(() => null))?.subscription);
   if (!parsed.success) return NextResponse.json({ error: "Geçersiz abonelik." }, { status: 400 });
   const admin = supabaseAdmin();

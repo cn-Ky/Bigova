@@ -29,7 +29,9 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || "/";
+  // Yalnızca site içi yollar açılır ("//evil.com" veya tam URL'ler yok sayılır)
+  const raw = (event.notification.data && event.notification.data.url) || "/";
+  const url = typeof raw === "string" && /^\/(?!\/)[\w\-./?=&%]*$/.test(raw) ? raw : "/";
   event.waitUntil(
     (async () => {
       const wins = await self.clients.matchAll({ type: "window", includeUncontrolled: true });

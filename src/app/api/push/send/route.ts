@@ -2,12 +2,13 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import webpush from "web-push";
 import { z } from "zod";
+import { isAllowedPushEndpoint } from "@/lib/pushEndpoint";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const Payload = z.object({
-  record: z.object({ from_id: z.string().uuid(), to_id: z.string().uuid(), body: z.string() }),
+  record: z.object({ from_id: z.string().uuid(), to_id: z.string().uuid(), body: z.string().max(2000) }),
 });
 
 const same = (a: string, b: string) => {
@@ -40,7 +41,9 @@ export async function POST(req: Request) {
     admin.from("push_subscriptions").select("endpoint,p256dh,auth").eq("user_id", to_id),
     admin.from("profiles").select("name").eq("id", from_id).maybeSingle(),
   ]);
-  if (!subs?.length) return NextResponse.json({ sent: 0 });
+  // Savunma amaçlı: veritabanına başka yoldan girmiş uç noktalara asla istek atma
+  const safeSubs = (subs ?? []).filter((s) => isAllowedPushEndpoint(s.endpoint));
+  if (!safeSubs.length) return NextResponse.json({ sent: 0 });
 
   const text = body.replace(/\s+/g, " ").trim();
   const message = JSON.stringify({
@@ -53,9 +56,9 @@ export async function POST(req: Request) {
   let sent = 0;
   const gone: string[] = [];
   await Promise.all(
-    subs.map(async (s) => {
+    safeSubs.map(async (s) => {
       try {
-        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, message, { TTL: 3600, urgency: "high" });
+        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, message, { TTL: 3600, urgency: "high", timeout: 5000 });
         sent++;
       } catch (e) {
         const code = (e as { statusCode?: number }).statusCode;

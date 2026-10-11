@@ -1,7 +1,11 @@
--- OPSİYONEL: Doğrulama bekleyen ve giriş yapamayan mevcut kullanıcıları elle onaylar.
--- Dikkat: e-posta sahipliği doğrulanmadan hesap aktif edilir. Yalnızca takılı kalan
--- kullanıcıları kurtarmak veya "Confirm email" ayarını kapattıysanız kullanın.
-update auth.users
-set email_confirmed_at = now()
-where email_confirmed_at is null;
--- Tek kullanıcı için: ... where email = 'kisi@example.com' and email_confirmed_at is null;
+-- OPSİYONEL ve TEHLİKELİ: e-posta sahipliği DOĞRULANMADAN hesap aktif eder.
+-- Toplu sürüm bilerek kapalı: açık kayıt + toplu onay, başkasının e-postasıyla açılmış hesapları da
+-- onaylar ve davet ödülü (redeem_referral) gibi "e-postası doğrulanmış" varsayan kontrolleri etkisiz bırakır.
+-- Yalnızca takılı kalan TEK bir kullanıcıyı kurtarmak için, e-postayı düzenleyip çalıştır:
+--
+-- update auth.users
+--    set email_confirmed_at = now()
+--  where email = 'kisi@example.com' and email_confirmed_at is null;
+--
+-- Toplu sürüm (önerilmez, kullanmadan önce iki kez düşün):
+-- update auth.users set email_confirmed_at = now() where email_confirmed_at is null;
