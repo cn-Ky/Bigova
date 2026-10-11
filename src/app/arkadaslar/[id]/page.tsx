@@ -3,6 +3,7 @@ import Mascot from "@/components/Mascot";
 import UserAvatar from "@/components/bigocuk/UserAvatar";
 import { useUnread } from "@/components/NotificationProvider";
 import { useAvatars } from "@/lib/bigocuk/useAvatars";
+import { blockErrorText, useBlocks } from "@/lib/blocks";
 import {
   buildTimeline,
   clock,
@@ -16,16 +17,19 @@ import { useUser } from "@/lib/useUser";
 import {
   faArrowDown,
   faArrowLeft,
+  faBan,
   faCheck,
   faCircleExclamation,
   faClock,
+  faEllipsisVertical,
   faFire,
   faPaperPlane,
+  faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Profile = { id: string; name: string };
@@ -85,6 +89,12 @@ export default function DirectMessage() {
   const [message, setMessage] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const router = useRouter();
+  const blocks = useBlocks(!!user);
+  const [selectedId, setSelectedId] = useState<string | null>(null); // silme seçeneği açık mesaj
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmBlock, setConfirmBlock] = useState(false);
+  const [blockBusy, setBlockBusy] = useState(false);
   const validId =
     /^[0-9a-f-]{36}$/i.test(friendId) ||
     demoFriends.some((person) => person.id === friendId);
@@ -122,7 +132,7 @@ export default function DirectMessage() {
           .maybeSingle(),
         sb
           .from("messages")
-          .select("id,from_id,to_id,body,created_at")
+          .select("id,from_id,to_id,body,created_at,deleted_at")
           .or(
             `and(from_id.eq.${user.id},to_id.eq.${friendId}),and(from_id.eq.${friendId},to_id.eq.${user.id})`,
           )
@@ -191,7 +201,7 @@ export default function DirectMessage() {
       .channel(`direct-${user.id}-${friendId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages" },
+        { event: "*", schema: "public", table: "messages" },
         (payload) => {
           const row = payload.new as Message;
           if (
@@ -314,11 +324,15 @@ export default function DirectMessage() {
     const { data: sent, error } = await sb
       .from("messages")
       .insert({ to_id: friendId, body: temp.body })
-      .select("id,from_id,to_id,body,created_at")
+      .select("id,from_id,to_id,body,created_at,deleted_at")
       .single();
     if (error || !sent) {
       setOutbox((o) => o.map((m) => (m.id === temp.id ? { ...m, status: "failed" } : m)));
-      setNotice(`Mesaj gönderilemedi: ${error?.message ?? "bağlantı hatası"}`);
+      setNotice(
+        (error as { code?: string } | null)?.code === "42501"
+          ? "Bu kişiye şu an mesaj gönderilemiyor."
+          : `Mesaj gönderilemedi: ${error?.message ?? "bağlantı hatası"}`,
+      );
       return;
     }
     setOutbox((o) => o.filter((m) => m.id !== temp.id));
@@ -397,6 +411,59 @@ export default function DirectMessage() {
     if (temp && !message) setMessage(temp.body);
     inputRef.current?.focus();
   }
+  /** Gönderdiğin mesajı herkesten siler (metin sunucuda temizlenir; karşıda "silindi" yer tutucusu kalır). */
+  async function deleteMessage(m: Message) {
+    setNotice("");
+    setSelectedId(null);
+    const stamp = new Date().toISOString();
+    const mark = (list: Message[]) => list.map((x) => (x.id === m.id ? { ...x, body: "", deleted_at: stamp } : x));
+    if (!user) {
+      // deneme sohbeti: yalnızca bu tarayıcıda
+      const next = mark(messages);
+      setMessages(next);
+      flushDemo(next);
+      return;
+    }
+    const before = messages;
+    setMessages(mark); // iyimser: hemen "silindi" görünür
+    const { error } = await sb.rpc("delete_message", { p_id: m.id });
+    if (error) {
+      setMessages(before);
+      const code = (error as { code?: string }).code;
+      setNotice(
+        code === "PGRST202" || code === "42883"
+          ? "Mesaj silme henüz kurulmadı: Supabase'de supabase/chat_safety_upgrade.sql dosyasını çalıştır."
+          : "Mesaj silinemedi. Tekrar dene.",
+      );
+    }
+  }
+  async function blockFriend() {
+    if (!friend) return;
+    setBlockBusy(true);
+    setNotice("");
+    try {
+      await blocks.block(friend.id);
+      router.push("/arkadaslar");
+    } catch (e) {
+      setNotice(blockErrorText(e));
+      setConfirmBlock(false);
+    } finally {
+      setBlockBusy(false);
+    }
+  }
+  async function unblockFriend() {
+    if (!friend) return;
+    setBlockBusy(true);
+    setNotice("");
+    try {
+      await blocks.unblock(friend.id);
+      await load();
+    } catch (e) {
+      setNotice(blockErrorText(e));
+    } finally {
+      setBlockBusy(false);
+    }
+  }
   async function addFriend() {
     if (!user || !friend) return;
     setBusy(true);
@@ -405,7 +472,7 @@ export default function DirectMessage() {
       .from("friendships")
       .insert({ requester: user.id, addressee: friend.id, status: "pending" });
     setBusy(false);
-    if (error) setNotice(`İstek gönderilemedi: ${error.message}`);
+    if (error) setNotice(error.code === "42501" ? "Bu kişiye şu an istek gönderilemiyor." : `İstek gönderilemedi: ${error.message}`);
     else {
       setNotice("");
       setRelation("outgoing");
@@ -454,7 +521,9 @@ export default function DirectMessage() {
             {friend.name || "Öğrenci"}
           </h1>
           <p className="mt-3 text-sm text-ink/70">
-            {relation === "outgoing"
+            {blocks.isBlocked(friend.id)
+              ? "Bu kişiyi engelledin. Engeli kaldırırsan tekrar arkadaşlık isteği gönderebilirsin."
+              : relation === "outgoing"
               ? "İstek gönderildi. Kabul edildiğinde burada bire bir mesajlaşabilirsiniz."
               : relation === "incoming"
                 ? "Bu kişi sana arkadaşlık isteği gönderdi. Kabul edince mesajlaşabilirsiniz."
@@ -465,7 +534,16 @@ export default function DirectMessage() {
               {notice}
             </p>
           )}
-          {relation === "none" && (
+          {blocks.isBlocked(friend.id) && (
+            <button
+              onClick={() => void unblockFriend()}
+              disabled={blockBusy}
+              className="mt-4 inline-flex items-center gap-2 rounded-full bg-sea px-5 py-3 font-bold text-white disabled:opacity-50"
+            >
+              <FontAwesomeIcon icon={faBan} /> {blockBusy ? "Kaldırılıyor…" : "Engeli kaldır"}
+            </button>
+          )}
+          {relation === "none" && !blocks.isBlocked(friend.id) && (
             <button
               onClick={addFriend}
               disabled={busy}
@@ -474,12 +552,12 @@ export default function DirectMessage() {
               {busy ? "Gönderiliyor…" : "Arkadaşlık isteği gönder"}
             </button>
           )}
-          {relation === "outgoing" && (
+          {relation === "outgoing" && !blocks.isBlocked(friend.id) && (
             <span className="mt-4 inline-block rounded-full bg-foam px-5 py-3 text-sm font-bold text-ink/60">
               Yanıt bekleniyor
             </span>
           )}
-          {relation === "incoming" && (
+          {relation === "incoming" && !blocks.isBlocked(friend.id) && (
             <button
               onClick={acceptFriend}
               disabled={busy}
@@ -536,6 +614,72 @@ export default function DirectMessage() {
             <FontAwesomeIcon icon={faFire} className={streak > 0 ? "text-sun" : "text-white/50"} />
             {streak}
           </button>
+          {user && UUID_RE.test(friendId) && (
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen((v) => !v);
+                  setConfirmBlock(false);
+                }}
+                aria-expanded={menuOpen}
+                aria-haspopup="menu"
+                aria-label="Sohbet seçenekleri"
+                className="chat-menu-btn grid h-10 w-10 place-items-center rounded-full bg-white/15 transition active:scale-90"
+              >
+                <FontAwesomeIcon icon={faEllipsisVertical} />
+              </button>
+              <AnimatePresence>
+                {menuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                    role="menu"
+                    className="chat-menu absolute right-0 top-12 z-30 w-64 rounded-2xl bg-card p-2 text-ink shadow-xl ring-1 ring-ink/10"
+                  >
+                    {!confirmBlock ? (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => setConfirmBlock(true)}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold text-coral hover:bg-coral/10"
+                      >
+                        <FontAwesomeIcon icon={faBan} /> {friendName} kişisini engelle
+                      </button>
+                    ) : (
+                      <div className="p-2">
+                        <p className="text-sm font-bold">{friendName} engellensin mi?</p>
+                        <p className="mt-1 text-xs opacity-70">
+                          Arkadaşlığınız ve mesaj seriniz silinir. Birbirinize mesaj yazamaz, istek gönderemezsiniz. Engeli sonra Arkadaşlar sayfasından kaldırabilirsin.
+                        </p>
+                        <div className="mt-3 flex gap-2">
+                          <button
+                            type="button"
+                            disabled={blockBusy}
+                            onClick={() => void blockFriend()}
+                            className="flex-1 rounded-full bg-coral px-3 py-2 text-sm font-extrabold text-white disabled:opacity-50"
+                          >
+                            {blockBusy ? "Engelleniyor…" : "Engelle"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setConfirmBlock(false);
+                              setMenuOpen(false);
+                            }}
+                            className="rounded-full px-3 py-2 text-sm font-bold opacity-75"
+                          >
+                            Vazgeç
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
         </div>
         <AnimatePresence initial={false}>
           {showStreakInfo && (
@@ -571,6 +715,10 @@ export default function DirectMessage() {
           const { message: m, mine, first, last } = item;
           const failed = m.status === "failed";
           const pending = m.status === "pending";
+          const deleted = !!m.deleted_at;
+          // yalnızca sunucuya ulaşmış kendi mesajın silinebilir (gönderilemeyenlerde zaten "Sil" var)
+          const canDelete = mine && !deleted && !m.status && !m.id.startsWith("tmp-") && (!!user || friendId.startsWith("demo-friend-"));
+          const selected = canDelete && selectedId === m.id;
           const corner = mine
             ? `${first ? "" : "rounded-tr-md"} rounded-br-md`
             : `${first ? "" : "rounded-tl-md"} rounded-bl-md`;
@@ -592,13 +740,39 @@ export default function DirectMessage() {
                 <div
                   title={fullStamp(m.created_at)}
                   data-from={mine ? "Sen" : friendName}
-                  className={`chat-bubble ${mine ? "chat-bubble--mine" : "chat-bubble--theirs"} ${first ? "is-first" : ""} ${last ? "is-last" : ""} ${failed ? "is-failed" : ""} ${pending ? "is-pending" : ""} rounded-[20px] px-3.5 py-2 shadow-sm ${corner} ${
+                  {...(canDelete
+                    ? {
+                        role: "button",
+                        tabIndex: 0,
+                        "aria-expanded": selected,
+                        "aria-label": "Mesaj seçenekleri",
+                        onClick: (e: React.MouseEvent) => {
+                          if ((e.target as HTMLElement).closest("a")) return;
+                          setSelectedId(selected ? null : m.id);
+                        },
+                        onKeyDown: (e: React.KeyboardEvent) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSelectedId(selected ? null : m.id);
+                          }
+                          if (e.key === "Escape") setSelectedId(null);
+                        },
+                      }
+                    : {})}
+                  className={`chat-bubble ${deleted ? "chat-bubble--deleted" : ""} ${canDelete ? "cursor-pointer" : ""} ${mine ? "chat-bubble--mine" : "chat-bubble--theirs"} ${first ? "is-first" : ""} ${last ? "is-last" : ""} ${failed ? "is-failed" : ""} ${pending ? "is-pending" : ""} rounded-[20px] px-3.5 py-2 shadow-sm ${corner} ${
                     mine ? "bg-sea text-white" : "bg-card text-ink"
                   } ${pending ? "opacity-70" : ""} ${failed ? "ring-2 ring-coral" : ""}`}
                 >
-                  <p className="chat-text whitespace-pre-wrap break-words text-[15px] leading-snug">
-                    <Linkified text={m.body} />
-                  </p>
+                  {deleted ? (
+                    <p className="chat-text flex items-center gap-2 text-[14px] italic leading-snug">
+                      <FontAwesomeIcon icon={faBan} className="text-[12px] opacity-70" />
+                      {mine ? "Bu mesajı sildin" : "Bu mesaj silindi"}
+                    </p>
+                  ) : (
+                    <p className="chat-text whitespace-pre-wrap break-words text-[15px] leading-snug">
+                      <Linkified text={m.body} />
+                    </p>
+                  )}
                   {last && (
                     <span
                       className={`chat-meta mt-1 flex items-center justify-end gap-1.5 text-[10px] ${mine ? "text-white/70" : "text-ink/50"}`}
@@ -614,6 +788,20 @@ export default function DirectMessage() {
                     </span>
                   )}
                 </div>
+                {selected && (
+                  <span className="chat-actions mt-1.5 flex items-center gap-2 text-xs font-bold">
+                    <button
+                      type="button"
+                      onClick={() => void deleteMessage(m)}
+                      className="chat-action-delete inline-flex items-center gap-1.5 rounded-full bg-coral px-3 py-1.5 text-white active:scale-95"
+                    >
+                      <FontAwesomeIcon icon={faTrashCan} /> Herkesten sil
+                    </button>
+                    <button type="button" onClick={() => setSelectedId(null)} className="rounded-full px-3 py-1.5 text-ink/70">
+                      Vazgeç
+                    </button>
+                  </span>
+                )}
                 {failed && (
                   <span className="mt-1 flex items-center gap-3 text-xs font-bold">
                     <span className="text-coral">Gönderilemedi</span>

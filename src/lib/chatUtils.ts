@@ -6,6 +6,8 @@ export type ChatMessage = {
   to_id: string;
   body: string;
   created_at: string;
+  /** Gönderen herkesten sildiyse dolu; metin (body) sunucuda boşaltılır */
+  deleted_at?: string | null;
   /** Yalnızca bu cihazdaki gönderilmemiş/gönderilemeyen mesajlarda dolu */
   status?: "pending" | "failed";
 };

@@ -1,9 +1,11 @@
 "use client";
 import SearchBox from "@/components/SearchBox";
 import UserAvatar from "@/components/bigocuk/UserAvatar";
+import BlockedUsers from "@/components/BlockedUsers";
 import UnreadBadge from "@/components/UnreadBadge";
 import { useUnread } from "@/components/NotificationProvider";
 import { useAvatars } from "@/lib/bigocuk/useAvatars";
+import { useBlocks } from "@/lib/blocks";
 import { demoFriends } from "@/lib/demoData";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useUser } from "@/lib/useUser";
@@ -27,14 +29,14 @@ type Profile = { id: string; name: string; student_no?: string | null };
 type Person = Profile & {
   direction: "friend" | "incoming" | "outgoing";
   streak: number;
-  last?: { body: string; at: string; mine: boolean };
+  last?: { body: string; at: string; mine: boolean; deleted?: boolean };
 };
 type Friendship = {
   requester: string;
   addressee: string;
   status: "pending" | "accepted";
 };
-type Msg = { from_id: string; to_id: string; body: string; created_at: string };
+type Msg = { from_id: string; to_id: string; body: string; created_at: string; deleted_at?: string | null };
 
 // Türkçe karakterlere duyarsız karşılaştırma (1:1 harf eşlemesi, uzunluk korunur)
 const TR: Record<string, string> = { İ: "i", I: "i", ı: "i", Ğ: "g", ğ: "g", Ü: "u", ü: "u", Ş: "s", ş: "s", Ö: "o", ö: "o", Ç: "c", ç: "c" };
@@ -68,6 +70,7 @@ export default function Arkadaslar() {
   const [busyId, setBusyId] = useState("");
   const [notice, setNotice] = useState<{ t: string; ok: boolean } | null>(null);
   const seq = useRef(0);
+  const blocks = useBlocks(!!user);
   const avatarIds = useMemo(
     () => [...(user ? [user.id] : []), ...[...people, ...results, ...suggestions].map((p) => p.id)],
     [people, results, suggestions, user],
@@ -92,7 +95,7 @@ export default function Arkadaslar() {
       sb.from("friendship_streaks").select("user_a,user_b,current_streak,last_mutual_date"),
       sb
         .from("messages")
-        .select("from_id,to_id,body,created_at")
+        .select("from_id,to_id,body,created_at,deleted_at")
         .or(`from_id.eq.${user.id},to_id.eq.${user.id}`)
         .order("created_at", { ascending: false })
         .limit(200),
@@ -102,7 +105,7 @@ export default function Arkadaslar() {
     const lastBy = new Map<string, Person["last"]>();
     for (const m of (msgs as Msg[]) ?? []) {
       const other = m.from_id === user.id ? m.to_id : m.from_id;
-      if (!lastBy.has(other)) lastBy.set(other, { body: m.body, at: m.created_at, mine: m.from_id === user.id });
+      if (!lastBy.has(other)) lastBy.set(other, { body: m.body, at: m.created_at, mine: m.from_id === user.id, deleted: !!m.deleted_at });
     }
     const list = ((profiles as Profile[]) ?? []).flatMap((profile) => {
       const link = friendships.find((l) => otherOf(l) === profile.id);
@@ -131,7 +134,7 @@ export default function Arkadaslar() {
     const channel = sb
       .channel(`friends-${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, () => load())
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => load())
       .subscribe();
     const poll = setInterval(() => {
       if (!document.hidden) load();
@@ -393,6 +396,15 @@ export default function Arkadaslar() {
           </section>
         )}
 
+        {!searching && (
+          <BlockedUsers
+            blocked={blocks.blocked}
+            onUnblock={async (id) => {
+              await blocks.unblock(id);
+              await load();
+            }}
+          />
+        )}
         {!searching && friends.length > 0 && (
           <section>
             <h2 className="mb-3 font-display text-lg font-extrabold">Bire bir sohbetler</h2>
@@ -411,7 +423,7 @@ export default function Arkadaslar() {
                     <span className="min-w-0 flex-1">
                       <b className="block truncate">{person.name || "Öğrenci"}</b>
                       <span className={`block truncate text-sm ${(byFriend[person.id] ?? 0) > 0 ? "font-extrabold text-ink" : "text-ink/65"}`}>
-                        {person.last ? `${person.last.mine ? "Sen: " : ""}${person.last.body}` : "Henüz mesaj yok · ilk mesajı sen yaz"}
+                        {person.last ? `${person.last.mine ? "Sen: " : ""}${person.last.deleted ? "Bu mesaj silindi" : person.last.body}` : "Henüz mesaj yok · ilk mesajı sen yaz"}
                       </span>
                       {person.streak > 0 && (
                         <span className="mt-0.5 flex items-center gap-1 text-xs font-bold text-coral">

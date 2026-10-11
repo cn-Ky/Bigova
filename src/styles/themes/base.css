@@ -65,3 +65,68 @@
     transition: background-color 0.3s, color 0.3s;
   }
 }
+
+/* ═════════ Silinen mesaj + mesaj/sohbet menüleri (tüm temalar) ═════════
+   Silinmiş mesaj temanın balon stilini taşımaz: soluk, kesik çerçeveli bir yer tutucudur. */
+html[data-theme] .chat-stage .chat-bubble.chat-bubble--deleted,
+[data-tp] .chat-stage .chat-bubble.chat-bubble--deleted {
+  background: transparent;
+  color: rgb(var(--ink) / 0.6);
+  border: 1.5px dashed rgb(var(--ink) / 0.3);
+  border-radius: 14px;
+  box-shadow: none;
+  outline: none;
+  transform: none;
+  text-shadow: none;
+  padding: 6px 12px;
+}
+html[data-theme] .chat-stage .chat-bubble.chat-bubble--deleted::before,
+html[data-theme] .chat-stage .chat-bubble.chat-bubble--deleted::after,
+[data-tp] .chat-stage .chat-bubble.chat-bubble--deleted::before,
+[data-tp] .chat-stage .chat-bubble.chat-bubble--deleted::after {
+  display: none;
+}
+html[data-theme] .chat-stage .chat-bubble--deleted .chat-meta {
+  color: rgb(var(--ink) / 0.45);
+}
+/* Seçili (silme seçeneği açık) mesaj */
+.chat-bubble[aria-expanded="true"] {
+  outline: 2px solid rgb(var(--sun));
+  outline-offset: 2px;
+}
+.chat-bubble[role="button"]:focus-visible {
+  outline: 3px solid rgb(var(--sun));
+  outline-offset: 2px;
+}
+html[data-theme="piksel"] .chat-actions button,
+html[data-theme="cizgi"] .chat-actions button {
+  border: 3px solid rgb(var(--ink));
+  border-radius: 0;
+  box-shadow: 3px 3px 0 rgb(0 0 0 / 0.55);
+}
+html[data-theme="truva"] .chat-actions button,
+html[data-theme="defter"] .chat-actions button {
+  border-radius: 3px;
+}
+/* Sohbet menüsü temalarda da kendi kartı gibi görünsün */
+html[data-theme="piksel"] .chat-menu {
+  border: 3px solid rgb(var(--ink));
+  border-radius: 0;
+  box-shadow: 4px 4px 0 rgb(0 0 0 / 0.65);
+}
+html[data-theme="cizgi"] .chat-menu {
+  border: 3px solid rgb(var(--ink));
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 rgb(var(--ink));
+}
+html[data-theme="truva"] .chat-menu {
+  border: 1px solid rgb(var(--sun) / 0.6);
+  border-radius: 3px;
+}
+html[data-theme="defter"] .chat-menu {
+  border: 1.5px solid rgb(var(--sea) / 0.4);
+  border-radius: 7px 14px 9px 12px / 12px 8px 14px 7px;
+}
+html[data-theme="fener"] .chat-menu {
+  border: 1px solid rgb(var(--sky) / 0.25);
+}

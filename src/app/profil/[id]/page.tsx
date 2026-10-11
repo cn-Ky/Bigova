@@ -3,10 +3,12 @@ import Avatar from "@/components/bigocuk/Avatar";
 import UserAvatar from "@/components/bigocuk/UserAvatar";
 import { DEFAULT_AVATAR, ITEM_MAP, SLOTS, speciesOf, type AvatarConfig } from "@/lib/bigocuk/items";
 import { rememberAvatar, useAvatars } from "@/lib/bigocuk/useAvatars";
+import { blockErrorText, useBlocks } from "@/lib/blocks";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useUser } from "@/lib/useUser";
 import {
   faArrowLeft,
+  faBan,
   faCheck,
   faFire,
   faLock,
@@ -45,6 +47,7 @@ export default function Profil() {
   const [streak, setStreak] = useState(0);
   const [friends, setFriends] = useState<{ id: string; name: string; mutual: boolean }[]>([]);
   const [busy, setBusy] = useState(false);
+  const blocks = useBlocks(!!user);
   const [setupMissing, setSetupMissing] = useState(false); // profiles_upgrade.sql çalıştırılmamış
   const [notice, setNotice] = useState<{ t: string; ok: boolean } | null>(null);
 
@@ -128,6 +131,21 @@ export default function Profil() {
         ok: false,
       });
     else if (kind === "add") setNotice({ t: "Arkadaşlık isteği gönderildi.", ok: true });
+    await load();
+  }
+
+  async function toggleBlock(block: boolean) {
+    if (!card) return;
+    setBusy(true);
+    setNotice(null);
+    try {
+      if (block) await blocks.block(card.id);
+      else await blocks.unblock(card.id);
+      setNotice({ t: block ? "Kullanıcı engellendi." : "Engel kaldırıldı.", ok: true });
+    } catch (e) {
+      setNotice({ t: blockErrorText(e), ok: false });
+    }
+    setBusy(false);
     await load();
   }
 
@@ -228,7 +246,21 @@ export default function Profil() {
               <FontAwesomeIcon icon={faPaw} /> Avatarımı düzenle
             </Link>
           )}
-          {card.relation === "none" && (
+          {card.relation !== "self" && blocks.isBlocked(card.id) && (
+            <>
+              <span className="flex items-center gap-2 rounded-full bg-card px-5 py-3 font-bold text-ink/60">
+                <FontAwesomeIcon icon={faBan} /> Engellendi
+              </span>
+              <button
+                onClick={() => void toggleBlock(false)}
+                disabled={busy}
+                className="rounded-full bg-sea px-5 py-3 font-bold text-white disabled:opacity-50"
+              >
+                Engeli kaldır
+              </button>
+            </>
+          )}
+          {card.relation === "none" && !blocks.isBlocked(card.id) && (
             <button
               onClick={() => act("add")}
               disabled={busy}
@@ -237,7 +269,7 @@ export default function Profil() {
               <FontAwesomeIcon icon={faUserPlus} /> {busy ? "…" : "Arkadaş ekle"}
             </button>
           )}
-          {card.relation === "outgoing" && (
+          {card.relation === "outgoing" && !blocks.isBlocked(card.id) && (
             <>
               <span className="flex items-center gap-2 rounded-full bg-card px-5 py-3 font-bold text-ink/60">
                 <FontAwesomeIcon icon={faUserCheck} /> İstek gönderildi
@@ -251,7 +283,7 @@ export default function Profil() {
               </button>
             </>
           )}
-          {card.relation === "incoming" && (
+          {card.relation === "incoming" && !blocks.isBlocked(card.id) && (
             <>
               <button
                 onClick={() => act("accept")}
@@ -270,7 +302,7 @@ export default function Profil() {
               </button>
             </>
           )}
-          {card.relation === "friend" && (
+          {card.relation === "friend" && !blocks.isBlocked(card.id) && (
             <>
               <Link
                 href={`/arkadaslar/${card.id}`}
@@ -291,6 +323,19 @@ export default function Profil() {
           )}
         </div>
 
+        {card.relation !== "self" && blocks.loaded && !blocks.isBlocked(card.id) && (
+          <div className="mt-3 flex justify-center">
+            <button
+              onClick={() => {
+                if (confirm(`${first} engellensin mi? Arkadaşlığınız silinir; birbirinize mesaj yazamaz ve istek gönderemezsiniz.`)) void toggleBlock(true);
+              }}
+              disabled={busy}
+              className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold text-coral hover:bg-coral/10 disabled:opacity-50"
+            >
+              <FontAwesomeIcon icon={faBan} /> Engelle
+            </button>
+          </div>
+        )}
         {card.relation === "friend" && (
           <p className="mt-4 flex items-center justify-center gap-2 text-xs text-ink/55">
             <FontAwesomeIcon icon={faUsers} /> {first} ile arkadaşsınız.
