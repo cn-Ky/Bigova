@@ -305,7 +305,7 @@ export default function Arkadaslar() {
 
   return (
     <main>
-      <header className="rounded-b-[24px] bg-sea px-5 pb-5 pt-[max(1.25rem,env(safe-area-inset-top))] text-white shadow-lg">
+      <header className="rounded-b-[28px] bg-sea px-5 pb-5 pt-[max(1.25rem,env(safe-area-inset-top))] text-white shadow-lg">
         <h1 className="font-display text-2xl font-extrabold">Arkadaşlar</h1>
         <p className="text-sm text-white/75">Öğrenci ara, arkadaş ekle ve bire bir konuş.</p>
         <CommunityTabs active="arkadaslar" className="mt-3" />
@@ -554,7 +554,7 @@ function DemoFriends() {
   }
   return (
     <main>
-      <header className="rounded-b-[24px] bg-sea px-5 pb-5 pt-[max(1.25rem,env(safe-area-inset-top))] text-white shadow-lg">
+      <header className="rounded-b-[28px] bg-sea px-5 pb-5 pt-[max(1.25rem,env(safe-area-inset-top))] text-white shadow-lg">
         <h1 className="font-display text-2xl font-extrabold">Arkadaşlar</h1>
         <p className="text-sm text-white/75">
           Deneme modu · örnek profiller bu tarayıcıda çalışır.

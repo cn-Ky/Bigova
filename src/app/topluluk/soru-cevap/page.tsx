@@ -2,6 +2,8 @@
 import CommunityHeader, { NeedLogin, Skeleton } from "@/components/community/CommunityHeader";
 import ComposeSheet from "@/components/community/ComposeSheet";
 import FeedList from "@/components/community/FeedList";
+import Mascot from "@/components/Mascot";
+import { Fab, PrimaryButton, TabChips } from "@/components/community/ui";
 import { useFeed, useMyCommunities } from "@/lib/community";
 import { useUser } from "@/lib/useUser";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
@@ -27,28 +29,23 @@ export default function SoruCevap() {
   return (
     <main className="pb-28">
       <CommunityHeader active="soru" subtitle="Takıldığın yeri sor, bildiğin soruyu yanıtla. Soru sahibi doğru yanıtı işaretler." />
-      <div className="grid gap-4 px-5 py-4">
-        <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]" role="tablist" aria-label="Soru filtresi">
-          {FILTERS.map((f) => (
-            <button key={f.id} type="button" role="tab" aria-selected={status === f.id} onClick={() => setStatus(f.id)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-extrabold ${status === f.id ? "bg-sea text-white" : "bg-card shadow-sm"}`}>
-              {f.label}
-            </button>
-          ))}
-        </div>
+      <div className="grid gap-4 px-5 pt-5">
+        <TabChips label="Soru filtresi" items={FILTERS} value={status} onChange={setStatus} />
         <FeedList
           feed={feed}
           empty={
             <>
+              <Mascot size={96} className="mx-auto" />
               <p className="font-display text-lg font-extrabold">{status === "solved" ? "Henüz çözülen soru yok" : "Henüz soru yok"}</p>
               <p className="mt-1 text-sm text-ink/70">Aklına takılan bir şey varsa ilk soruyu sen sor.</p>
-              <button type="button" onClick={() => setComposing(true)} className="mt-3 rounded-full bg-sea px-4 py-2 text-sm font-extrabold text-white">Soru sor</button>
+              <PrimaryButton type="button" onClick={() => setComposing(true)} className="mt-3">Soru sor</PrimaryButton>
             </>
           }
         />
       </div>
-      <button type="button" onClick={() => setComposing(true)} className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-5 z-30 flex h-14 items-center gap-2 rounded-full bg-sea px-5 text-sm font-extrabold text-white shadow-xl lg:bottom-8">
+      <Fab wide onClick={() => setComposing(true)} label="Soru sor">
         <FontAwesomeIcon icon={faPlus} /> Soru sor
-      </button>
+      </Fab>
       <AnimatePresence>
         {composing && <ComposeSheet communities={mine.list ?? []} defaultKind="question" lockKind onClose={() => setComposing(false)} onPosted={feed.refresh} />}
       </AnimatePresence>

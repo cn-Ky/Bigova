@@ -3,12 +3,14 @@ import UserAvatar from "@/components/bigocuk/UserAvatar";
 import { BackHeader, NeedLogin, Notice, Skeleton } from "@/components/community/CommunityHeader";
 import PostCard, { ItemMenu, RichText } from "@/components/community/PostCard";
 import ReportSheet from "@/components/community/ReportSheet";
+import { EmptyState, SPRING } from "@/components/community/ui";
+import Mascot from "@/components/Mascot";
 import { useAvatars } from "@/lib/bigocuk/useAvatars";
 import { errText, rpc, timeAgo, type FeedPost, type PostComment } from "@/lib/community";
 import { useUser } from "@/lib/useUser";
 import { faCircleCheck, faHeart, faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -86,18 +88,19 @@ export default function GonderiDetay() {
   return (
     <main className="pb-32">
       <BackHeader title={isQuestion ? "Soru" : "Gönderi"} subtitle={post.community_name} />
-      <div className="grid gap-4 px-5 py-4">
+      <div className="grid gap-4 px-5 pt-5">
         <PostCard post={post} avatar={avatars[post.author_id]} detail onPatch={(p) => setPost((cur) => (cur ? { ...cur, ...p } : cur))} onRemove={() => router.replace("/topluluk")} />
         <section aria-label={isQuestion ? "Yanıtlar" : "Yorumlar"}>
           <h2 className="mb-2 font-display text-lg font-extrabold">{isQuestion ? "Yanıtlar" : "Yorumlar"} ({post.comment_count})</h2>
           {comments === null ? <Skeleton n={2} h="h-20" /> : sorted.length === 0 ? (
-            <p className="rounded-[22px] bg-card p-5 text-center text-sm text-ink/70 shadow-sm">{isQuestion ? "Henüz yanıt yok. Bildiğin bir şey varsa ilk yanıtı sen yaz." : "Henüz yorum yok. İlk yorumu sen yaz."}</p>
+            <EmptyState><Mascot size={80} className="mx-auto" /><p className="mt-1 text-sm text-ink/70">{isQuestion ? "Henüz yanıt yok. Bildiğin bir şey varsa ilk yanıtı sen yaz." : "Henüz yorum yok. İlk yorumu sen yaz."}</p></EmptyState>
           ) : (
             <ul className="grid gap-2">
+              <AnimatePresence initial={false}>
               {sorted.map((c) => (
-                <li key={c.id} className={`rounded-[20px] p-3.5 shadow-sm ${c.is_accepted ? "bg-tide/20 ring-2 ring-tide" : "bg-card"}`}>
+                <motion.li key={c.id} layout="position" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} transition={SPRING} className={`rounded-[20px] p-3.5 shadow-sm ${c.is_accepted ? "bg-tide/20 ring-2 ring-tide" : "bg-card"}`}>
                   <div className="flex items-start gap-3">
-                    <Link href={`/profil/${c.author_id}`}><UserAvatar name={c.author_name} avatar={avatars[c.author_id]} size={36} /></Link>
+                    <Link href={`/profil/${c.author_id}`} className="transition-transform hover:scale-105"><UserAvatar name={c.author_name} avatar={avatars[c.author_id]} size={36} /></Link>
                     <div className="min-w-0 flex-1">
                       <p className="flex flex-wrap items-center gap-x-2 text-xs text-ink/60">
                         <Link href={`/profil/${c.author_id}`} className="text-sm font-extrabold text-ink">{c.author_name || "Öğrenci"}</Link>
@@ -107,18 +110,22 @@ export default function GonderiDetay() {
                       {c.hidden && <p className="mt-1 rounded-lg bg-sun/25 px-2 py-1 text-[11px] font-bold">{c.mine ? "Şikâyetler nedeniyle inceleniyor." : "Şikâyetler nedeniyle gizlendi."}</p>}
                       <RichText text={c.body} className="mt-1 text-[15px] leading-relaxed" />
                       <div className="mt-2 flex items-center gap-1">
-                        <button type="button" onClick={() => like(c)} aria-pressed={c.liked} aria-label={c.liked ? "Beğenmekten vazgeç" : "Beğen"} className={`flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-extrabold ${c.liked ? "text-coral" : "text-ink/65"}`}>
-                          <FontAwesomeIcon icon={faHeart} className={c.liked ? "" : "opacity-45"} />{c.like_count}
-                        </button>
+                        <motion.button whileTap={{ scale: 0.85 }} type="button" onClick={() => like(c)} aria-pressed={c.liked} aria-label={c.liked ? "Beğenmekten vazgeç" : "Beğen"} className={`flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold transition-colors hover:bg-coral/10 ${c.liked ? "text-coral" : "text-ink/65"}`}>
+                          <motion.span key={String(c.liked)} initial={c.liked ? { scale: 0.4 } : false} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 12 }} className="inline-flex">
+                            <FontAwesomeIcon icon={faHeart} className={c.liked ? "" : "opacity-45"} />
+                          </motion.span>
+                          {c.like_count}
+                        </motion.button>
                         {isQuestion && post.mine && (
-                          <button type="button" onClick={() => accept(c)} className="rounded-full bg-foam px-3 py-1.5 text-xs font-extrabold">{c.is_accepted ? "İşareti kaldır" : "Doğru yanıt"}</button>
+                          <motion.button whileTap={{ scale: 0.9 }} type="button" onClick={() => accept(c)} className="rounded-full bg-foam px-3 py-1.5 text-xs font-bold transition-colors hover:bg-tide/20">{c.is_accepted ? "İşareti kaldır" : "Doğru yanıt"}</motion.button>
                         )}
                       </div>
                     </div>
                     <ItemMenu authorId={c.author_id} canDelete={c.mine || c.can_moderate} canReport={!c.mine} onDelete={() => del(c)} onReport={() => setReporting(c.id)} label="Yorum" />
                   </div>
-                </li>
+                </motion.li>
               ))}
+              </AnimatePresence>
             </ul>
           )}
         </section>
@@ -127,7 +134,7 @@ export default function GonderiDetay() {
         {err && <p role="alert" className="mb-1 px-2 text-xs font-bold text-coral">{err}</p>}
         <div className="flex items-end gap-2 rounded-[26px] bg-card p-1.5 shadow-sm ring-1 ring-ink/5 focus-within:ring-2 focus-within:ring-sun">
           <textarea value={text} onChange={(e) => setText(e.target.value.slice(0, 2000))} rows={1} placeholder={isQuestion ? "Yanıtını yaz…" : "Yorum yaz…"} aria-label={isQuestion ? "Yanıt yaz" : "Yorum yaz"} className="max-h-32 min-h-11 flex-1 resize-none bg-transparent px-3.5 py-2.5 text-base leading-snug outline-none placeholder:text-ink/45" />
-          <button disabled={!text.trim() || sending} aria-label="Gönder" className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${text.trim() && !sending ? "bg-sea text-white" : "bg-ink/10 text-ink/35"}`}><FontAwesomeIcon icon={faPaperPlane} /></button>
+          <motion.button whileTap={{ scale: 0.88 }} disabled={!text.trim() || sending} aria-label="Gönder" className={`grid h-11 w-11 shrink-0 place-items-center rounded-full transition-colors ${text.trim() && !sending ? "bg-sea text-white" : "bg-ink/10 text-ink/35"}`}><FontAwesomeIcon icon={faPaperPlane} /></motion.button>
         </div>
       </form>
       <AnimatePresence>{reporting && <ReportSheet type="comment" id={reporting} onClose={() => setReporting(null)} />}</AnimatePresence>

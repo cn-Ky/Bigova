@@ -3,6 +3,7 @@ import { MAX_IMAGES, errText, removeImages, rpc, uploadPostImages, type Communit
 import { useUser } from "@/lib/useUser";
 import { faImage, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Sheet, { fieldClass } from "./Sheet";
 
@@ -82,9 +83,9 @@ export default function ComposeSheet({
           {!lockKind && (
             <div className="grid grid-cols-2 gap-1 rounded-xl bg-foam p-1" role="tablist" aria-label="Gönderi türü">
               {(["post", "question"] as const).map((k) => (
-                <button key={k} type="button" role="tab" aria-selected={kind === k} onClick={() => setKind(k)} className={`rounded-lg px-3 py-2 text-sm font-bold ${kind === k ? "bg-card shadow-sm" : "text-ink/65"}`}>
+                <motion.button key={k} whileTap={{ scale: 0.95 }} type="button" role="tab" aria-selected={kind === k} onClick={() => setKind(k)} className={`rounded-lg px-3 py-2 text-sm font-bold transition-colors ${kind === k ? "bg-sea text-white shadow-sm" : "text-ink/65"}`}>
                   {k === "post" ? "Paylaşım" : "Soru"}
-                </button>
+                </motion.button>
               ))}
             </div>
           )}
@@ -119,22 +120,22 @@ export default function ComposeSheet({
           {previews.length > 0 && (
             <ul className="grid grid-cols-4 gap-2">
               {previews.map((u, i) => (
-                <li key={u} className="relative aspect-square overflow-hidden rounded-xl bg-foam">
+                <motion.li key={u} initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring", stiffness: 300, damping: 24 }} className="relative aspect-square overflow-hidden rounded-xl bg-foam">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={u} alt={`Seçilen fotoğraf ${i + 1}`} className="h-full w-full object-cover" />
-                  <button type="button" aria-label={`Fotoğraf ${i + 1} kaldır`} onClick={() => setFiles((f) => f.filter((_, j) => j !== i))} className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/60 text-[10px] text-white">
+                  <motion.button whileTap={{ scale: 0.85 }} type="button" aria-label={`Fotoğraf ${i + 1} kaldır`} onClick={() => setFiles((f) => f.filter((_, j) => j !== i))} className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-deep/70 text-[10px] text-white">
                     <FontAwesomeIcon icon={faXmark} />
-                  </button>
-                </li>
+                  </motion.button>
+                </motion.li>
               ))}
             </ul>
           )}
           <div className="flex items-center gap-2">
             <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={(e) => pick(e.target.files)} />
-            <button type="button" disabled={files.length >= MAX_IMAGES} onClick={() => input.current?.click()} className="rounded-full bg-foam px-4 py-2.5 text-sm font-extrabold disabled:opacity-50">
+            <motion.button whileTap={{ scale: 0.92 }} type="button" disabled={files.length >= MAX_IMAGES} onClick={() => input.current?.click()} className="rounded-full bg-foam px-4 py-2.5 text-sm font-bold transition-colors hover:bg-tide/15 disabled:opacity-50">
               <FontAwesomeIcon icon={faImage} className="mr-2" />
               Fotoğraf ({files.length}/{MAX_IMAGES})
-            </button>
+            </motion.button>
             <p className="text-[11px] text-ink/55">Fotoğraflar otomatik küçültülür.</p>
           </div>
           {err && (
@@ -142,9 +143,9 @@ export default function ComposeSheet({
               {err}
             </p>
           )}
-          <button disabled={busy} className="rounded-full bg-sea px-4 py-3 text-sm font-extrabold text-white disabled:opacity-60">
+          <motion.button whileTap={{ scale: 0.95 }} disabled={busy} className="shine rounded-full bg-sea px-4 py-3 text-sm font-bold text-white disabled:opacity-60">
             {busy ? "Paylaşılıyor…" : kind === "question" ? "Soruyu paylaş" : "Paylaş"}
-          </button>
+          </motion.button>
         </form>
       )}
     </Sheet>

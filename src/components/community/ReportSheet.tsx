@@ -1,5 +1,6 @@
 "use client";
 import { REPORT_REASONS, errText, rpc, type TargetType } from "@/lib/community";
+import { motion } from "framer-motion";
 import { useState } from "react";
 import Sheet, { fieldClass } from "./Sheet";
 
@@ -28,19 +29,19 @@ export default function ReportSheet({ type, id, onClose }: { type: TargetType; i
       {done ? (
         <div>
           <p className="rounded-2xl bg-tide/20 p-4 text-sm font-bold">Bildirimin alındı. Teşekkürler; ekibimiz inceleyecek.</p>
-          <button type="button" onClick={onClose} className="mt-4 w-full rounded-full bg-sea px-4 py-3 text-sm font-extrabold text-white">
+          <motion.button whileTap={{ scale: 0.95 }} type="button" onClick={onClose} className="mt-4 w-full rounded-full bg-sea px-4 py-3 text-sm font-bold text-white">
             Tamam
-          </button>
+          </motion.button>
         </div>
       ) : (
         <div className="grid gap-3">
           <fieldset className="grid gap-1.5">
             <legend className="mb-1 text-sm font-bold">Neden şikâyet ediyorsun?</legend>
             {REPORT_REASONS.map((r) => (
-              <label key={r.id} className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold ${reason === r.id ? "bg-sea text-white" : "bg-foam"}`}>
-                <input type="radio" name="reason" value={r.id} checked={reason === r.id} onChange={() => setReason(r.id)} className="accent-[#1b8a9a]" />
+              <motion.label key={r.id} whileTap={{ scale: 0.98 }} className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition-colors ${reason === r.id ? "bg-sea text-white" : "bg-foam hover:bg-tide/15"}`}>
+                <input type="radio" name="reason" value={r.id} checked={reason === r.id} onChange={() => setReason(r.id)} className="accent-sun" />
                 {r.label}
-              </label>
+              </motion.label>
             ))}
           </fieldset>
           <textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} rows={3} placeholder="İstersen kısa bir not ekle (isteğe bağlı)" aria-label="Not" className={fieldClass} />
@@ -49,9 +50,9 @@ export default function ReportSheet({ type, id, onClose }: { type: TargetType; i
               {err}
             </p>
           )}
-          <button type="button" disabled={busy} onClick={send} className="rounded-full bg-sea px-4 py-3 text-sm font-extrabold text-white disabled:opacity-60">
+          <motion.button whileTap={{ scale: 0.95 }} type="button" disabled={busy} onClick={send} className="rounded-full bg-sea px-4 py-3 text-sm font-bold text-white disabled:opacity-60">
             {busy ? "Gönderiliyor…" : "Şikâyeti gönder"}
-          </button>
+          </motion.button>
           <p className="text-xs text-ink/60">Şikâyetin gizli tutulur; içeriğin sahibi kimin bildirdiğini görmez.</p>
         </div>
       )}

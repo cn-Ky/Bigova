@@ -2,7 +2,9 @@
 import { BackHeader, NeedLogin, Notice, Skeleton } from "@/components/community/CommunityHeader";
 import { REPORT_REASONS, errText, rpc, timeAgo, type AdminReport } from "@/lib/community";
 import { useUser } from "@/lib/useUser";
+import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
+import { EmptyState, SPRING } from "@/components/community/ui";
 
 const reasonLabel = (id: string) => REPORT_REASONS.find((r) => r.id === id)?.label ?? id;
 const typeLabel = { post: "Gönderi", comment: "Yorum", message: "Forum mesajı" } as const;
@@ -27,14 +29,15 @@ export default function Yonetim() {
   return (
     <main className="pb-16">
       <BackHeader title="Şikâyet kuyruğu" subtitle="Yönetici" fallback="/topluluk" />
-      <div className="grid gap-3 px-5 py-4">
+      <div className="grid gap-3 px-5 pt-5">
         {err && <Notice text={err} />}
         {list === null ? <Skeleton /> : list.length === 0 && !err ? (
-          <p className="rounded-[22px] bg-card p-6 text-center text-sm text-ink/70 shadow-sm">Bekleyen şikâyet yok. 🎉</p>
+          <EmptyState><p className="text-sm text-ink/70">Bekleyen şikâyet yok. 🎉</p></EmptyState>
         ) : (
           <ul className="grid gap-3">
+            <AnimatePresence initial={false}>
             {list.map((r) => (
-              <li key={`${r.target_type}-${r.target_id}`} className="rounded-[22px] bg-card p-4 shadow-sm">
+              <motion.li key={`${r.target_type}-${r.target_id}`} layout="position" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} transition={SPRING} className="rounded-[24px] bg-card p-4 shadow-sm">
                 <p className="flex flex-wrap items-center gap-2 text-xs">
                   <span className="rounded-full bg-sky px-2.5 py-1 font-extrabold text-deep">{typeLabel[r.target_type]}</span>
                   <span className="rounded-full bg-coral/30 px-2.5 py-1 font-extrabold">{r.report_count} şikâyet</span>
@@ -45,11 +48,12 @@ export default function Yonetim() {
                 <p className="mt-2 whitespace-pre-wrap break-words rounded-xl bg-foam p-3 text-sm">{r.preview || "(metin yok)"}</p>
                 {r.note && <p className="mt-2 text-xs text-ink/65">Not: {r.note}</p>}
                 <div className="mt-3 flex gap-2">
-                  <button type="button" disabled={busy === r.target_id} onClick={() => resolve(r, "remove")} className="rounded-full bg-coral px-4 py-2 text-sm font-extrabold text-deep disabled:opacity-60">Kaldır</button>
-                  <button type="button" disabled={busy === r.target_id} onClick={() => resolve(r, "dismiss")} className="rounded-full bg-foam px-4 py-2 text-sm font-extrabold disabled:opacity-60">Şikâyetleri reddet</button>
+                  <motion.button whileTap={{ scale: 0.92 }} type="button" disabled={busy === r.target_id} onClick={() => resolve(r, "remove")} className="rounded-full bg-coral px-4 py-2 text-sm font-bold text-deep disabled:opacity-60">Kaldır</motion.button>
+                  <motion.button whileTap={{ scale: 0.92 }} type="button" disabled={busy === r.target_id} onClick={() => resolve(r, "dismiss")} className="rounded-full bg-foam px-4 py-2 text-sm font-bold transition-colors hover:bg-tide/20 disabled:opacity-60">Şikâyetleri reddet</motion.button>
                 </div>
-              </li>
+              </motion.li>
             ))}
+            </AnimatePresence>
           </ul>
         )}
       </div>

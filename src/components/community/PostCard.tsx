@@ -16,10 +16,11 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import ReportSheet from "./ReportSheet";
+import { CARD_CLASS, SPRING, cardMotion } from "./ui";
 
 /** Düz metni, yalnızca http/https bağlantıları tıklanabilir olacak şekilde gösterir. */
 export function RichText({ text, className = "" }: { text: string; className?: string }) {
@@ -27,7 +28,7 @@ export function RichText({ text, className = "" }: { text: string; className?: s
     <p className={`whitespace-pre-wrap break-words ${className}`}>
       {splitLinks(text).map((p, i) =>
         p.href ? (
-          <a key={i} href={p.href} target="_blank" rel="noopener noreferrer nofollow ugc" className="font-bold text-sea underline">
+          <a key={i} href={p.href} target="_blank" rel="noopener noreferrer nofollow ugc" className="font-bold text-sea underline decoration-tide decoration-2 underline-offset-2">
             {p.text}
           </a>
         ) : (
@@ -68,14 +69,15 @@ export function ItemMenu({
       document.removeEventListener("keydown", close);
     };
   }, [open]);
-  const item = "flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-bold hover:bg-foam";
+  const item = "flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-bold transition-colors hover:bg-foam";
   return (
     <div ref={ref} className="relative">
-      <button type="button" aria-label={`${label} için seçenekler`} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((v) => !v)} className="grid h-8 w-8 place-items-center rounded-full text-ink/60 hover:bg-foam">
+      <motion.button whileTap={{ scale: 0.85 }} type="button" aria-label={`${label} için seçenekler`} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((v) => !v)} className="grid h-8 w-8 place-items-center rounded-full text-ink/60 transition-colors hover:bg-foam">
         <FontAwesomeIcon icon={faEllipsis} />
-      </button>
+      </motion.button>
+      <AnimatePresence>
       {open && (
-        <div role="menu" className="absolute right-0 top-9 z-20 w-44 overflow-hidden rounded-2xl bg-card py-1 shadow-xl ring-1 ring-ink/10">
+        <motion.div initial={{ opacity: 0, scale: 0.92, y: -6 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.92 }} transition={{ duration: 0.14 }} style={{ transformOrigin: "top right" }} role="menu" className="absolute right-0 top-9 z-20 w-44 overflow-hidden rounded-2xl bg-card py-1 shadow-xl ring-1 ring-ink/10">
           <Link role="menuitem" href={`/profil/${authorId}`} className={item}>
             <FontAwesomeIcon icon={faUser} className="w-4 text-ink/55" /> Profili aç
           </Link>
@@ -89,8 +91,9 @@ export function ItemMenu({
               <FontAwesomeIcon icon={faTrash} className="w-4" /> Sil
             </button>
           )}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -112,28 +115,28 @@ function Photos({ paths }: { paths: string[] }) {
   const grid = paths.length === 1 ? "grid-cols-1" : "grid-cols-2";
   return (
     <>
-      <ul className={`mt-3 grid gap-1 overflow-hidden rounded-2xl ${grid}`}>
+      <ul className={`mt-3 grid gap-1 overflow-hidden rounded-[20px] ${grid}`}>
         {paths.map((p, i) => (
           <li key={p} className={paths.length === 3 && i === 0 ? "row-span-2" : ""}>
-            <button type="button" onClick={() => setOpen(i)} aria-label={`Fotoğraf ${i + 1} / ${paths.length} büyüt`} className="block h-full w-full bg-foam">
+            <button type="button" onClick={() => setOpen(i)} aria-label={`Fotoğraf ${i + 1} / ${paths.length} büyüt`} className="group/ph block h-full w-full overflow-hidden bg-foam">
               {urls[p] ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={urls[p]} alt="Gönderi fotoğrafı" loading="lazy" className={`w-full object-cover ${paths.length === 1 ? "max-h-[420px]" : "aspect-square h-full"}`} />
+                <img src={urls[p]} alt="Gönderi fotoğrafı" loading="lazy" className={`w-full object-cover transition-transform duration-500 group-hover/ph:scale-105 ${paths.length === 1 ? "max-h-[420px]" : "aspect-square h-full"}`} />
               ) : (
-                <span className={`block animate-pulse bg-foam ${paths.length === 1 ? "h-56" : "aspect-square"}`} />
+                <span className={`shimmer block ${paths.length === 1 ? "h-56" : "aspect-square"}`} />
               )}
             </button>
           </li>
         ))}
       </ul>
       {open !== null && (
-        <div role="dialog" aria-modal="true" aria-label="Fotoğraf" className="fixed inset-0 z-[90] grid place-items-center bg-black/85 p-4" onClick={() => setOpen(null)}>
-          <button type="button" aria-label="Kapat" className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white" onClick={() => setOpen(null)}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} role="dialog" aria-modal="true" aria-label="Fotoğraf" className="fixed inset-0 z-[90] grid place-items-center bg-deep/90 p-4 backdrop-blur-sm" onClick={() => setOpen(null)}>
+          <motion.button whileTap={{ scale: 0.88 }} type="button" aria-label="Kapat" className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white" onClick={() => setOpen(null)}>
             <FontAwesomeIcon icon={faXmark} />
-          </button>
+          </motion.button>
           {urls[paths[open]] && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={urls[paths[open]]} alt="Gönderi fotoğrafı" className="max-h-full max-w-full rounded-xl object-contain" onClick={(e) => e.stopPropagation()} />
+            <motion.img key={open} initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING} src={urls[paths[open]]} alt="Gönderi fotoğrafı" className="max-h-full max-w-full rounded-2xl object-contain" onClick={(e) => e.stopPropagation()} />
           )}
           {paths.length > 1 && (
             <div className="absolute bottom-6 flex gap-2" onClick={(e) => e.stopPropagation()}>
@@ -142,7 +145,7 @@ function Photos({ paths }: { paths: string[] }) {
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
       )}
     </>
   );
@@ -197,9 +200,9 @@ export default function PostCard({
 
   const textClass = detail ? "" : "line-clamp-6";
   return (
-    <article className="rounded-[22px] bg-card p-4 shadow-sm">
+    <motion.article layout="position" {...(detail ? { initial: false, transition: SPRING } : cardMotion)} className={`${CARD_CLASS} p-4`}>
       <div className="flex items-center gap-3">
-        <Link href={`/profil/${post.author_id}`} aria-label={`${post.author_name} profili`}>
+        <Link href={`/profil/${post.author_id}`} aria-label={`${post.author_name} profili`} className="transition-transform hover:scale-105">
           <UserAvatar name={post.author_name} avatar={avatar} size={42} />
         </Link>
         <div className="min-w-0 flex-1 leading-tight">
@@ -247,7 +250,7 @@ export default function PostCard({
         (detail ? (
           <h2 className="mt-2 font-display text-xl font-extrabold leading-snug">{post.title}</h2>
         ) : (
-          <Link href={href} className="mt-2 block font-display text-lg font-extrabold leading-snug">
+          <Link href={href} className="mt-2 block font-display text-lg font-extrabold leading-snug transition-colors hover:text-sea">
             {post.title}
           </Link>
         ))}
@@ -259,33 +262,38 @@ export default function PostCard({
       <Photos paths={post.images} />
 
       <div className="mt-3 flex items-center gap-1 border-t border-ink/5 pt-2">
-        <button
+        <motion.button
           type="button"
+          whileTap={{ scale: 0.85 }}
           onClick={toggleLike}
           aria-pressed={post.liked}
           aria-label={post.liked ? "Beğenmekten vazgeç" : "Beğen"}
-          className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-extrabold ${post.liked ? "text-coral" : "text-ink/70"}`}
+          className={`group flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-bold transition-colors hover:bg-coral/10 ${post.liked ? "text-coral" : "text-ink/70"}`}
         >
-          <FontAwesomeIcon icon={faHeart} className={post.liked ? "" : "opacity-45"} />
+          <motion.span key={String(post.liked)} initial={post.liked ? { scale: 0.4 } : false} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 12 }} className="inline-flex">
+            <FontAwesomeIcon icon={faHeart} className={post.liked ? "" : "opacity-45"} />
+          </motion.span>
           <span className="tabular-nums">{post.like_count}</span>
-        </button>
+        </motion.button>
         {detail ? (
-          <span className="flex items-center gap-1.5 px-3 py-2 text-sm font-extrabold text-ink/70">
+          <span className="flex items-center gap-1.5 px-3 py-2 text-sm font-bold text-ink/70">
             <FontAwesomeIcon icon={faComment} />
             <span className="tabular-nums">{post.comment_count}</span>
             <span className="sr-only">yorum</span>
           </span>
         ) : (
-          <Link href={href} aria-label={`${post.comment_count} yorum, gönderiyi aç`} className="flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-extrabold text-ink/70">
-            <FontAwesomeIcon icon={faComment} />
+          <Link href={href} aria-label={`${post.comment_count} yorum, gönderiyi aç`} className="group flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-bold text-ink/70 transition-colors hover:bg-foam">
+            <FontAwesomeIcon icon={faComment} className="ico" />
             <span className="tabular-nums">{post.comment_count}</span>
           </Link>
         )}
         {post.kind === "question" && !solved && post.comment_count === 0 && !detail && (
-          <Link href={href} className="ml-auto rounded-full bg-sea px-3 py-1.5 text-xs font-extrabold text-white">
-            <FontAwesomeIcon icon={faCheck} className="mr-1" />
-            Yanıtla
-          </Link>
+          <motion.div whileTap={{ scale: 0.92 }} className="ml-auto">
+            <Link href={href} className="block rounded-full bg-sea px-3 py-1.5 text-xs font-bold text-white">
+              <FontAwesomeIcon icon={faCheck} className="mr-1" />
+              Yanıtla
+            </Link>
+          </motion.div>
         )}
       </div>
       {err && (
@@ -294,6 +302,6 @@ export default function PostCard({
         </p>
       )}
       <AnimatePresence>{reporting && <ReportSheet type="post" id={post.id} onClose={() => setReporting(false)} />}</AnimatePresence>
-    </article>
+    </motion.article>
   );
 }

@@ -21,7 +21,7 @@ export default function Sheet({ title, onClose, children }: { title: string; onC
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[80] flex items-end justify-center bg-deep/50 md:items-center md:p-6"
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-deep/60 backdrop-blur-sm md:items-center md:p-6"
       onClick={onClose}
     >
       <motion.div
@@ -33,13 +33,13 @@ export default function Sheet({ title, onClose, children }: { title: string; onC
         exit={{ y: 40, opacity: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-[28px] bg-card p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-ink shadow-2xl md:rounded-[28px]"
+        className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-[24px] bg-card p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-ink shadow-2xl md:rounded-[24px]"
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-xl font-extrabold">{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Kapat" className="grid h-9 w-9 place-items-center rounded-full bg-foam">
+          <motion.button whileTap={{ scale: 0.88 }} whileHover={{ rotate: 90 }} type="button" onClick={onClose} aria-label="Kapat" className="grid h-9 w-9 place-items-center rounded-full bg-foam">
             <FontAwesomeIcon icon={faXmark} />
-          </button>
+          </motion.button>
         </div>
         {children}
       </motion.div>
@@ -48,4 +48,4 @@ export default function Sheet({ title, onClose, children }: { title: string; onC
 }
 
 export const fieldClass =
-  "w-full rounded-xl bg-foam px-3 py-2.5 text-sm text-ink outline-none placeholder:text-ink/45 focus:ring-2 focus:ring-tide";
+  "w-full rounded-xl bg-foam px-4 py-3 text-base text-ink placeholder:text-ink/45 field-ring";

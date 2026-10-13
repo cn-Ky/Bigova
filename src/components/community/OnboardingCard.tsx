@@ -1,7 +1,9 @@
 "use client";
 import { GRADE_LABELS, errText, rpc, type Community } from "@/lib/community";
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { fieldClass } from "./Sheet";
+import { SPRING } from "./ui";
 
 /** İlk girişte bölüm ve sınıf seçtirir; ilgili bölüm/sınıf topluluklarına otomatik üye yapar. */
 export default function OnboardingCard({ initialDepartment, initialGrade, onDone, compact = false }: { initialDepartment?: string | null; initialGrade?: number | null; onDone: () => void; compact?: boolean }) {
@@ -38,7 +40,7 @@ export default function OnboardingCard({ initialDepartment, initialGrade, onDone
     }
   };
   return (
-    <section aria-label="Bölüm ve sınıf seçimi" className={`rounded-[22px] bg-card p-4 shadow-sm ${compact ? "" : "border-2 border-tide/40"}`}>
+    <motion.section initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={SPRING} aria-label="Bölüm ve sınıf seçimi" className={`rounded-[24px] bg-card p-4 shadow-sm ${compact ? "" : "border-2 border-tide/40"}`}>
       <h2 className="font-display text-lg font-extrabold">{compact ? "Bölümün ve sınıfın" : "Topluluğunu bul"}</h2>
       <p className="mt-1 text-sm text-ink/70">Bölümünü ve sınıfını seç; sana özel topluluklara otomatik katılırsın. İstediğin zaman değiştirebilirsin.</p>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -64,9 +66,9 @@ export default function OnboardingCard({ initialDepartment, initialGrade, onDone
           {err}
         </p>
       )}
-      <button type="button" disabled={busy} onClick={save} className="mt-3 rounded-full bg-sea px-5 py-2.5 text-sm font-extrabold text-white disabled:opacity-60">
+      <motion.button whileTap={{ scale: 0.92 }} type="button" disabled={busy} onClick={save} className="shine mt-3 rounded-full bg-sea px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60">
         {busy ? "Kaydediliyor…" : "Kaydet ve katıl"}
-      </button>
-    </section>
+      </motion.button>
+    </motion.section>
   );
 }
