@@ -34,8 +34,8 @@ import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 
 const field =
-  "w-full rounded-xl bg-foam px-3 py-2.5 text-sm text-ink outline-none placeholder:text-ink/45 focus:ring-2 focus:ring-tide";
-const chip = "rounded-full px-3 py-1.5 text-xs font-extrabold";
+  "w-full rounded-xl bg-foam px-3 py-2.5 text-sm text-ink placeholder:text-ink/45 field-ring";
+const chip = "rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors";
 
 /* ───────── Ortak kart iskeleti ───────── */
 export function Card({
@@ -54,7 +54,7 @@ export function Card({
   className?: string;
 }) {
   return (
-    <section aria-label={title} className={`rounded-[22px] bg-card p-4 shadow-sm ${className}`}>
+    <section aria-label={title} className={`rounded-[22px] bg-card p-4 shadow-sm transition-shadow hover:shadow-lg ${className}`}>
       <div className="mb-3 flex items-center gap-3">
         <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${tone}`}>
           <FontAwesomeIcon icon={icon} />
@@ -84,7 +84,7 @@ function Sheet({ title, onClose, children }: { title: string; onClose: () => voi
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[80] flex items-end justify-center bg-deep/50 md:items-center md:p-6"
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-deep/60 backdrop-blur-sm md:items-center md:p-6"
       onClick={onClose}
     >
       <motion.div
@@ -96,13 +96,13 @@ function Sheet({ title, onClose, children }: { title: string; onClose: () => voi
         exit={{ y: 40, opacity: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-t-[28px] bg-card p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-ink shadow-2xl md:rounded-[28px]"
+        className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-[24px] bg-card p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-ink shadow-2xl md:rounded-[24px]"
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-xl font-extrabold">{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Kapat" className="grid h-9 w-9 place-items-center rounded-full bg-foam">
+          <motion.button whileTap={{ scale: 0.88 }} whileHover={{ rotate: 90 }} type="button" onClick={onClose} aria-label="Kapat" className="grid h-9 w-9 place-items-center rounded-full bg-foam">
             <FontAwesomeIcon icon={faXmark} />
-          </button>
+          </motion.button>
         </div>
         {children}
       </motion.div>
@@ -138,10 +138,10 @@ export function TodayWidget({
       icon={faCalendarDay}
       tone="bg-sky text-deep"
       action={
-        <button type="button" onClick={() => setEditor("program")} className={`${chip} bg-foam`}>
+        <motion.button whileTap={{ scale: 0.92 }} type="button" onClick={() => setEditor("program")} className={`${chip} bg-foam`}>
           <FontAwesomeIcon icon={faPencil} className="mr-1.5" />
           Düzenle
-        </button>
+        </motion.button>
       }
     >
       {view.ready && (
@@ -152,10 +152,10 @@ export function TodayWidget({
                 Haftalık dersini bir kez gir; burada her gün o günün dersleri ve sıradaki ders görünsün.
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <button type="button" onClick={() => setEditor("program")} className={`${chip} bg-sea text-white`}>
+                <motion.button whileTap={{ scale: 0.92 }} type="button" onClick={() => setEditor("program")} className={`${chip} bg-sea text-white`}>
                   <FontAwesomeIcon icon={faPlus} className="mr-1.5" />
                   Ders ekle
-                </button>
+                </motion.button>
                 <Link href="/ders-programi" className={`${chip} bg-card`}>
                   Resmî çizelgeyi aç
                 </Link>
@@ -187,10 +187,10 @@ export function TodayWidget({
 
           <div className="mt-4 flex items-center justify-between">
             <h3 className="font-display text-base font-extrabold">Yaklaşan sınavlar</h3>
-            <button type="button" onClick={() => setEditor("exams")} className="text-xs font-extrabold text-sea">
+            <motion.button whileTap={{ scale: 0.92 }} type="button" onClick={() => setEditor("exams")} className="text-xs font-extrabold text-sea">
               <FontAwesomeIcon icon={faPlus} className="mr-1" />
               Sınav ekle
-            </button>
+            </motion.button>
           </div>
           {view.upcoming.length === 0 ? (
             <p className="mt-2 text-sm text-ink/60">Yaklaşan sınav yok.</p>
@@ -227,7 +227,7 @@ export function TodayWidget({
           <Sheet title={editor === "program" ? "Haftalık ders programım" : "Sınavlarım"} onClose={() => setEditor(null)}>
             <div className="mb-4 grid grid-cols-2 gap-1 rounded-xl bg-foam p-1" role="tablist">
               {(["program", "exams"] as const).map((k) => (
-                <button
+                <motion.button whileTap={{ scale: 0.92 }}
                   key={k}
                   type="button"
                   role="tab"
@@ -236,7 +236,7 @@ export function TodayWidget({
                   className={`rounded-lg px-3 py-2 text-sm font-bold ${editor === k ? "bg-card shadow-sm" : "text-ink/65"}`}
                 >
                   {k === "program" ? "Dersler" : "Sınavlar"}
-                </button>
+                </motion.button>
               ))}
             </div>
             {editor === "program" ? (
@@ -297,9 +297,9 @@ function CourseEditor({ courses, add, remove }: { courses: Course[]; add: (c: Om
             {msg}
           </p>
         )}
-        <button disabled={busy} className="rounded-full bg-sea px-4 py-3 text-sm font-extrabold text-white disabled:opacity-60">
+        <motion.button whileTap={{ scale: 0.92 }} disabled={busy} className="rounded-full bg-sea px-4 py-3 text-sm font-bold text-white disabled:opacity-60">
           Derse ekle
-        </button>
+        </motion.button>
       </form>
       <ul className="mt-5 grid gap-4">
         {DAY_NAMES.map((d, i) => {
@@ -318,9 +318,9 @@ function CourseEditor({ courses, add, remove }: { courses: Course[]; add: (c: Om
                       <b>{c.name}</b>
                       {c.room ? <span className="text-ink/60"> · {c.room}</span> : null}
                     </span>
-                    <button type="button" onClick={() => remove(c.id)} aria-label={`${c.name} dersini sil`} className="grid h-8 w-8 place-items-center rounded-full text-ink/60 hover:bg-card">
+                    <motion.button whileTap={{ scale: 0.92 }} type="button" onClick={() => remove(c.id)} aria-label={`${c.name} dersini sil`} className="grid h-8 w-8 place-items-center rounded-full text-ink/60 hover:bg-card">
                       <FontAwesomeIcon icon={faXmark} />
-                    </button>
+                    </motion.button>
                   </li>
                 ))}
               </ul>
@@ -393,9 +393,9 @@ function ExamEditor({
             {msg}
           </p>
         )}
-        <button disabled={busy} className="rounded-full bg-sea px-4 py-3 text-sm font-extrabold text-white disabled:opacity-60">
+        <motion.button whileTap={{ scale: 0.92 }} disabled={busy} className="rounded-full bg-sea px-4 py-3 text-sm font-bold text-white disabled:opacity-60">
           Sınavı ekle
-        </button>
+        </motion.button>
       </form>
       <ul className="mt-5 grid gap-1.5">
         {exams.length === 0 && <li className="text-sm text-ink/60">Henüz sınav eklemedin.</li>}
@@ -411,9 +411,9 @@ function ExamEditor({
                 {x.exam_time ? ` ${x.exam_time}` : ""}
               </span>
             </span>
-            <button type="button" onClick={() => remove(x.id)} aria-label={`${x.course} ${x.kind} sınavını sil`} className="grid h-8 w-8 place-items-center rounded-full text-ink/60 hover:bg-card">
+            <motion.button whileTap={{ scale: 0.92 }} type="button" onClick={() => remove(x.id)} aria-label={`${x.course} ${x.kind} sınavını sil`} className="grid h-8 w-8 place-items-center rounded-full text-ink/60 hover:bg-card">
               <FontAwesomeIcon icon={faXmark} />
-            </button>
+            </motion.button>
           </li>
         ))}
       </ul>
@@ -462,19 +462,19 @@ export function TasksWidget({
       <form onSubmit={submit} className="grid gap-2">
         <div className="flex gap-2">
           <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder="Yeni görev veya ödev…" aria-label="Yeni görev" className={field} />
-          <button aria-label="Görevi ekle" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sea text-white">
+          <motion.button whileTap={{ scale: 0.92 }} aria-label="Görevi ekle" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sea text-white">
             <FontAwesomeIcon icon={faPlus} />
-          </button>
+          </motion.button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {(["task", "homework"] as const).map((k) => (
-            <button key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(k)} className={`${chip} ${kind === k ? "bg-sea text-white" : "bg-foam"}`}>
+            <motion.button whileTap={{ scale: 0.92 }} key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(k)} className={`${chip} ${kind === k ? "bg-sea text-white" : "bg-foam"}`}>
               {k === "task" ? "Yapılacak" : "Ödev"}
-            </button>
+            </motion.button>
           ))}
-          <button type="button" aria-expanded={more} onClick={() => setMore((v) => !v)} className="text-xs font-extrabold text-sea">
+          <motion.button whileTap={{ scale: 0.92 }} type="button" aria-expanded={more} onClick={() => setMore((v) => !v)} className="text-xs font-extrabold text-sea">
             {more ? "Daha az" : "Tarih / ders"}
-          </button>
+          </motion.button>
         </div>
         {more && (
           <div className="grid grid-cols-2 gap-2">
@@ -505,7 +505,7 @@ export function TasksWidget({
             const late = !t.done && n !== null && n < 0;
             return (
               <li key={t.id} className="flex items-center gap-2 rounded-2xl bg-foam px-2 py-1.5">
-                <button
+                <motion.button whileTap={{ scale: 0.92 }}
                   type="button"
                   role="checkbox"
                   aria-checked={t.done}
@@ -514,7 +514,7 @@ export function TasksWidget({
                   className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 ${t.done ? "border-tide bg-tide text-deep" : "border-ink/30"}`}
                 >
                   {t.done && <FontAwesomeIcon icon={faCheck} className="text-xs" />}
-                </button>
+                </motion.button>
                 <span className={`min-w-0 flex-1 leading-tight ${t.done ? "line-through opacity-55" : ""}`}>
                   <b className="block truncate text-sm">{t.title}</b>
                   <span className="block truncate text-xs text-ink/60">
@@ -525,18 +525,18 @@ export function TasksWidget({
                     {t.due_date && <span className={late ? "font-extrabold text-coral" : ""}>{relativeDay(t.due_date)}</span>}
                   </span>
                 </span>
-                <button type="button" onClick={() => removeTask(t.id)} aria-label={`${t.title} görevini sil`} className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink/50 hover:bg-card">
+                <motion.button whileTap={{ scale: 0.92 }} type="button" onClick={() => removeTask(t.id)} aria-label={`${t.title} görevini sil`} className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink/50 hover:bg-card">
                   <FontAwesomeIcon icon={faXmark} />
-                </button>
+                </motion.button>
               </li>
             );
           })}
         </ul>
       )}
       {(open.length > 5 || done > 0) && (
-        <button type="button" onClick={() => setAll((v) => !v)} className="mt-2 text-xs font-extrabold text-sea">
+        <motion.button whileTap={{ scale: 0.92 }} type="button" onClick={() => setAll((v) => !v)} className="mt-2 text-xs font-extrabold text-sea">
           {all ? "Yalnızca bekleyenler" : `Tümünü göster (${tasks.length})`}
-        </button>
+        </motion.button>
       )}
     </Card>
   );
@@ -564,12 +564,12 @@ export function PomodoroWidget() {
           </p>
         </div>
         <div className="flex items-center gap-1 rounded-full bg-foam p-1" role="group" aria-label="Günlük hedef">
-          <button type="button" onClick={() => setGoal(goal - 1)} disabled={goal <= 1} aria-label="Hedefi azalt" className="grid h-8 w-8 place-items-center rounded-full bg-card disabled:opacity-40">
+          <motion.button whileTap={{ scale: 0.92 }} type="button" onClick={() => setGoal(goal - 1)} disabled={goal <= 1} aria-label="Hedefi azalt" className="grid h-8 w-8 place-items-center rounded-full bg-card disabled:opacity-40">
             <FontAwesomeIcon icon={faMinus} className="text-xs" />
-          </button>
-          <button type="button" onClick={() => setGoal(goal + 1)} disabled={goal >= 16} aria-label="Hedefi artır" className="grid h-8 w-8 place-items-center rounded-full bg-card disabled:opacity-40">
+          </motion.button>
+          <motion.button whileTap={{ scale: 0.92 }} type="button" onClick={() => setGoal(goal + 1)} disabled={goal >= 16} aria-label="Hedefi artır" className="grid h-8 w-8 place-items-center rounded-full bg-card disabled:opacity-40">
             <FontAwesomeIcon icon={faPlus} className="text-xs" />
-          </button>
+          </motion.button>
         </div>
       </div>
       <div className="mt-3 h-3 overflow-hidden rounded-full bg-foam" role="progressbar" aria-valuemin={0} aria-valuemax={goal} aria-valuenow={Math.min(n, goal)} aria-label="Günlük Pomodoro hedefi">
@@ -600,7 +600,7 @@ export function NewsWidget() {
       {items === null ? (
         <ul className="grid gap-2" aria-busy="true">
           {[0, 1, 2].map((i) => (
-            <li key={i} className="h-14 animate-pulse rounded-2xl bg-foam" />
+            <li key={i} className="shimmer h-14 rounded-2xl" />
           ))}
         </ul>
       ) : items.length === 0 ? (

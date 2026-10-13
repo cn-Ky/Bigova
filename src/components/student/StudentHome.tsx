@@ -83,22 +83,23 @@ export default function StudentHome() {
           </h2>
           <p className="text-xs capitalize text-ink/60">{dateLabel}</p>
         </div>
-        <button
+        <motion.button
           type="button"
+          whileTap={{ scale: 0.9 }}
           aria-expanded={editing}
           aria-controls="student-home-customize"
           onClick={() => setEditing((v) => !v)}
-          className="shrink-0 rounded-full bg-card px-3 py-1.5 text-xs font-extrabold shadow-sm"
+          className={`group shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold shadow-sm transition-[background-color,color,box-shadow] hover:shadow-md ${editing ? "bg-sun text-deep" : "bg-card"}`}
         >
-          <FontAwesomeIcon icon={faSliders} className="mr-1.5" />
+          <FontAwesomeIcon icon={faSliders} className="ico mr-1.5" />
           {editing ? "Bitti" : "Kişiselleştir"}
-        </button>
+        </motion.button>
       </div>
 
       {data.status === "local" && (
-        <p className="mb-3 rounded-2xl bg-sun/25 px-4 py-2.5 text-xs font-bold text-ink">
+        <motion.p initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="mb-3 rounded-2xl bg-sun/25 px-4 py-2.5 text-xs font-bold text-ink">
           Bilgilerin şimdilik yalnızca bu cihazda saklanıyor. Hesabınla eşitlenmesi için yönetici veritabanı güncellemesini yapmalı.
-        </p>
+        </motion.p>
       )}
       {data.error && (
         <p role="alert" className="mb-3 flex items-start justify-between gap-3 rounded-2xl bg-coral/25 px-4 py-2.5 text-xs font-bold text-ink">
@@ -116,24 +117,31 @@ export default function StudentHome() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="mb-3 overflow-hidden"
           >
             <div className="rounded-[22px] bg-card p-4 shadow-sm">
               <h3 className="font-display text-base font-extrabold">Kutuların sırası ve görünürlüğü</h3>
               <ul className="mt-2 grid gap-1.5">
                 {prefs.widgets.map((w, i) => (
-                  <li key={w.id} className="flex items-center gap-2 rounded-xl bg-foam px-3 py-2">
-                    <span className={`min-w-0 flex-1 truncate text-sm font-bold ${w.hidden ? "opacity-50" : ""}`}>{labelOf[w.id]}</span>
-                    <button type="button" onClick={() => move(i, -1)} disabled={i === 0} aria-label={`${labelOf[w.id]} kutusunu yukarı taşı`} className="grid h-8 w-8 place-items-center rounded-full bg-card disabled:opacity-35">
+                  <motion.li
+                    key={w.id}
+                    layout
+                    transition={{ type: "spring", stiffness: 300, damping: 28 }}
+                    whileHover={{ x: 2 }}
+                    className="flex items-center gap-2 rounded-xl bg-foam px-3 py-2"
+                  >
+                    <span className={`min-w-0 flex-1 truncate text-sm font-bold transition-opacity ${w.hidden ? "opacity-50" : ""}`}>{labelOf[w.id]}</span>
+                    <motion.button whileTap={{ scale: 0.8 }} type="button" onClick={() => move(i, -1)} disabled={i === 0} aria-label={`${labelOf[w.id]} kutusunu yukarı taşı`} className="grid h-8 w-8 place-items-center rounded-full bg-card shadow-sm transition-shadow hover:shadow-md disabled:opacity-35">
                       <FontAwesomeIcon icon={faChevronUp} className="text-xs" />
-                    </button>
-                    <button type="button" onClick={() => move(i, 1)} disabled={i === prefs.widgets.length - 1} aria-label={`${labelOf[w.id]} kutusunu aşağı taşı`} className="grid h-8 w-8 place-items-center rounded-full bg-card disabled:opacity-35">
+                    </motion.button>
+                    <motion.button whileTap={{ scale: 0.8 }} type="button" onClick={() => move(i, 1)} disabled={i === prefs.widgets.length - 1} aria-label={`${labelOf[w.id]} kutusunu aşağı taşı`} className="grid h-8 w-8 place-items-center rounded-full bg-card shadow-sm transition-shadow hover:shadow-md disabled:opacity-35">
                       <FontAwesomeIcon icon={faChevronDown} className="text-xs" />
-                    </button>
-                    <button type="button" onClick={() => toggleHidden(w.id)} aria-pressed={!w.hidden} aria-label={`${labelOf[w.id]} kutusunu ${w.hidden ? "göster" : "gizle"}`} className="grid h-8 w-8 place-items-center rounded-full bg-card">
+                    </motion.button>
+                    <motion.button whileTap={{ scale: 0.8 }} type="button" onClick={() => toggleHidden(w.id)} aria-pressed={!w.hidden} aria-label={`${labelOf[w.id]} kutusunu ${w.hidden ? "göster" : "gizle"}`} className={`grid h-8 w-8 place-items-center rounded-full shadow-sm transition-[background-color,box-shadow] hover:shadow-md ${w.hidden ? "bg-card" : "bg-sun text-deep"}`}>
                       <FontAwesomeIcon icon={w.hidden ? faEyeSlash : faEye} className="text-xs" />
-                    </button>
-                  </li>
+                    </motion.button>
+                  </motion.li>
                 ))}
               </ul>
 
@@ -149,29 +157,31 @@ export default function StudentHome() {
                   const full = !on && prefs.shortcuts.length >= MAX_SHORTCUTS;
                   return (
                     <li key={t.href}>
-                      <button
+                      <motion.button
                         type="button"
+                        whileTap={{ scale: 0.9 }}
                         aria-pressed={on}
                         disabled={full}
                         onClick={() => toggleShortcut(t.href)}
-                        className={`rounded-full px-3 py-1.5 text-xs font-extrabold disabled:opacity-40 ${on ? "bg-sea text-white" : "bg-foam"}`}
+                        className={`group rounded-full px-3.5 py-1.5 text-xs font-bold transition-[background-color,color,box-shadow] disabled:opacity-40 ${on ? "bg-sea text-white shadow-sm" : "bg-foam hover:bg-tide/15"}`}
                       >
-                        <FontAwesomeIcon icon={t.i} className="mr-1.5" />
+                        <FontAwesomeIcon icon={t.i} className="ico mr-1.5" />
                         {t.l}
-                      </button>
+                      </motion.button>
                     </li>
                   );
                 })}
               </ul>
 
-              <button
+              <motion.button
                 type="button"
+                whileTap={{ scale: 0.92 }}
                 onClick={() => set({ ...normalizePrefs(null), shortcuts: DEFAULT_SHORTCUTS })}
-                className="mt-4 text-xs font-extrabold text-sea"
+                className="group mt-4 rounded-full bg-foam px-3.5 py-1.5 text-xs font-bold transition-colors hover:bg-tide/15"
               >
-                <FontAwesomeIcon icon={faRotateLeft} className="mr-1.5" />
+                <FontAwesomeIcon icon={faRotateLeft} className="ico mr-1.5" />
                 Varsayılana döndür
-              </button>
+              </motion.button>
             </div>
           </motion.div>
         )}
@@ -180,11 +190,11 @@ export default function StudentHome() {
       {data.status === "loading" ? (
         <div className="grid gap-3 md:grid-cols-2" aria-busy="true" aria-label="Yükleniyor">
           {[0, 1].map((i) => (
-            <div key={i} className="h-40 animate-pulse rounded-[22px] bg-card/70" />
+            <div key={i} className="shimmer h-40 rounded-[22px]" />
           ))}
         </div>
       ) : visible.length === 0 ? (
-        <p className="rounded-[22px] bg-card p-4 text-sm text-ink/70 shadow-sm">Tüm kutuları gizledin. “Kişiselleştir”den istediklerini geri açabilirsin.</p>
+        <p className="rounded-[22px] bg-card p-5 text-center text-sm text-ink/70 shadow-sm">Tüm kutuları gizledin. “Kişiselleştir”den istediklerini geri açabilirsin.</p>
       ) : (
         <div className="grid items-start gap-3 md:grid-cols-2">
           {visible.map((w, i) => (
