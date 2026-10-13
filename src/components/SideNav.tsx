@@ -81,7 +81,7 @@ function Item({ t, on }: { t: SideTab; on: boolean }) {
             className={`relative grid h-9 w-9 place-items-center rounded-xl ${on ? "bg-sun text-deep" : "bg-white/10"}`}
           >
             <FontAwesomeIcon icon={t.i} />
-            {t.href === "/arkadaslar" && <UnreadBadge className="absolute -right-1.5 -top-1.5 !h-4 !min-w-4 !text-[10px]" />}
+            {t.href === "/topluluk" && <UnreadBadge className="absolute -right-1.5 -top-1.5 !h-4 !min-w-4 !text-[10px]" />}
           </motion.span>
           <span className="side-item-label leading-tight">
             <b className="block font-display text-[17px]">{t.l}</b>

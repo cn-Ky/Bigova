@@ -40,7 +40,7 @@ function TopLink({
     >
       <span className="adaptive-top-icon">
         <FontAwesomeIcon icon={item.i} />
-        {item.href === "/arkadaslar" && <UnreadBadge />}
+        {item.href === "/topluluk" && <UnreadBadge />}
       </span>
       {labeled && <span className="adaptive-top-label">{item.l}</span>}
     </Link>

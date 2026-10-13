@@ -89,9 +89,9 @@ const tiles = [
   },
   {
     kind: "friends",
-    t: "Arkadaşlar",
-    d: "Arkadaş ekle, bire bir sohbet",
-    href: "/arkadaslar",
+    t: "Topluluk",
+    d: "Gönderi, soru-cevap, forum ve sohbet",
+    href: "/topluluk",
     c: "bg-sky text-deep",
   },
   {

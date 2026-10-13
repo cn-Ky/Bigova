@@ -43,7 +43,7 @@ export const CATEGORIES: Category[] = [
     blurb: "Arkadaşlar, Bigocuk, haftalık anket",
     icon: faUsers,
     tone: "coral",
-    hrefs: ["/arkadaslar", "/bigocuk", "/anketler"],
+    hrefs: ["/topluluk", "/bigocuk", "/anketler"],
   },
   {
     id: "about",
@@ -66,7 +66,9 @@ const allTabs: SideTab[] = [...sideTabs, settingsTab as SideTab];
 export const tabByHref = (href: string) => allTabs.find((t) => t.href === href);
 export const home = tabs[0] as SideTab;
 
-export const categoryOf = (pathname: string): CategoryId | null => {
+export const categoryOf = (rawPathname: string): CategoryId | null => {
+  // Arkadaşlar ve bire bir sohbetler artık Topluluk menüsünün altında
+  const pathname = rawPathname.startsWith("/arkadaslar") ? "/topluluk" : rawPathname;
   for (const c of CATEGORIES)
     for (const h of c.hrefs) if (!h.startsWith("http") && (pathname === h || pathname.startsWith(`${h}/`))) return c.id;
   return null;

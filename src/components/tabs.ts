@@ -64,10 +64,10 @@ export const sideTabs = [
     hint: "Tesisatçı, elektrikçi, mobilyacı",
   },
   {
-    href: "/arkadaslar",
-    l: "Arkadaşlar",
+    href: "/topluluk",
+    l: "Topluluk",
     i: faUserGroup,
-    hint: "Arkadaş ve sohbetler",
+    hint: "Gönderi, soru-cevap, forum ve arkadaşlar",
   },
   {
     href: "/dergi",
@@ -122,4 +122,4 @@ export const sideTabs = [
 export type SideTab = (typeof sideTabs)[number] & { external?: boolean };
 export const settingsTab = tabs[4];
 export const isOn = (p: string, h: string) =>
-  h === "/" ? p === "/" : p.startsWith(h);
+  h === "/" ? p === "/" : p.startsWith(h) || (h === "/topluluk" && p.startsWith("/arkadaslar"));
