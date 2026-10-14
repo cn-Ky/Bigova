@@ -87,9 +87,16 @@ const tiles = [
     c: "bg-sun text-deep",
   },
   {
+    kind: "arkadaslar",
+    t: "Arkadaşlar",
+    d: "Arkadaş ekle, mesajlaş",
+    href: "/arkadaslar",
+    c: "bg-coral text-deep",
+  },
+  {
     kind: "friends",
     t: "Topluluk",
-    d: "Gönderi, soru-cevap, forum ve sohbet",
+    d: "Gönderi, soru-cevap ve forum",
     href: "/topluluk",
     c: "bg-sky text-deep",
   },
@@ -484,6 +491,16 @@ function TileArt({ kind }: { kind: string }) {
           />
         </svg>
       );
+    case "arkadaslar":
+      return (
+        <svg {...shared}>
+          <path d="M14 70c1-12 8-19 18-19s17 7 18 19" fill="currentColor" opacity=".23" stroke="currentColor" strokeWidth="3" />
+          <circle cx="32" cy="36" r="11" fill="currentColor" opacity=".28" stroke="currentColor" strokeWidth="3" />
+          <path d="M58 71c1-12 8-19 18-19s17 7 18 19" fill="currentColor" opacity=".18" stroke="currentColor" strokeWidth="3" />
+          <circle cx="76" cy="38" r="11" fill="currentColor" opacity=".25" stroke="currentColor" strokeWidth="3" />
+          <path d="M54 30c-5-7-14-1-9 6l9 9 9-9c5-7-4-13-9-6z" fill="rgb(var(--card))" opacity=".8" />
+        </svg>
+      );
     case "schedule":
       return (
         <svg {...shared}>
@@ -730,7 +747,7 @@ function Tile({ x, n }: { x: (typeof tiles)[number]; n: number }) {
             icon={faArrowRight}
             className="absolute bottom-4 right-4 -translate-x-3 opacity-0 transition duration-300 group-hover:translate-x-0 group-hover:opacity-80"
           />
-          {x.kind === "friends" && <UnreadBadge className="absolute left-4 top-9 z-10 ring-2 ring-sky" />}
+          {x.kind === "arkadaslar" && <UnreadBadge className="absolute left-4 top-9 z-10 ring-2 ring-sky" />}
           <span>
             <b className="block font-display text-lg leading-tight">{x.t}</b>
             <span className="text-[13px] opacity-75">{x.d}</span>

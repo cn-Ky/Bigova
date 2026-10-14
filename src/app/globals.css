@@ -387,7 +387,8 @@ select:focus-visible {
 .tile-art--ustalar {
   animation: art-sway 4.4s ease-in-out infinite;
 }
-.tile-art--friends {
+.tile-art--friends,
+.tile-art--arkadaslar {
   animation: art-float 3.6s ease-in-out infinite;
 }
 .tile-art--magazine {
