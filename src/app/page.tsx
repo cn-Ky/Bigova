@@ -977,8 +977,6 @@ export default function Home() {
 
       <UnreadCard />
       <PushControl variant="banner" />
-      <StudentHome />
-
       <EventAnnouncement />
 
       <CategoryMenu />
@@ -1008,6 +1006,8 @@ export default function Home() {
           </Link>
         </motion.div>
       )}
+
+      <StudentHome />
     </main>
   );
 }
