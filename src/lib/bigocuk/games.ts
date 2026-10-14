@@ -45,7 +45,7 @@ export const GAMES: Game[] = [
   {
     id: "anketler",
     title: "Anketler",
-    blurb: "Haftalık öğrenci anketlerini doldur, sonuçları yüzde olarak gör.",
+    blurb: "Her hafta yeni sorular: etkinlik, çalışma ve Bigova önerilerini oyla.",
     reward: "Her anket = 1 Bigcoin",
     href: "/bigocuk/anketler",
     icon: faPoll,

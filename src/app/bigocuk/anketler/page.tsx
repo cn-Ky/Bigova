@@ -9,7 +9,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-type Poll = { id: string; week_start: string; week_end: string; question: string; options: string[] };
+type Poll = { id: string; week_start: string; week_end: string; question: string; options: string[]; category: string | null };
+/** Otomatik üretilen anketlerin kategori etiketleri (supabase/polls_v3_auto_upgrade.sql ile aynı anahtarlar). */
+const CATEGORY: Record<string, string> = {
+  organizasyon: "Organizasyon önerisi",
+  calisma: "Çalışma önerisi",
+  uygulama: "Bigova'yı geliştir",
+};
 type Load = "loading" | "ready" | "setup" | "error";
 
 const localDate = () => {
@@ -19,7 +25,7 @@ const localDate = () => {
 const day = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("tr-TR", { day: "numeric", month: "short" });
 const range = (p: { week_start: string; week_end: string }) => `${day(p.week_start)} – ${day(p.week_end)}`;
 const isMissingTable = (e: { code?: string; message?: string } | null) =>
-  !!e && (e.code === "42P01" || e.code === "PGRST205" || e.code === "PGRST202" || /schema cache|does not exist/i.test(e.message ?? ""));
+  !!e && (e.code === "42P01" || e.code === "42703" || e.code === "PGRST205" || e.code === "PGRST202" || /schema cache|does not exist/i.test(e.message ?? ""));
 
 export default function Anketler() {
   const { user } = useUser();
@@ -51,10 +57,14 @@ export default function Anketler() {
       if (typeof data === "string") serverToday = data.slice(0, 10);
     } catch {}
     setToday(serverToday);
+    // Bu haftanın otomatik anketleri henüz oluşmadıysa sunucu üretir (hata olursa mevcut anketler yine gösterilir).
+    try {
+      await sb.rpc("poll_ensure_week");
+    } catch {}
 
     const { data, error } = await sb
       .from("weekly_polls")
-      .select("id,week_start,week_end,question,options")
+      .select("id,week_start,week_end,question,options,category")
       .order("week_start", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(40);
@@ -123,7 +133,7 @@ export default function Anketler() {
     setPubMsg("");
     const { error } = await sb.rpc("poll_publish", { p_question: question.trim(), p_options: options });
     setPublishing(false);
-    if (error) return setPubMsg(isMissingTable(error) ? "Kurulum eksik: supabase/polls_v2_upgrade.sql dosyasını çalıştır." : errMsg(error));
+    if (error) return setPubMsg(isMissingTable(error) ? "Kurulum eksik: supabase/polls_v3_auto_upgrade.sql dosyasını çalıştır." : errMsg(error));
     setQuestion("");
     setOptionsText("");
     setPubMsg("Anket bu haftaya eklendi.");
@@ -147,7 +157,7 @@ export default function Anketler() {
           <div>
             <h1 className="font-display text-2xl font-extrabold">Anketler</h1>
             <p className="text-sm text-white/75">
-              Her anket = {POLL_COINS} {COIN_NAME} · sonuçlar haftalık
+              Her hafta yeni sorular · her anket = {POLL_COINS} {COIN_NAME}
             </p>
           </div>
         </div>
@@ -168,7 +178,7 @@ export default function Anketler() {
         {load === "loading" && <p className="mt-6 text-sm text-ink/60">Yükleniyor…</p>}
         {load === "setup" && (
           <p className="mt-6 text-sm font-bold text-coral">
-            Kurulum eksik: <code>supabase/polls_v2_upgrade.sql</code> dosyasını çalıştır.
+            Kurulum eksik: <code>supabase/polls_v3_auto_upgrade.sql</code> dosyasını çalıştır.
           </p>
         )}
         {load === "error" && <p className="mt-6 text-sm font-bold text-coral">Anketler yüklenemedi. Sayfayı yenile.</p>}
@@ -178,7 +188,7 @@ export default function Anketler() {
             <h2 className="mt-6 font-display text-xl font-extrabold">Bu haftanın anketleri</h2>
             {open.length === 0 && (
               <p className="mt-3 rounded-[20px] border-2 border-dashed border-ink/15 p-5 text-center text-sm text-ink/55">
-                Bu hafta henüz anket yayımlanmadı. Yeni anketler eklendikçe burada görünecek.
+                Bu haftanın anketleri hazırlanıyor. Birazdan sayfayı yenile.
               </p>
             )}
             <ul className="mt-3 grid gap-4">
@@ -194,7 +204,10 @@ export default function Anketler() {
                       </span>
                       <span className="text-xs text-ink/55">{range(poll)}</span>
                     </div>
-                    <h3 className="mt-3 font-display text-lg font-extrabold">{poll.question}</h3>
+                    {poll.category && CATEGORY[poll.category] && (
+                      <p className="mt-3 text-xs font-extrabold uppercase tracking-wide text-sea">{CATEGORY[poll.category]}</p>
+                    )}
+                    <h3 className={`${poll.category ? "mt-1" : "mt-3"} font-display text-lg font-extrabold`}>{poll.question}</h3>
                     <div className="mt-3 grid gap-2" role="radiogroup" aria-label={poll.question}>
                       {poll.options.map((option, i) => {
                         const on = done ? voted === i : choice[poll.id] === i;
@@ -255,7 +268,10 @@ export default function Anketler() {
                 <ul className="mt-2 grid gap-4">
                   {items.map((poll) => (
                     <li key={poll.id} className="rounded-[20px] bg-card p-5 shadow-sm">
-                      <h3 className="font-display text-lg font-extrabold">{poll.question}</h3>
+                      {poll.category && CATEGORY[poll.category] && (
+                        <p className="text-xs font-extrabold uppercase tracking-wide text-sea">{CATEGORY[poll.category]}</p>
+                      )}
+                      <h3 className="mt-1 font-display text-lg font-extrabold">{poll.question}</h3>
                       <div className="mt-3 grid gap-2">
                         {poll.options.map((option, i) => {
                           const pct = results[poll.id]?.[i] ?? 0;

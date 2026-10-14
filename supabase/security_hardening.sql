@@ -234,7 +234,7 @@ notify pgrst, 'reload schema';
 -- DENETİM SORGULARI (isteğe bağlı, çalıştırıp sonucu kontrol et)
 --
 -- a) Anonim (girişsiz) kullanıcının çağırabildiği fonksiyonlar. Beklenen: tr_norm, bigocuk_today,
---    bigocuk_default_avatar ve get_poll_results dışında bir şey GÖRÜNMEMELİ.
+--    bigocuk_default_avatar, get_poll_results ve poll_ensure_week dışında bir şey GÖRÜNMEMELİ.
 -- select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
 --  where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute') order by 1;
 --

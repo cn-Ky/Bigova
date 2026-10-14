@@ -86,7 +86,7 @@ export const GUIDE: TipSection[] = [
     id: "sosyal", title: "Sosyal & Kulüp", icon: "sosyal",
     tips: [
       { icon: "friends", title: "Topluluğa katıl", text: "Bölümünün ve sınıfının topluluğunda gönderi paylaş, soru sor, çalışma grubu kur; arkadaş ekle ve mesajlaş.", href: "/topluluk", cta: "Topluluk" },
-      { icon: "poll", title: "Anket doldur, Bigcoin kazan", text: "Her anket 1 Bigcoin kazandırır. Biga öğrencilerinin neler düşündüğünü haftalık sonuçlarda gör.", href: "/bigocuk/anketler", cta: "Anketler" },
+      { icon: "poll", title: "Anket doldur, Bigcoin kazan", text: "Her hafta yeni anketler gelir, her biri 1 Bigcoin kazandırır. Öğrencilerin ne düşündüğünü haftalık sonuçlarda gör.", href: "/bigocuk/anketler", cta: "Anketler" },
       { icon: "magazine", title: "Dergiyi oku", text: "Öğrenci dergisinde kampüs ve şehir yaşamıyla ilgili yazılara göz at.", href: "/dergi", cta: "Dergi" },
       { icon: "game", title: "Yürü, Bigcoin kazan", text: "Bigocuk'ta adım atarak Bigcoin topla, avatarını giydir.", href: "/bigocuk", cta: "Bigocuk" },
       { icon: "club", title: "Bir kulübe katıl", text: "Yeni insanlarla tanışmanın ve CV'ni güçlendirmenin en kolay yollarından biri bir kulüp ya da topluluğa katılmak." },
