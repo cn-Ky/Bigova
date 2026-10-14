@@ -1,34 +1,28 @@
 "use client";
-import { EMAIL_RE, MIN_PASSWORD, OTP_RE, formatPhone, normalizePhone } from "@/lib/authConfig";
+import { EMAIL_RE, MIN_PASSWORD, OTP_RE } from "@/lib/authConfig";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CodeField, MethodTabs, PhoneField, Status, authError, field, type Method, type Msg } from "./parts";
+import { CodeField, Status, authError, field, type Msg } from "./parts";
 
 type Step = "ask" | "code" | "new";
 
 /**
- * Şifremi unuttum: 1) e-posta/telefon → 2) gelen kod → 3) yeni şifre.
+ * Şifremi unuttum: 1) e-posta → 2) gelen kod → 3) yeni şifre.
  * Kod doğrulanınca oturum açılır; yeni şifre auth.updateUser ile kaydedilir.
  * Hesap var/yok bilgisi sızmasın diye ilk adımda her zaman aynı mesaj gösterilir.
  */
 export default function ForgotPassword({
-  initialMethod,
   initialEmail,
-  initialPhone,
   onBack,
 }: {
-  initialMethod: Method;
   initialEmail: string;
-  initialPhone: string;
   onBack: () => void;
 }) {
   const router = useRouter();
-  const [method, setMethod] = useState<Method>(initialMethod);
   const [email, setEmail] = useState(initialEmail);
-  const [phone, setPhone] = useState(initialPhone);
   const [step, setStep] = useState<Step>("ask");
-  const [target, setTarget] = useState(""); // kodun gönderildiği, normalize edilmiş adres
+  const [target, setTarget] = useState(""); // kodun gönderildiği e-posta
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [again, setAgain] = useState("");
@@ -44,39 +38,27 @@ export default function ForgotPassword({
   }, [cooldown]);
 
   /** Kod gönderir. Başarıysa true (hesap yoksa da true: bilgi sızdırmamak için). */
-  async function sendCode(to: string, via: Method): Promise<boolean> {
-    const sb = supabaseBrowser();
-    const { error } =
-      via === "email"
-        ? await sb.auth.resetPasswordForEmail(to)
-        : await sb.auth.signInWithOtp({ phone: to, options: { shouldCreateUser: false } });
+  async function sendCode(to: string): Promise<boolean> {
+    const { error } = await supabaseBrowser().auth.resetPasswordForEmail(to);
     if (!error) return true;
-    // Kayıtsız numara: Supabase "signups not allowed" döner; hesap varlığını belli etme.
-    if (via === "phone" && (error.code === "otp_disabled" || /signups? not allowed/i.test(error.message))) return true;
     setMsg({ t: authError(error, "Kod gönderilemedi"), ok: false });
     return false;
   }
 
   async function ask(e: React.FormEvent) {
     e.preventDefault();
-    const to = method === "email" ? email.trim().toLowerCase() : normalizePhone(phone);
-    if (method === "email" && !EMAIL_RE.test(to ?? ""))
-      return setMsg({ t: "Geçerli bir e-posta adresi yaz.", ok: false });
-    if (method === "phone" && !to)
-      return setMsg({ t: "Geçerli bir telefon numarası yaz. Örn: 5XX XXX XX XX", ok: false });
+    const to = email.trim().toLowerCase();
+    if (!EMAIL_RE.test(to)) return setMsg({ t: "Geçerli bir e-posta adresi yaz.", ok: false });
     setBusy(true);
     setMsg(null);
     try {
-      if (await sendCode(to!, method)) {
-        setTarget(to!);
+      if (await sendCode(to)) {
+        setTarget(to);
         setStep("code");
         setCode("");
         setCooldown(60);
         setMsg({
-          t:
-            method === "email"
-              ? "Bu e-posta kayıtlıysa doğrulama kodu gönderildi. Spam klasörünü de kontrol et."
-              : "Bu numara kayıtlıysa doğrulama kodu SMS ile gönderildi.",
+          t: "Bu e-posta kayıtlıysa doğrulama kodu gönderildi. Spam klasörünü de kontrol et.",
           ok: true,
         });
       }
@@ -91,7 +73,7 @@ export default function ForgotPassword({
     setBusy(true);
     setMsg(null);
     try {
-      if (await sendCode(target, method)) {
+      if (await sendCode(target)) {
         setCooldown(60);
         setMsg({ t: "Yeni kod gönderildi.", ok: true });
       }
@@ -108,11 +90,11 @@ export default function ForgotPassword({
     setBusy(true);
     setMsg(null);
     try {
-      const sb = supabaseBrowser();
-      const { error } =
-        method === "email"
-          ? await sb.auth.verifyOtp({ email: target, token: code, type: "recovery" })
-          : await sb.auth.verifyOtp({ phone: target, token: code, type: "sms" });
+      const { error } = await supabaseBrowser().auth.verifyOtp({
+        email: target,
+        token: code,
+        type: "recovery",
+      });
       if (error) {
         setMsg({
           t:
@@ -167,7 +149,6 @@ export default function ForgotPassword({
 
   const btn =
     "rounded-2xl bg-sea p-4 font-display text-lg font-bold text-white active:scale-[.98] disabled:opacity-60";
-  const sentTo = method === "email" ? target : formatPhone(target);
 
   return (
     <>
@@ -176,35 +157,24 @@ export default function ForgotPassword({
           {step === "new" ? "Yeni şifreni belirle" : "Şifreni mi unuttun?"}
         </h1>
         <p className="text-sm text-ink/70">
-          {step === "ask" && "Hesabına bağlı e-posta veya telefona bir kod göndereceğiz."}
-          {step === "code" && `${sentTo} adresine gönderilen kodu yaz.`}
+          {step === "ask" && "Hesabına bağlı e-postaya bir kod göndereceğiz."}
+          {step === "code" && `${target} adresine gönderilen kodu yaz.`}
           {step === "new" && "Kod doğrulandı. Yeni şifreni yaz."}
         </p>
       </div>
       <div className="mx-auto mt-6 grid max-w-md gap-3 rounded-[28px] bg-card p-5 shadow-sm">
         {step === "ask" && (
           <form onSubmit={ask} className="grid gap-3">
-            <MethodTabs
-              value={method}
-              onChange={(m) => {
-                setMethod(m);
-                setMsg(null);
-              }}
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="E-posta adresi"
+              required
+              className={field}
             />
-            {method === "email" ? (
-              <input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                placeholder="E-posta adresi"
-                required
-                className={field}
-              />
-            ) : (
-              <PhoneField value={phone} onChange={setPhone} />
-            )}
             <button type="submit" disabled={busy} className={btn}>
               {busy ? "Gönderiliyor…" : "Kod gönder"}
             </button>
@@ -233,7 +203,7 @@ export default function ForgotPassword({
               }}
               className="text-sm font-bold underline"
             >
-              {method === "email" ? "E-postayı değiştir" : "Numarayı değiştir"}
+              E-postayı değiştir
             </button>
           </form>
         )}

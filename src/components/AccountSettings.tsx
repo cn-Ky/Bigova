@@ -30,9 +30,8 @@ function Status({ msg }: { msg: Msg }) {
 }
 
 /** Mevcut şifreyi doğrular (e-posta/şifre değişikliğinden önce hesabı korur). */
-type Identity = { email: string } | { phone: string };
-async function verifyPassword(identity: Identity, password: string) {
-  const { error } = await supabaseBrowser().auth.signInWithPassword({ ...identity, password });
+async function verifyPassword(email: string, password: string) {
+  const { error } = await supabaseBrowser().auth.signInWithPassword({ email, password });
   return !error;
 }
 
@@ -53,7 +52,7 @@ function EmailForm({ currentEmail }: { currentEmail: string }) {
     setBusy(true);
     setMsg(null);
     try {
-      if (!(await verifyPassword({ email: currentEmail }, password)))
+      if (!(await verifyPassword(currentEmail, password)))
         return setMsg({ t: "Mevcut şifre hatalı.", ok: false });
       const { error } = await supabaseBrowser().auth.updateUser(
         { email: next },
@@ -132,7 +131,7 @@ function EmailForm({ currentEmail }: { currentEmail: string }) {
   );
 }
 
-function PasswordForm({ identity }: { identity: Identity }) {
+function PasswordForm({ currentEmail }: { currentEmail: string }) {
   const [open, setOpen] = useState(false);
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -149,7 +148,7 @@ function PasswordForm({ identity }: { identity: Identity }) {
     setBusy(true);
     setMsg(null);
     try {
-      if (!(await verifyPassword(identity, current)))
+      if (!(await verifyPassword(currentEmail, current)))
         return setMsg({ t: "Mevcut şifre hatalı.", ok: false });
       const { error } = await supabaseBrowser().auth.updateUser({ password: next });
       if (error)
@@ -278,7 +277,7 @@ function PrivacyToggle({ userId }: { userId: string }) {
 
 /** Ayarlar > Hesap: profil, e-posta/şifre değiştirme ve çıkış (mobil dahil tüm ekranlarda). */
 export default function AccountSettings() {
-  const { user, fullName, email, phone, signOut } = useUser();
+  const { user, fullName, email, signOut } = useUser();
   const router = useRouter();
   const ids = useMemo(() => (user ? [user.id] : []), [user]);
   const avatars = useAvatars(ids);
@@ -310,14 +309,14 @@ export default function AccountSettings() {
         <UserAvatar name={fullName ?? ""} avatar={avatars[user.id]} size={52} />
         <span className="min-w-0 flex-1">
           <b className="block truncate">{fullName}</b>
-          <span className="block truncate text-sm opacity-70">{email ?? phone}</span>
+          <span className="block truncate text-sm opacity-70">{email}</span>
           <span className="text-xs font-bold text-sea">Profilimi gör</span>
         </span>
         <FontAwesomeIcon icon={faChevronRight} className="opacity-40" />
       </Link>
       <PrivacyToggle userId={user.id} />
       {email && <EmailForm currentEmail={email} />}
-      {(email || phone) && <PasswordForm identity={email ? { email } : { phone: phone! }} />}
+      {email && <PasswordForm currentEmail={email} />}
       <button
         type="button"
         onClick={async () => {
