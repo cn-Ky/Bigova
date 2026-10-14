@@ -1823,6 +1823,65 @@ select:focus-visible {
   background: #4d7c5a;
   color: #fff;
 }
+.biga-map-pin--halkbank {
+  background: #1f5fa8;
+  color: #fff;
+}
+.biga-map-pin--akbank {
+  background: #d4252b;
+  color: #fff;
+}
+.biga-map-pin--yapikredi {
+  background: #1d4f91;
+  color: #fff;
+}
+.biga-map-pin--denizbank {
+  background: #0a8bd0;
+  color: #fff;
+}
+.biga-map-pin--qnb {
+  background: #6a2c91;
+  color: #fff;
+}
+.biga-map-pin--water {
+  background: #2a9fd6;
+  color: #fff;
+}
+.biga-map-pin--office {
+  background: #5d6b82;
+  color: #fff;
+}
+.biga-map-pin--beauty {
+  background: #c9558f;
+  color: #fff;
+}
+.biga-map-pin--auto {
+  background: #6b6f76;
+  color: #fff;
+}
+.biga-map-cluster {
+  display: grid;
+  place-items: center;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: rgb(var(--sea));
+  color: #fff;
+  font-weight: 900;
+  box-shadow: 0 3px 12px rgb(8 29 40 / 0.4);
+}
+.biga-map-cluster span {
+  font-size: 0.8rem;
+  line-height: 1;
+}
+.biga-map-cluster--md {
+  background: rgb(var(--coral));
+}
+.biga-map-cluster--lg {
+  background: rgb(var(--deep));
+}
+.biga-map-cluster--lg span {
+  font-size: 0.9rem;
+}
 .biga-map-bank-logo {
   font-family: var(--f-display), sans-serif;
   font-size: 1rem;

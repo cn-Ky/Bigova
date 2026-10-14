@@ -1,6 +1,8 @@
 "use client";
 
 import L from "leaflet";
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   MapContainer,
@@ -9,7 +11,6 @@ import {
   TileLayer,
   ZoomControl,
   useMap,
-  useMapEvents,
 } from "react-leaflet";
 import { BIGA_CENTER, kindTier, type MapPlace, type PlaceKind } from "@/lib/mapPlaces";
 
@@ -36,8 +37,6 @@ const TILE_SOURCES = [
   },
 ] as const;
 
-const MAX_MARKERS = 350;
-
 export default function MapCanvas({
   places,
   selected,
@@ -47,7 +46,6 @@ export default function MapCanvas({
   routeEnds,
   userPosition,
   focus,
-  showAll,
 }: {
   places: MapPlace[];
   selected: MapPlace | null;
@@ -58,8 +56,6 @@ export default function MapCanvas({
   routeEnds: { origin: MapPlace | null; destination: MapPlace | null };
   userPosition: [number, number] | null;
   focus: MapFocus | null;
-  /** Filtre/arama aktifken zoom'a göre gizlemeyi kapatır */
-  showAll: boolean;
 }) {
   const [tileIndex, setTileIndex] = useState(0);
   const tileErrors = useRef(0);
@@ -115,12 +111,7 @@ export default function MapCanvas({
           />
         </>
       )}
-      <ViewportMarkers
-        places={places}
-        selected={selected}
-        onSelect={onSelect}
-        showAll={showAll}
-      />
+      <PlaceLayer places={places} selected={selected} onSelect={onSelect} />
       {route && routeEnds.origin && (
         <Marker
           position={[routeEnds.origin.lat, routeEnds.origin.lon]}
@@ -179,71 +170,106 @@ function MapController({
   return null;
 }
 
-type View = { bounds: L.LatLngBounds; zoom: number };
+/** Küçük sonuç kümelerinde (ör. ATM filtresi) kümeleme kapalı; hepsi tek tek görünür. */
+const SMALL_SET = 150;
+/** Bu zoom ve üstünde hiçbir nokta kümelenmez (sokak seviyesi). */
+const STREET_ZOOM = 16;
+
+function clusterIcon(cluster: L.MarkerCluster) {
+  const count = cluster.getChildCount();
+  const size = count < 10 ? "sm" : count < 60 ? "md" : "lg";
+  const px = size === "sm" ? 38 : size === "md" ? 46 : 54;
+  return L.divIcon({
+    html: `<span>${count}</span>`,
+    className: `biga-map-cluster biga-map-cluster--${size}`,
+    iconSize: L.point(px, px),
+  });
+}
 
 /**
- * Yalnızca görünen alandaki noktaları çizer; uzaklaştıkça önemsiz noktaları gizler.
- * Binlerce DOM marker'ı yerine en fazla MAX_MARKERS tane çizilir.
+ * Tüm noktaları çizer: hiçbiri gizlenmez. Yoğun alanlarda yakın noktalar sayılı kümelere toplanır;
+ * yakınlaştıkça (veya kümeye dokununca) tek tek açılır. Marker'lar yer nesnesine göre önbelleğe alınır.
  */
-function ViewportMarkers({
+function PlaceLayer({
   places,
   selected,
   onSelect,
-  showAll,
 }: {
   places: MapPlace[];
   selected: MapPlace | null;
   onSelect: (place: MapPlace) => void;
-  showAll: boolean;
 }) {
   const map = useMap();
-  const [view, setView] = useState<View>(() => ({
-    bounds: map.getBounds(),
-    zoom: map.getZoom(),
-  }));
-  const update = useCallback(
-    () => setView({ bounds: map.getBounds(), zoom: map.getZoom() }),
-    [map],
-  );
-  useMapEvents({ moveend: update, zoomend: update, resize: update });
-  // Harita ilk yerleştiğinde gerçek sınırları al.
+  const markers = useRef(new WeakMap<MapPlace, L.Marker>());
+  const onSelectRef = useRef(onSelect);
+  const selectedRef = useRef<MapPlace | null>(selected);
+  const lastSelected = useRef<MapPlace | null>(null);
+
   useEffect(() => {
-    map.whenReady(update);
-  }, [map, update]);
+    onSelectRef.current = onSelect;
+  }, [onSelect]);
 
-  const visible = useMemo(() => {
-    const padded = view.bounds.pad(0.25);
-    const minTier = showAll || view.zoom >= 16 ? 3 : view.zoom >= 14 ? 2 : 1;
-    const inView = places.filter(
-      (place) =>
-        padded.contains([place.lat, place.lon]) &&
-        (showAll || kindTier(place.kind) <= minTier),
-    );
-    inView.sort((a, b) => kindTier(a.kind) - kindTier(b.kind));
-    const limited = inView.slice(0, MAX_MARKERS);
-    if (selected && !limited.some((place) => place.id === selected.id))
-      limited.push(selected);
-    return limited;
-  }, [places, selected, showAll, view]);
-
-  return (
-    <>
-      {visible.map((place) => {
-        const isSelected = selected?.id === place.id;
-        return (
-          <Marker
-            key={place.id}
-            position={[place.lat, place.lon]}
-            icon={makeIcon(place.kind, isSelected)}
-            zIndexOffset={isSelected ? 1000 : -kindTier(place.kind) * 10}
-            eventHandlers={{ click: () => onSelect(place) }}
-            title={place.name}
-            alt={place.name}
-          />
-        );
-      })}
-    </>
+  // Seçili yer filtre dışında kalsa bile haritada görünsün.
+  const layerPlaces = useMemo(
+    () => (selected && !places.includes(selected) ? [...places, selected] : places),
+    [places, selected],
   );
+
+  useEffect(() => {
+    const small = layerPlaces.length <= SMALL_SET;
+    const group = L.markerClusterGroup({
+      chunkedLoading: true,
+      showCoverageOnHover: false,
+      spiderfyOnMaxZoom: true,
+      animateAddingMarkers: false,
+      maxClusterRadius: (zoom) => (zoom >= 15 ? 36 : 54),
+      disableClusteringAtZoom: small ? 12 : STREET_ZOOM,
+      iconCreateFunction: clusterIcon,
+    });
+    const list: L.Marker[] = [];
+    for (const place of layerPlaces) {
+      let marker = markers.current.get(place);
+      if (!marker) {
+        marker = L.marker([place.lat, place.lon], {
+          icon: makeIcon(place.kind, false),
+          title: place.name,
+          alt: place.name,
+          zIndexOffset: -kindTier(place.kind) * 10,
+        });
+        marker.on("click", () => onSelectRef.current(place));
+        markers.current.set(place, marker);
+      }
+      const isSelected = selectedRef.current === place;
+      marker.setIcon(makeIcon(place.kind, isSelected));
+      marker.setZIndexOffset(isSelected ? 1000 : -kindTier(place.kind) * 10);
+      list.push(marker);
+    }
+    group.addLayers(list);
+    map.addLayer(group);
+    return () => {
+      map.removeLayer(group);
+      group.clearLayers();
+    };
+  }, [map, layerPlaces]);
+
+  // Seçim değişince yalnızca iki marker'ın simgesini güncelle (katmanı yeniden kurma).
+  useEffect(() => {
+    selectedRef.current = selected;
+    const previous = lastSelected.current;
+    if (previous && previous !== selected) {
+      const marker = markers.current.get(previous);
+      marker?.setIcon(makeIcon(previous.kind, false));
+      marker?.setZIndexOffset(-kindTier(previous.kind) * 10);
+    }
+    if (selected) {
+      const marker = markers.current.get(selected);
+      marker?.setIcon(makeIcon(selected.kind, true));
+      marker?.setZIndexOffset(1000);
+    }
+    lastSelected.current = selected;
+  }, [selected]);
+
+  return null;
 }
 
 const paths: Record<PlaceKind, string> = {
@@ -280,6 +306,17 @@ const paths: Record<PlaceKind, string> = {
   vakifbank:
     '<path d="M4 20h16M6 17h12M7 17V9m5 8V9m5 8V9M4 7l8-4 8 4v2H4z"/><path d="M10 6h4"/>',
   bank: '<rect x="4" y="9" width="16" height="11" rx="1"/><path d="m3 8 9-5 9 5M8 12v5m4-5v5m4-5v5"/>',
+  halkbank: '<rect x="4" y="9" width="16" height="11" rx="1"/><path d="m3 8 9-5 9 5M8 12v5m4-5v5m4-5v5"/>',
+  akbank: '<rect x="4" y="9" width="16" height="11" rx="1"/><path d="m3 8 9-5 9 5M8 12v5m4-5v5m4-5v5"/>',
+  yapikredi: '<rect x="4" y="9" width="16" height="11" rx="1"/><path d="m3 8 9-5 9 5M8 12v5m4-5v5m4-5v5"/>',
+  denizbank: '<rect x="4" y="9" width="16" height="11" rx="1"/><path d="m3 8 9-5 9 5M8 12v5m4-5v5m4-5v5"/>',
+  qnb: '<rect x="4" y="9" width="16" height="11" rx="1"/><path d="m3 8 9-5 9 5M8 12v5m4-5v5m4-5v5"/>',
+  water: '<path d=\"M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z\"/>',
+  office:
+    '<rect x=\"3\" y=\"7\" width=\"18\" height=\"13\" rx=\"2\"/><path d=\"M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18\"/>',
+  beauty:
+    '<circle cx=\"6\" cy=\"6\" r=\"3\"/><circle cx=\"6\" cy=\"18\" r=\"3\"/><path d=\"M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12\"/>',
+  auto: '<path d=\"M14.7 6.3a4 4 0 0 0-5.4 5.1L3 17.7 6.3 21l6.3-6.3a4 4 0 0 0 5.1-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6Z\"/>',
   atm: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8v4H8zm1 8h6m-6 3h4"/>',
   bus: '<path d="M5 16V7c0-2 1-3 3-3h8c2 0 3 1 3 3v9M5 12h14M7 16h10M8 19h.01M16 19h.01"/>',
   park: '<path d="M12 21v-8m0 0c-5 0-7-3-7-6 4 0 6 2 7 5 1-5 4-7 8-7 0 5-2 8-8 8z"/>',
@@ -293,6 +330,11 @@ const bankLogos: Partial<Record<PlaceKind, string>> = {
   garanti: "G",
   isbank: "İ",
   vakifbank: "V",
+  halkbank: "H",
+  akbank: "A",
+  yapikredi: "Y",
+  denizbank: "D",
+  qnb: "Q",
 };
 
 // İkonları türe göre önbelleğe al: her render'da DOM'u yeniden kurmamak için.

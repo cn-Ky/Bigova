@@ -8,9 +8,12 @@ import {
 import {
   faArrowRightArrowLeft,
   faBus,
+  faCartShopping,
   faClock,
+  faGasPump,
   faGlobe,
   faGraduationCap,
+  faHeartPulse,
   faLandmark,
   faLocationDot,
   faMagnifyingGlass,
@@ -24,6 +27,7 @@ import {
   faStore,
   faTag,
   faTree,
+  faUtensils,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -51,19 +55,41 @@ type RouteState = {
   mode: Mode;
 };
 
+type FilterId =
+  | "all"
+  | "atm"
+  | "food"
+  | "market"
+  | "health"
+  | "fuel"
+  | "business"
+  | "education"
+  | "landmark"
+  | "park"
+  | "service"
+  | "bus";
+
+const isHealth = (p: MapPlace) => p.kind === "pharmacy" || p.kind === "health";
+const isFuel = (p: MapPlace) => p.kind === "fuel" || p.kind === "charging";
+
 const filters: {
-  id: PlaceCategory | "all";
+  id: FilterId;
   label: string;
   icon: typeof faBus;
+  match: (place: MapPlace) => boolean;
 }[] = [
-  { id: "all", label: "Tümü", icon: faMapLocationDot },
-  { id: "landmark", label: "Kültür", icon: faLandmark },
-  { id: "park", label: "Parklar", icon: faTree },
-  { id: "business", label: "İşletmeler", icon: faStore },
-  { id: "education", label: "Eğitim", icon: faGraduationCap },
-  { id: "service", label: "Hizmetler", icon: faSquareParking },
-  { id: "bus", label: "Duraklar", icon: faBus },
-  { id: "atm", label: "ATM", icon: faMoneyBillWave },
+  { id: "all", label: "Tümü", icon: faMapLocationDot, match: () => true },
+  { id: "atm", label: "ATM & Banka", icon: faMoneyBillWave, match: (p) => p.category === "atm" },
+  { id: "food", label: "Yeme-İçme", icon: faUtensils, match: (p) => p.kind === "cafe" || p.kind === "restaurant" },
+  { id: "market", label: "Market", icon: faCartShopping, match: (p) => p.kind === "market" || p.kind === "mall" },
+  { id: "health", label: "Sağlık & Eczane", icon: faHeartPulse, match: isHealth },
+  { id: "fuel", label: "Akaryakıt & Şarj", icon: faGasPump, match: isFuel },
+  { id: "business", label: "Tüm işletmeler", icon: faStore, match: (p) => p.category === "business" || p.kind === "market" || p.kind === "pharmacy" || p.kind === "fuel" },
+  { id: "education", label: "Eğitim", icon: faGraduationCap, match: (p) => p.category === "education" },
+  { id: "landmark", label: "Kültür", icon: faLandmark, match: (p) => p.category === "landmark" },
+  { id: "park", label: "Parklar", icon: faTree, match: (p) => p.category === "park" },
+  { id: "service", label: "Hizmetler", icon: faSquareParking, match: (p) => p.category === "service" },
+  { id: "bus", label: "Duraklar", icon: faBus, match: (p) => p.category === "bus" },
 ];
 
 const groupOrder: PlaceCategory[] = [
@@ -83,8 +109,7 @@ export default function BigaMapPage() {
   const [stale, setStale] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
-  const [activeFilter, setActiveFilter] =
-    useState<(typeof filters)[number]["id"]>("all");
+  const [activeFilter, setActiveFilter] = useState<FilterId>("all");
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [selected, setSelected] = useState<MapPlace | null>(null);
@@ -142,23 +167,22 @@ export default function BigaMapPage() {
   const byId = useMemo(() => new Map(places.map((p) => [p.id, p])), [places]);
 
   const counts = useMemo(() => {
-    const result: Record<string, number> = { all: places.length };
-    for (const place of places)
-      result[place.category] = (result[place.category] ?? 0) + 1;
+    const result: Record<string, number> = {};
+    for (const filter of filters)
+      result[filter.id] = places.reduce((n, place) => n + (filter.match(place) ? 1 : 0), 0);
     return result;
   }, [places]);
 
   const visiblePlaces = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("tr");
+    const match = filters.find((filter) => filter.id === activeFilter)?.match ?? (() => true);
     return places.filter((place) => {
-      const matchesFilter =
-        activeFilter === "all" || place.category === activeFilter;
       const matchesQuery =
         !normalized ||
-        `${place.name} ${place.detail} ${categoryName(place.category)}`
+        `${place.name} ${place.detail} ${place.address ?? ""} ${categoryName(place.category)}`
           .toLocaleLowerCase("tr")
           .includes(normalized);
-      return matchesFilter && matchesQuery;
+      return matchesQuery && match(place);
     });
   }, [activeFilter, places, query]);
 
@@ -565,7 +589,6 @@ export default function BigaMapPage() {
           routeEnds={routeEnds}
           userPosition={userPosition}
           focus={focus}
-          showAll={activeFilter !== "all" || query.trim() !== ""}
         />
 
         <button

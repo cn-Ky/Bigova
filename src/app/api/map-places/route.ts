@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { supabasePublic } from "@/lib/supabase/public";
+import { CUSTOM_PLACES } from "@/lib/customPlaces";
 import {
   OVERPASS_ENDPOINTS,
   buildOverpassQuery,
-  elementToPlace,
+  dedupePlaces,
+  elementToPlaces,
   kindFromBusinessCategory,
   type MapPlace,
   type OverpassElement,
@@ -11,9 +13,11 @@ import {
 
 // Build sırasında statik üretilmesin; önbelleği Cache-Control ile yönetiyoruz.
 export const dynamic = "force-dynamic";
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 const FRESH_MS = 6 * 60 * 60 * 1000;
+/** Tüm Overpass denemeleri için toplam süre bütçesi (maxDuration'ın altında kalmalı). */
+const OSM_BUDGET_MS = 48_000;
 let lastGood: { at: number; places: MapPlace[] } | null = null;
 // Önbellek soğukken eşzamanlı istekler her biri Overpass'a gitmesin (hem yavaş hem Overpass'ı kızdırır).
 let inflight: Promise<MapPlace[]> | null = null;
@@ -26,8 +30,11 @@ const fetchOsmShared = () => {
 
 async function fetchOsm(): Promise<MapPlace[]> {
   const body = `data=${encodeURIComponent(buildOverpassQuery())}`;
+  const deadline = Date.now() + OSM_BUDGET_MS;
   let lastError: unknown;
   for (const endpoint of OVERPASS_ENDPOINTS) {
+    const left = deadline - Date.now();
+    if (left < 4000) break;
     try {
       const response = await fetch(endpoint, {
         method: "POST",
@@ -38,25 +45,41 @@ async function fetchOsm(): Promise<MapPlace[]> {
         },
         body,
         cache: "no-store",
-        signal: AbortSignal.timeout(14000),
+        signal: AbortSignal.timeout(Math.min(left, 26_000)),
       });
       if (!response.ok) throw new Error(`Overpass ${response.status}`);
       const data = (await response.json()) as { elements?: OverpassElement[] };
       const seen = new Set<string>();
       const places: MapPlace[] = [];
       for (const element of data.elements ?? []) {
-        const place = elementToPlace(element);
-        if (!place || seen.has(place.id)) continue;
-        seen.add(place.id);
-        places.push(place);
+        for (const place of elementToPlaces(element)) {
+          if (seen.has(place.id)) continue;
+          seen.add(place.id);
+          places.push(place);
+        }
       }
-      if (places.length) return places;
+      if (places.length) return dedupePlaces(places);
       throw new Error("Overpass boş yanıt döndü");
     } catch (error) {
       lastError = error;
     }
   }
   throw lastError ?? new Error("Overpass erişilemiyor");
+}
+
+/** Canlı OSM alınamazsa, `npm run map:snapshot` ile üretilen kayıtlı noktaları kullan. */
+async function fetchSnapshot(origin: string): Promise<MapPlace[]> {
+  try {
+    const response = await fetch(`${origin}/data/biga-places.json`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!response.ok) return [];
+    const data = (await response.json()) as { places?: MapPlace[] };
+    return Array.isArray(data.places) ? data.places : [];
+  } catch {
+    return [];
+  }
 }
 
 async function fetchBigovaBusinesses(): Promise<MapPlace[]> {
@@ -71,7 +94,7 @@ async function fetchBigovaBusinesses(): Promise<MapPlace[]> {
       .select("*")
       .not("lat", "is", null)
       .not("lng", "is", null)
-      .limit(500);
+      .limit(2000);
     if (error || !data) return [];
     return data.flatMap((b): MapPlace[] => {
       if (typeof b.lat !== "number" || typeof b.lng !== "number") return [];
@@ -101,7 +124,7 @@ async function fetchBigovaBusinesses(): Promise<MapPlace[]> {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const [osm, own] = await Promise.all([
     fetchOsmShared().then(
       (places) => ({ places, ok: true as const }),
@@ -113,19 +136,19 @@ export async function GET() {
   let osmPlaces = osm.places;
   let stale = false;
   if (!osm.ok) {
-    if (lastGood) {
-      osmPlaces = lastGood.places;
-      stale = true;
-    }
+    stale = true;
+    if (lastGood) osmPlaces = lastGood.places;
+    else osmPlaces = await fetchSnapshot(new URL(request.url).origin);
   } else {
     lastGood = { at: Date.now(), places: osm.places };
   }
 
-  // Bigova'da kayıtlı işletme, aynı isimdeki OSM noktasının yerini alır.
+  // Bigova'da kayıtlı / elle eklenen yer, aynı isimdeki OSM noktasının yerini alır.
   const norm = (s: string) => s.toLocaleLowerCase("tr").replace(/\s+/g, " ").trim();
-  const ownNames = new Set(own.map((p) => norm(p.name)));
+  const ours = [...own, ...CUSTOM_PLACES];
+  const ownNames = new Set(ours.map((p) => norm(p.name)));
   const places = [
-    ...own,
+    ...ours,
     ...osmPlaces.filter((p) => !ownNames.has(norm(p.name))),
   ];
 
