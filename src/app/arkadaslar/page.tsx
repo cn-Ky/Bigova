@@ -2,7 +2,6 @@
 import SearchBox from "@/components/SearchBox";
 import UserAvatar from "@/components/bigocuk/UserAvatar";
 import BlockedUsers from "@/components/BlockedUsers";
-import { CommunityTabs } from "@/components/community/CommunityHeader";
 import UnreadBadge from "@/components/UnreadBadge";
 import { useUnread } from "@/components/NotificationProvider";
 import { useAvatars } from "@/lib/bigocuk/useAvatars";
@@ -308,7 +307,6 @@ export default function Arkadaslar() {
       <header className="rounded-b-[28px] bg-sea px-5 pb-5 pt-[max(1.25rem,env(safe-area-inset-top))] text-white shadow-lg">
         <h1 className="font-display text-2xl font-extrabold">Arkadaşlar</h1>
         <p className="text-sm text-white/75">Öğrenci ara, arkadaş ekle ve bire bir konuş.</p>
-        <CommunityTabs active="arkadaslar" className="mt-3" />
         <ul className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
           <li className="rounded-full bg-white/15 px-3 py-1.5">{friends.length} arkadaş</li>
           {incoming.length > 0 && <li className="rounded-full bg-coral px-3 py-1.5">{incoming.length} yeni istek</li>}

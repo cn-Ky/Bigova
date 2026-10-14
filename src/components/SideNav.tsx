@@ -8,7 +8,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
+import UserAvatar from "./bigocuk/UserAvatar";
+import { useAvatars } from "@/lib/bigocuk/useAvatars";
 import Mascot from "./Mascot";
 import CategoryGroup from "./CategoryGroup";
 import UnreadBadge from "./UnreadBadge";
@@ -81,7 +83,7 @@ function Item({ t, on }: { t: SideTab; on: boolean }) {
             className={`relative grid h-9 w-9 place-items-center rounded-xl ${on ? "bg-sun text-deep" : "bg-white/10"}`}
           >
             <FontAwesomeIcon icon={t.i} />
-            {t.href === "/topluluk" && <UnreadBadge className="absolute -right-1.5 -top-1.5 !h-4 !min-w-4 !text-[10px]" />}
+            {t.href === "/arkadaslar" && <UnreadBadge className="absolute -right-1.5 -top-1.5 !h-4 !min-w-4 !text-[10px]" />}
           </motion.span>
           <span className="side-item-label leading-tight">
             <b className="block font-display text-[17px]">{t.l}</b>
@@ -99,6 +101,8 @@ export default function SideNav() {
   const p = usePathname();
   const { user, name, email, signOut } = useUser();
   const active = categoryOf(p);
+  const avatarIds = useMemo(() => (user ? [user.id] : []), [user]);
+  const avatars = useAvatars(avatarIds);
   const { open, toggle } = useOpenCats("bigova-cats-nav", ["city"], active);
   const glow = (e: React.MouseEvent<HTMLElement>) => {
     const b = e.currentTarget.getBoundingClientRect();
@@ -169,21 +173,27 @@ export default function SideNav() {
         {user ? (
           <motion.div
             whileHover={{ scale: 1.02 }}
-            className="side-user-card flex items-center gap-3 rounded-2xl bg-white/15 p-3 backdrop-blur"
+            className="side-user-card relative flex items-center gap-3 rounded-2xl bg-white/15 p-3 backdrop-blur"
           >
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-sun font-display text-lg font-extrabold text-deep">
-              {(name ?? "?")[0].toUpperCase()}
-            </span>
-            <span className="side-user-text min-w-0 flex-1 leading-tight">
-              <b className="block truncate">{name}</b>
-              <span className="block truncate text-xs text-white/70">{email}</span>
-            </span>
+            {/* Tüm kutu profile gider: bağlantı kutuyu kaplar, çıkış düğmesi üstte kalır */}
+            <Link
+              href={`/profil/${user.id}`}
+              aria-label="Profilimi aç"
+              title="Profilimi aç"
+              className="flex min-w-0 flex-1 items-center gap-3 after:absolute after:inset-0 after:rounded-2xl after:content-['']"
+            >
+              <UserAvatar name={name ?? ""} avatar={avatars[user.id]} size={40} className="ring-2 ring-white/30" />
+              <span className="side-user-text min-w-0 flex-1 leading-tight">
+                <b className="block truncate">{name}</b>
+                <span className="block truncate text-xs text-white/70">{email}</span>
+              </span>
+            </Link>
             <motion.button
               whileTap={{ scale: 0.85 }}
               whileHover={{ rotate: -10 }}
               onClick={signOut}
               aria-label="Çıkış yap"
-              className="side-account-action grid h-9 w-9 place-items-center rounded-full bg-white/15"
+              className="side-account-action relative z-10 grid h-9 w-9 place-items-center rounded-full bg-white/15"
             >
               <FontAwesomeIcon icon={faRightFromBracket} />
             </motion.button>

@@ -1,6 +1,5 @@
 "use client";
 import Mascot from "@/components/Mascot";
-import UnreadBadge from "@/components/UnreadBadge";
 import { SPRING } from "./ui";
 import {
   faArrowLeft,
@@ -8,7 +7,6 @@ import {
   faComments,
   faNewspaper,
   faPeopleGroup,
-  faUserGroup,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
@@ -16,16 +14,15 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
-export type CommunityTab = "akis" | "topluluklar" | "soru" | "forum" | "arkadaslar";
+export type CommunityTab = "akis" | "topluluklar" | "soru" | "forum";
 const TABS: { id: CommunityTab; href: string; l: string; i: typeof faNewspaper }[] = [
   { id: "akis", href: "/topluluk", l: "Akış", i: faNewspaper },
   { id: "topluluklar", href: "/topluluk/topluluklar", l: "Topluluklar", i: faPeopleGroup },
   { id: "soru", href: "/topluluk/soru-cevap", l: "Soru-Cevap", i: faCircleQuestion },
   { id: "forum", href: "/topluluk/forum", l: "Forum", i: faComments },
-  { id: "arkadaslar", href: "/arkadaslar", l: "Arkadaşlar", i: faUserGroup },
 ];
 
-/** Topluluk bölümleri arasında gezinti (Arkadaşlar sayfasında da kullanılır). */
+/** Topluluk bölümleri arasında gezinti. */
 export function CommunityTabs({ active, className = "" }: { active: CommunityTab; className?: string }) {
   return (
     <nav aria-label="Topluluk bölümleri" className={`-mx-5 overflow-x-auto px-5 [scrollbar-width:none] ${className}`}>
@@ -42,7 +39,6 @@ export function CommunityTabs({ active, className = "" }: { active: CommunityTab
                 >
                   <FontAwesomeIcon icon={t.i} className="text-xs" />
                   {t.l}
-                  {t.id === "arkadaslar" && <UnreadBadge className="!static !ml-1 !h-4 !min-w-4 !text-[10px]" />}
                 </Link>
               </motion.div>
             </li>

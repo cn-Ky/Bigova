@@ -12,6 +12,7 @@ import {
   faLandmark,
   faMapLocationDot,
   faNewspaper,
+  faPeopleGroup,
   faPoll,
   faScrewdriverWrench,
   faStopwatch,
@@ -64,10 +65,16 @@ export const sideTabs = [
     hint: "Tesisatçı, elektrikçi, mobilyacı",
   },
   {
+    href: "/arkadaslar",
+    l: "Arkadaşlar",
+    i: faUserGroup,
+    hint: "Arkadaş ekle, mesajlaş",
+  },
+  {
     href: "/topluluk",
     l: "Topluluk",
-    i: faUserGroup,
-    hint: "Gönderi, soru-cevap, forum ve arkadaşlar",
+    i: faPeopleGroup,
+    hint: "Gönderi, soru-cevap ve forum",
   },
   {
     href: "/dergi",
@@ -122,4 +129,4 @@ export const sideTabs = [
 export type SideTab = (typeof sideTabs)[number] & { external?: boolean };
 export const settingsTab = tabs[4];
 export const isOn = (p: string, h: string) =>
-  h === "/" ? p === "/" : p.startsWith(h) || (h === "/topluluk" && p.startsWith("/arkadaslar"));
+  h === "/" ? p === "/" : p.startsWith(h);

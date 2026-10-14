@@ -23,7 +23,7 @@ export const WIDGETS: { id: WidgetId; label: string }[] = [
   { id: "news", label: "Biga duyuruları" },
   { id: "shortcuts", label: "Kısayollar" },
 ];
-export const DEFAULT_SHORTCUTS = ["/ders-programi", "/pomodoro", "/notlar", "/ulasim", "/topluluk", "https://ubys.comu.edu.tr/"];
+export const DEFAULT_SHORTCUTS = ["/ders-programi", "/pomodoro", "/notlar", "/ulasim", "/arkadaslar", "/topluluk", "https://ubys.comu.edu.tr/"];
 export const MAX_SHORTCUTS = 8;
 
 /** Kayıtlı tercihi bilinen widget'larla birleştirir: bilinmeyenler atılır, eksikler sona eklenir. */
@@ -42,7 +42,6 @@ export function normalizePrefs(raw: Partial<Prefs> | null | undefined): Prefs {
     Array.isArray(raw?.shortcuts) && raw!.shortcuts.length
       ? raw!.shortcuts
           .filter((s): s is string => typeof s === "string")
-          .map((s) => (s === "/arkadaslar" ? "/topluluk" : s)) // Arkadaşlar → Topluluk
           .filter((s, i, a) => a.indexOf(s) === i)
           .slice(0, MAX_SHORTCUTS)
       : DEFAULT_SHORTCUTS;
