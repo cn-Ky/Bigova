@@ -1,5 +1,6 @@
 "use client";
 import Mascot from "@/components/Mascot";
+import EventAnnouncement from "@/components/EventAnnouncement";
 import Weather from "@/components/Weather";
 import { useUnread } from "@/components/NotificationProvider";
 import PushControl from "@/components/PushControl";
@@ -10,11 +11,9 @@ import { useOpenCats } from "@/lib/useOpenCats";
 import { useUser } from "@/lib/useUser";
 import {
   faArrowRight,
-  faCalendarDays,
   faChevronDown,
   faMessage,
   faHand,
-  faLocationDot,
   faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -963,98 +962,7 @@ export default function Home() {
       <PushControl variant="banner" />
       <StudentHome />
 
-      <motion.section
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.12, duration: 0.45 }}
-        aria-labelledby="event-heading"
-        className="event-banner relative mx-5 mt-5 grid min-h-40 grid-cols-[minmax(0,1fr)_92px] items-center overflow-hidden rounded-[22px] px-5 py-5 text-white shadow-[0_12px_28px_rgba(7,38,56,.2)] md:grid-cols-[minmax(0,1fr)_180px] md:px-7"
-      >
-        <div className="relative z-10 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 text-[10px] font-extrabold uppercase tracking-[.12em] text-sun">
-            <FontAwesomeIcon icon={faCalendarDays} /> Etkinlik duyurusu{" "}
-            <span className="rounded-full bg-white/15 px-2 py-1 text-white/85">
-              Örnek
-            </span>
-          </div>
-          <h2
-            id="event-heading"
-            className="mt-2 max-w-2xl font-display text-xl font-extrabold leading-tight md:text-2xl"
-          >
-            Biga'da kampüs buluşması
-          </h2>
-          <p className="mt-1 max-w-xl text-sm text-white/75">
-            Yeni dönem, kulüpler ve kampüs etkinlikleri için duyurular burada.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs font-bold text-white/85">
-            <span>
-              <FontAwesomeIcon
-                icon={faCalendarDays}
-                className="mr-1.5 text-sun"
-              />
-              10 Ekim · 13.00
-            </span>
-            <span>
-              <FontAwesomeIcon
-                icon={faLocationDot}
-                className="mr-1.5 text-sun"
-              />
-              Kampüs meydanı
-            </span>
-          </div>
-        </div>
-        <svg
-          className="event-art relative z-10 ml-auto h-24 w-24 md:h-32 md:w-36"
-          viewBox="0 0 144 128"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M22 106h100"
-            stroke="white"
-            strokeOpacity=".4"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-          <path
-            d="M39 101V55l34-24 34 24v46"
-            fill="rgb(var(--sun))"
-            fillOpacity=".9"
-            stroke="white"
-            strokeWidth="3"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M53 101V70q0-7 7-7h26q7 0 7 7v31"
-            fill="rgb(var(--sea))"
-            stroke="white"
-            strokeWidth="3"
-          />
-          <path
-            d="M49 54h48M73 31v18"
-            stroke="white"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-          <path
-            d="m110 20 3 7 7 3-7 3-3 7-3-7-7-3 7-3zM27 39l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"
-            fill="white"
-          />
-          <path
-            d="M109 75h12v26h-12z"
-            fill="rgb(var(--coral))"
-            stroke="white"
-            strokeWidth="2"
-          />
-          <path
-            d="M115 75V57m0 0 11 5-11 5"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </motion.section>
+      <EventAnnouncement />
 
       <CategoryMenu />
 
