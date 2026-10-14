@@ -99,7 +99,7 @@ function Item({ t, on }: { t: SideTab; on: boolean }) {
 
 export default function SideNav() {
   const p = usePathname();
-  const { user, name, email, signOut } = useUser();
+  const { user, name, email, phone, signOut } = useUser();
   const active = categoryOf(p);
   const avatarIds = useMemo(() => (user ? [user.id] : []), [user]);
   const avatars = useAvatars(avatarIds);
@@ -185,7 +185,7 @@ export default function SideNav() {
               <UserAvatar name={name ?? ""} avatar={avatars[user.id]} size={40} className="ring-2 ring-white/30" />
               <span className="side-user-text min-w-0 flex-1 leading-tight">
                 <b className="block truncate">{name}</b>
-                <span className="block truncate text-xs text-white/70">{email}</span>
+                <span className="block truncate text-xs text-white/70">{email ?? phone}</span>
               </span>
             </Link>
             <motion.button

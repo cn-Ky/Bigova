@@ -52,8 +52,10 @@ export function useUser() {
     publish(null);
   };
   const meta = (user?.user_metadata ?? {}) as { first_name?: string; last_name?: string; name?: string };
-  const email = user?.email ?? undefined;
-  const fullName = [meta.first_name, meta.last_name].filter(Boolean).join(" ") || meta.name || email?.split("@")[0];
-  const name = meta.first_name || meta.name?.split(" ")[0] || email?.split("@")[0];
-  return { user, name, fullName, email, signOut };
+  const email = user?.email || undefined;
+  const phone = user?.phone ? `+${user.phone.replace(/^\+/, "")}` : undefined;
+  const fallback = email?.split("@")[0] ?? phone;
+  const fullName = [meta.first_name, meta.last_name].filter(Boolean).join(" ") || meta.name || fallback;
+  const name = meta.first_name || meta.name?.split(" ")[0] || fallback;
+  return { user, name, fullName, email, phone, signOut };
 }

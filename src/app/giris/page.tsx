@@ -3,15 +3,19 @@ import Mascot from "@/components/Mascot";
 import {
   EMAIL_RE,
   MIN_PASSWORD,
+  OTP_RE,
   REQUIRE_SCHOOL_MAIL,
   SCHOOL_MAIL,
+  formatPhone,
+  normalizePhone,
 } from "@/lib/authConfig";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import ForgotPassword from "./ForgotPassword";
+import { CodeField, MethodTabs, PhoneField, authError, field, type Method } from "./parts";
 
-const field = "rounded-2xl bg-foam p-4 field-ring";
 const clean = (s: string) => s.trim().replace(/\s+/g, " ");
 const REF_KEY = "bigova-ref";
 const cleanRef = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
@@ -29,6 +33,11 @@ export default function Giris() {
   const [canResend, setCanResend] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [refCode, setRefCode] = useState("");
+  const [method, setMethod] = useState<Method>("email");
+  const [phone, setPhone] = useState("");
+  const [view, setView] = useState<"form" | "otp" | "forgot">("form");
+  const [pendingPhone, setPendingPhone] = useState(""); // SMS kodu beklenen numara (E.164)
+  const [otp, setOtp] = useState("");
 
   useEffect(() => {
     // Davet bağlantısı: /giris?ref=KOD → kayıt formu açılır, kod hazır gelir
@@ -99,8 +108,134 @@ export default function Giris() {
     }
   }
 
+  /** Telefona SMS doğrulama kodu ister (kayıt sonrası veya doğrulanmamış numarayla giriş). */
+  async function sendSms(to: string) {
+    const { error } = await supabaseBrowser().auth.resend({ type: "sms", phone: to });
+    if (error) {
+      setMsg({ t: authError(error, "SMS gönderilemedi"), ok: false });
+      return false;
+    }
+    setCooldown(60);
+    return true;
+  }
+
+  async function submitPhone() {
+    const to = normalizePhone(phone);
+    if (!to) return setMsg({ t: "Geçerli bir telefon numarası yaz. Örn: 5XX XXX XX XX", ok: false });
+    if (password.length < MIN_PASSWORD)
+      return setMsg({ t: `Şifre en az ${MIN_PASSWORD} karakter olmalı.`, ok: false });
+    const first = clean(firstName);
+    const last = clean(lastName);
+    if (mode === "register" && (first.length < 2 || last.length < 2))
+      return setMsg({ t: "İsim ve soyisim en az 2 karakter olmalı.", ok: false });
+
+    setBusy(true);
+    setMsg(null);
+    try {
+      const sb = supabaseBrowser();
+      if (mode === "login") {
+        const { error } = await sb.auth.signInWithPassword({ phone: to, password });
+        if (!error) {
+          router.push("/");
+          router.refresh();
+        } else if (error.code === "phone_not_confirmed") {
+          // Numara daha önce doğrulanmamış: yeni kod gönder ve kod ekranına geç
+          if (await sendSms(to)) {
+            setPendingPhone(to);
+            setOtp("");
+            setView("otp");
+            setMsg({ t: "Numaran henüz doğrulanmamış. SMS ile yeni bir kod gönderdik.", ok: true });
+          }
+        } else {
+          setMsg({
+            t:
+              error.code === "invalid_credentials"
+                ? "Telefon veya şifre hatalı."
+                : authError(error, "Giriş yapılamadı"),
+            ok: false,
+          });
+        }
+      } else {
+        const { data, error } = await sb.auth.signUp({
+          phone: to,
+          password,
+          options: {
+            data: {
+              first_name: first,
+              last_name: last,
+              name: `${first} ${last}`,
+              ...(refCode.length === 8 ? { ref_code: refCode } : {}),
+            },
+          },
+        });
+        if (error) {
+          setMsg({
+            t:
+              error.code === "user_already_exists" || error.code === "phone_exists"
+                ? "Bu telefon ile zaten bir hesap var. Giriş yapmayı dene."
+                : authError(error, "Kayıt yapılamadı"),
+            ok: false,
+          });
+        } else if (data.session) {
+          router.push("/");
+          router.refresh();
+        } else {
+          setPendingPhone(to);
+          setOtp("");
+          setCooldown(60);
+          setView("otp");
+          setMsg({ t: "Kaydın oluşturuldu. SMS ile gelen kodu yaz.", ok: true });
+        }
+      }
+    } catch {
+      setMsg({ t: "Sunucuya bağlanılamadı. İnternet bağlantını kontrol edip tekrar dene.", ok: false });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function verifyOtp(e: React.FormEvent) {
+    e.preventDefault();
+    if (!OTP_RE.test(otp)) return setMsg({ t: "Kodu eksiksiz yaz.", ok: false });
+    setBusy(true);
+    setMsg(null);
+    try {
+      const { error } = await supabaseBrowser().auth.verifyOtp({
+        phone: pendingPhone,
+        token: otp,
+        type: "sms",
+      });
+      if (error) {
+        setMsg({
+          t: error.code === "otp_expired" ? "Kodun süresi dolmuş. Yeni bir kod iste." : "Kod hatalı. Tekrar dene.",
+          ok: false,
+        });
+      } else {
+        router.push("/");
+        router.refresh();
+      }
+    } catch {
+      setMsg({ t: "Sunucuya bağlanılamadı. Tekrar dene.", ok: false });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resendOtp() {
+    setBusy(true);
+    setMsg(null);
+    try {
+      if (await sendSms(pendingPhone)) setMsg({ t: "Yeni kod gönderildi.", ok: true });
+    } catch {
+      setMsg({ t: "Sunucuya bağlanılamadı. Tekrar dene.", ok: false });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (method === "phone") return submitPhone();
     const mail = email.trim().toLowerCase();
     if (!EMAIL_RE.test(mail))
       return setMsg({ t: "Geçerli bir e-posta adresi yaz.", ok: false });
@@ -185,6 +320,69 @@ export default function Giris() {
     }
   }
 
+  if (view === "forgot")
+    return (
+      <main className="px-5 pt-[max(2rem,env(safe-area-inset-top))]">
+        <Mascot size={96} className="mx-auto" />
+        <ForgotPassword
+          initialMethod={method}
+          initialEmail={email}
+          initialPhone={phone}
+          onBack={() => {
+            setView("form");
+            setMsg(null);
+          }}
+        />
+      </main>
+    );
+
+  if (view === "otp")
+    return (
+      <main className="px-5 pt-[max(2rem,env(safe-area-inset-top))]">
+        <div className="mx-auto max-w-md text-center">
+          <Mascot size={96} className="mx-auto" />
+          <h1 className="font-display text-3xl font-extrabold">Telefonunu doğrula</h1>
+          <p className="text-sm text-ink/70">{formatPhone(pendingPhone)} numarasına gelen kodu yaz.</p>
+        </div>
+        <form
+          onSubmit={verifyOtp}
+          className="mx-auto mt-6 grid max-w-md gap-3 rounded-[28px] bg-card p-5 shadow-sm"
+        >
+          <CodeField value={otp} onChange={setOtp} />
+          <button
+            type="submit"
+            disabled={busy || otp.length < 6}
+            className="rounded-2xl bg-sea p-4 font-display text-lg font-bold text-white active:scale-[.98] disabled:opacity-60"
+          >
+            {busy ? "Doğrulanıyor…" : "Doğrula"}
+          </button>
+          {msg && (
+            <p role="status" className={`text-sm font-bold ${msg.ok ? "text-tide" : "text-coral"}`}>
+              {msg.t}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={resendOtp}
+            disabled={busy || cooldown > 0}
+            className="rounded-2xl bg-sun p-3 text-sm font-bold text-deep disabled:opacity-60"
+          >
+            {cooldown > 0 ? `Yeni kod için ${cooldown} sn bekle` : "Kodu tekrar gönder"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setView("form");
+              setMsg(null);
+            }}
+            className="text-sm font-bold underline"
+          >
+            Numarayı değiştir
+          </button>
+        </form>
+      </main>
+    );
+
   return (
     <main className="px-5 pt-[max(2rem,env(safe-area-inset-top))]">
       <div className="mx-auto max-w-md text-center">
@@ -194,14 +392,26 @@ export default function Giris() {
         </h1>
         <p className="text-sm text-ink/70">
           {mode === "login"
-            ? "E-posta ve şifrenle giriş yap."
-            : "İsim, soyisim, e-posta ve şifreyle hemen kayıt ol."}
+            ? method === "email"
+              ? "E-posta ve şifrenle giriş yap."
+              : "Telefon numaran ve şifrenle giriş yap."
+            : method === "email"
+              ? "İsim, soyisim, e-posta ve şifreyle hemen kayıt ol."
+              : "İsim, soyisim, telefon ve şifreyle hemen kayıt ol. Numaranı SMS koduyla doğrularsın."}
         </p>
       </div>
       <form
         onSubmit={submit}
         className="mx-auto mt-6 grid max-w-md gap-3 rounded-[28px] bg-card p-5 shadow-sm"
       >
+        <MethodTabs
+          value={method}
+          onChange={(m) => {
+            setMethod(m);
+            setMsg(null);
+            setCanResend(false);
+          }}
+        />
         {mode === "register" && (
           <div className="grid grid-cols-2 gap-3">
             <input
@@ -224,16 +434,20 @@ export default function Giris() {
             />
           </div>
         )}
-        <input
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          type="email"
-          inputMode="email"
-          autoComplete="email"
-          placeholder="E-posta adresi"
-          required
-          className={field}
-        />
+        {method === "email" ? (
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            placeholder="E-posta adresi"
+            required
+            className={field}
+          />
+        ) : (
+          <PhoneField value={phone} onChange={setPhone} />
+        )}
         <div className="relative">
           <input
             value={password}
@@ -253,6 +467,18 @@ export default function Giris() {
             {show ? "Gizle" : "Göster"}
           </button>
         </div>
+        {mode === "login" && (
+          <button
+            type="button"
+            onClick={() => {
+              setView("forgot");
+              setMsg(null);
+            }}
+            className="-mt-1 justify-self-end px-1 text-sm font-bold text-sea underline"
+          >
+            Şifremi unuttum
+          </button>
+        )}
         {mode === "register" && (
           <div>
             <input
@@ -288,7 +514,7 @@ export default function Giris() {
             {msg.t}
           </p>
         )}
-        {canResend && (
+        {canResend && method === "email" && (
           <button
             type="button"
             onClick={resend}
