@@ -1,4 +1,5 @@
 import AdaptiveNavigation from "@/components/AdaptiveNavigation";
+import AuthGate from "@/components/AuthGate";
 import ClickSounds from "@/components/ClickSounds";
 import ConsoleBanner from "@/components/ConsoleBanner";
 import NotificationProvider from "@/components/NotificationProvider";
@@ -67,7 +68,9 @@ export default function RootLayout({
           <Splash />
           <NotificationProvider>
             <AdaptiveNavigation />
-            <div className="shell pb-28 lg:pb-10">{children}</div>
+            <div className="shell pb-28 lg:pb-10">
+              <AuthGate>{children}</AuthGate>
+            </div>
             <ReferralSync />
             <ThemeGuard />
           </NotificationProvider>

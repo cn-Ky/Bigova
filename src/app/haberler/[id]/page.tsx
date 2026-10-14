@@ -1,6 +1,6 @@
 "use client";
 import Mascot from "@/components/Mascot";
-import NewsCover from "@/components/NewsCover";
+import NewsMedia from "@/components/NewsMedia";
 import { fetchNews, useSavedNews } from "@/lib/newsClient";
 import {
   categoryMeta,
@@ -8,7 +8,9 @@ import {
   longDate,
   paragraphs,
   readingMinutes,
+  safeImg,
   safeUrl,
+  VERIFICATION_LABEL,
   type NewsArticle,
 } from "@/lib/newsData";
 import {
@@ -16,6 +18,7 @@ import {
   faArrowUpRightFromSquare,
   faBookmark,
   faCheck,
+  faCircleCheck,
   faClock,
   faShareNodes,
   faUser,
@@ -100,7 +103,7 @@ export default function HaberDetay() {
         className="fixed inset-x-0 top-0 z-[60] h-1 origin-left bg-sun"
       />
       <div className="relative">
-        <NewsCover category={article.category} seed={article.title} size="hero" className="h-56 rounded-b-[32px] md:h-72" />
+        <NewsMedia category={article.category} seed={article.title} imageUrl={article.image_url} size="hero" className="h-56 rounded-b-[32px] md:h-72" />
         <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))]">
           <Link
             href="/haberler"
@@ -131,12 +134,33 @@ export default function HaberDetay() {
         </div>
       </div>
 
+      {safeImg(article.image_url) && (
+        <p className="px-5 pt-2 text-[11px] text-ink/55">
+          Temsili görsel{article.image_credit ? ` · ${article.image_credit}` : ""}
+          {safeUrl(article.image_link) && (
+            <>
+              {" "}
+              <a href={safeUrl(article.image_link)!} target="_blank" rel="noopener noreferrer nofollow" className="underline">
+                Lisans ve kaynak
+              </a>
+            </>
+          )}
+        </p>
+      )}
+
       <article className="px-5 pt-5">
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-tide/20 px-3 py-1 text-xs font-extrabold">
             <FontAwesomeIcon icon={icon} />
             {article.category}
           </span>
+          {article.is_auto && article.verification && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-sun/30 px-3 py-1 text-xs font-extrabold">
+              <FontAwesomeIcon icon={faCircleCheck} />
+              {VERIFICATION_LABEL[article.verification]}
+              {article.verification === "verified" && ` · ${article.source_count ?? 0} kaynak`}
+            </span>
+          )}
           {isDemoNews(article) && (
             <span className="rounded-full bg-coral/20 px-3 py-1 text-xs font-extrabold">Örnek haber · temsilidir</span>
           )}
@@ -166,22 +190,55 @@ export default function HaberDetay() {
           ))}
         </div>
 
-        {(article.source_name || source) && (
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-card p-4 shadow-sm">
-            <span className="text-sm text-ink/70">
-              Kaynak: <b className="text-ink">{article.source_name ?? "Dış kaynak"}</b>
-            </span>
-            {source && (
-              <a
-                href={source}
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-                className="inline-flex items-center gap-2 rounded-full bg-sea px-4 py-2 text-sm font-bold text-white"
-              >
-                Kaynağa git <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
-              </a>
-            )}
-          </div>
+        {article.is_auto && (article.sources?.length ?? 0) > 0 ? (
+          <section aria-label="Kaynaklar" className="mt-6 rounded-2xl bg-card p-4 shadow-sm">
+            <h2 className="font-display text-base font-extrabold">Haberi yayımlayan kaynaklar</h2>
+            <ul className="mt-2 grid gap-2">
+              {article.sources!.map((s) => {
+                const href = safeUrl(s.url);
+                return (
+                  <li key={s.url} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="min-w-0 truncate">
+                      <b>{s.name}</b>
+                      {s.published_at && <span className="text-ink/55"> · {longDate(s.published_at)}</span>}
+                    </span>
+                    {href && (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer nofollow"
+                        className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-sea px-3 py-1.5 text-xs font-bold text-white"
+                      >
+                        Oku <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+                      </a>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-3 text-xs text-ink/55">
+              Bu yazı Bigova tarafından kaynaklardan otomatik derlenmiş bir özettir; kaynak haberlerin metni
+              yayımlanmaz. Hata görürsen kaynak haberi esas al.
+            </p>
+          </section>
+        ) : (
+          (article.source_name || source) && (
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-card p-4 shadow-sm">
+              <span className="text-sm text-ink/70">
+                Kaynak: <b className="text-ink">{article.source_name ?? "Dış kaynak"}</b>
+              </span>
+              {source && (
+                <a
+                  href={source}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="inline-flex items-center gap-2 rounded-full bg-sea px-4 py-2 text-sm font-bold text-white"
+                >
+                  Kaynağa git <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+                </a>
+              )}
+            </div>
+          )
         )}
       </article>
 
@@ -195,7 +252,7 @@ export default function HaberDetay() {
                   href={`/haberler/${a.id}`}
                   className="flex gap-3 rounded-[22px] bg-card p-3 shadow-sm transition active:scale-[0.98]"
                 >
-                  <NewsCover category={a.category} seed={a.title} size="thumb" className="h-16 w-16 shrink-0 rounded-xl" />
+                  <NewsMedia category={a.category} seed={a.title} imageUrl={a.image_url} size="thumb" className="h-16 w-16 shrink-0 rounded-xl" />
                   <span className="min-w-0">
                     <span className="block text-[11px] font-extrabold text-ink/55">{a.category}</span>
                     <b className="line-clamp-3 font-display text-[15px] leading-tight">{a.title}</b>

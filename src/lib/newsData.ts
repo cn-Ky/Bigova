@@ -45,7 +45,27 @@ export type NewsArticle = {
   source_url: string | null;
   featured: boolean;
   published_at: string;
+  /** Otomatik derleme alanları (elle eklenen haberlerde boş/undefined) */
+  is_auto?: boolean;
+  verification?: Verification | null;
+  source_count?: number;
+  sources?: NewsSource[] | null;
+  image_url?: string | null;
+  image_credit?: string | null;
+  image_link?: string | null;
 };
+
+export type Verification = "official" | "verified" | "single";
+export type NewsSource = { name: string; url: string; title?: string; published_at?: string };
+
+export const VERIFICATION_LABEL: Record<Verification, string> = {
+  official: "Resmî kaynak",
+  verified: "Birden fazla kaynakla doğrulandı",
+  single: "Tek kaynak",
+};
+
+/** Yalnızca https görsel adreslerine izin verilir. */
+export const safeImg = (u: string | null | undefined) => (u && /^https:\/\/\S+$/i.test(u) ? u : null);
 
 export const isDemoNews = (a: Pick<NewsArticle, "id">) => a.id.startsWith("demo-");
 
@@ -76,7 +96,7 @@ export function timeAgo(iso: string) {
 }
 
 /** Yalnızca http/https kaynak bağlantılarına izin verilir. */
-export const safeUrl = (u: string | null) => (u && /^https?:\/\/\S+$/i.test(u) ? u : null);
+export const safeUrl = (u: string | null | undefined) => (u && /^https?:\/\/\S+$/i.test(u) ? u : null);
 
 const ago = (hours: number) => new Date(Date.now() - hours * 3600000).toISOString();
 const SAMPLE_AUTHOR = "Bigova Editör Ekibi (örnek)";

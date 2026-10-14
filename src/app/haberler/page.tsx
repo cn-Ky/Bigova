@@ -1,6 +1,6 @@
 "use client";
 import Mascot from "@/components/Mascot";
-import NewsCover from "@/components/NewsCover";
+import NewsMedia from "@/components/NewsMedia";
 import SearchBox from "@/components/SearchBox";
 import { fetchNews, useSavedNews } from "@/lib/newsClient";
 import {
@@ -17,6 +17,7 @@ import { useUser } from "@/lib/useUser";
 import {
   faArrowRight,
   faBookmark,
+  faCircleCheck,
   faClock,
   faPlus,
   faXmark,
@@ -44,6 +45,18 @@ function Chip({ category }: { category: string }) {
     <span className="inline-flex items-center gap-1.5 rounded-full bg-tide/20 px-2.5 py-0.5 text-[11px] font-extrabold">
       <FontAwesomeIcon icon={icon} className="text-[10px]" />
       {category}
+    </span>
+  );
+}
+
+/** Otomatik derlenen haberlerde doğrulama rozeti (tek kaynaklı haberler zaten yayınlanmaz). */
+function VerifyBadge({ a }: { a: NewsArticle }) {
+  if (!a.is_auto || !a.verification || a.verification === "single") return null;
+  const n = a.source_count ?? 1;
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-sun/30 px-2.5 py-0.5 text-[11px] font-extrabold">
+      <FontAwesomeIcon icon={faCircleCheck} className="text-[10px]" />
+      {a.verification === "official" ? "Resmî kaynak" : `${n} kaynak doğruladı`}
     </span>
   );
 }
@@ -206,10 +219,11 @@ export default function Haberler() {
           className="group relative mx-5 mt-4 overflow-hidden rounded-[28px] bg-card shadow-sm transition-shadow hover:shadow-lg"
         >
           <Link href={`/haberler/${hero.id}`} aria-label={hero.title} className="absolute inset-0 z-0" />
-          <NewsCover category={hero.category} seed={hero.title} size="hero" className="h-44 md:h-56" />
+          <NewsMedia category={hero.category} seed={hero.title} imageUrl={hero.image_url} size="hero" className="h-44 md:h-56" />
           <div className="relative z-10 p-5">
             <div className="pointer-events-none flex flex-wrap items-center gap-2">
               <Chip category={hero.category} />
+              <VerifyBadge a={hero} />
               {isDemoNews(hero) && <span className="text-[11px] font-extrabold text-coral">Örnek haber</span>}
             </div>
             <h2 className="pointer-events-none mt-2 font-display text-2xl font-extrabold leading-tight md:text-3xl">
@@ -249,10 +263,11 @@ export default function Haberler() {
               className="group relative flex gap-3 rounded-[24px] bg-card p-3 shadow-sm transition-shadow hover:shadow-lg"
             >
               <Link href={`/haberler/${a.id}`} aria-label={a.title} className="absolute inset-0 z-0 rounded-[24px]" />
-              <NewsCover category={a.category} seed={a.title} size="thumb" className="pointer-events-none h-24 w-24 shrink-0 rounded-2xl" />
+              <NewsMedia category={a.category} seed={a.title} imageUrl={a.image_url} size="thumb" className="pointer-events-none h-24 w-24 shrink-0 rounded-2xl" />
               <div className="relative z-10 flex min-w-0 flex-1 flex-col">
                 <div className="pointer-events-none flex flex-wrap items-center gap-2">
                   <Chip category={a.category} />
+                  <VerifyBadge a={a} />
                   {isDemoNews(a) && <span className="text-[10px] font-extrabold text-coral">Örnek</span>}
                 </div>
                 <h3 className="pointer-events-none mt-1.5 line-clamp-3 font-display text-[17px] font-extrabold leading-tight">
@@ -286,7 +301,9 @@ export default function Haberler() {
 
       {items && (
         <p className="px-5 pb-2 pt-5 text-center text-xs text-ink/55">
-          “Örnek” etiketli içerikler biçimi göstermek için hazırlanmış genel yazılardır, gerçek bir olayı bildirmez.
+          Biga Gündemi, haberleri birden fazla kaynaktan otomatik derler: yalnızca en az iki bağımsız kaynağın ya da
+          resmî bir kurumun bildirdiği gelişmeler yayınlanır. Metinler Bigova özetidir; tam haber için kaynağa git.
+          {items.some(isDemoNews) && " “Örnek” etiketli içerikler biçimi göstermek için hazırlanmıştır, gerçek bir olayı bildirmez."}{" "}
           Kaydettiğin haberler yalnızca bu tarayıcıda tutulur.
         </p>
       )}

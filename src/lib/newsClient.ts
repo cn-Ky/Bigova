@@ -6,19 +6,22 @@ import { demoNews, type NewsArticle } from "@/lib/newsData";
 const byDate = (a: NewsArticle, b: NewsArticle) =>
   new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
 
-/** Yayındaki gerçek haberler + örnek haberler (en yeni üstte). Tablo yoksa yalnızca örnekler döner. */
+/** Yayındaki gerçek haberler (+ az haber varsa örnekler), en yeni üstte. Tablo yoksa yalnızca örnekler döner. */
 export async function fetchNews(): Promise<NewsArticle[]> {
   let remote: NewsArticle[] = [];
   try {
     const { data, error } = await supabaseBrowser()
       .from("news_articles")
-      .select("id,title,summary,body,category,author_name,source_name,source_url,featured,published_at")
+      .select(
+        "id,title,summary,body,category,author_name,source_name,source_url,featured,published_at,is_auto,verification,source_count,sources,image_url,image_credit,image_link",
+      )
       .eq("status", "published")
       .order("published_at", { ascending: false })
       .limit(100);
     if (!error && data) remote = data as NewsArticle[];
   } catch {}
-  return [...remote, ...demoNews].sort(byDate);
+  // Yeterince gerçek haber varsa "Örnek" içerikler gösterilmez.
+  return (remote.length >= 3 ? remote : [...remote, ...demoNews]).sort(byDate);
 }
 
 const SAVED_KEY = "bigova-news-saved";
