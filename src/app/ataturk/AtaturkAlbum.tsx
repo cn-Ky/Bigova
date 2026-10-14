@@ -10,6 +10,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { Tx } from "./Turk";
 
 type Collection = "portre" | "mucadele" | "halk" | "egitim";
 
@@ -278,23 +279,26 @@ export default function AtaturkAlbum() {
       }
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [selectedPhoto, visiblePhotos.length]);
 
   return (
-    <section className="atat-album" id="fotoğraf-albümü">
-      <header className="atat-album-heading">
-        <div>
-          <p className="atat-album-eyebrow">FOTOĞRAF ARŞİVİ · 1922–1937</p>
-          <h2>Bir ömrün izleri</h2>
-          <p>
-            Arşivlerden seçilen 25 kare; yıllar, yolculuklar ve insanlarla
-            birlikte.
-          </p>
-        </div>
-        <span className="atat-album-total" aria-live="polite">
-          {visiblePhotos.length.toString().padStart(2, "0")} / 25 FOTOĞRAF
+    <section className="atat-section atat-album" id="fotoğraf-albümü">
+      <header className="atat-head">
+        <span className="atat-bignum" aria-hidden="true">
+          00
         </span>
+        <p className="atat-kicker">00 / ARŞİV · 1922–1937</p>
+        <h2>Bir ömrün izleri</h2>
+        <p className="atat-lede">
+          Arşivlerden seçilen {photos.length} kare; yıllar, yolculuklar ve
+          insanlarla birlikte.
+        </p>
       </header>
 
       <div className="atat-album-tools">
@@ -331,42 +335,44 @@ export default function AtaturkAlbum() {
             placeholder="Yıl veya konu ara"
           />
         </label>
+        <span className="atat-album-total" aria-live="polite">
+          {visiblePhotos.length.toString().padStart(2, "0")} /{" "}
+          {photos.length} FOTOĞRAF
+        </span>
       </div>
 
-      <div className="atat-gallery-grid" aria-live="polite">
-        <AnimatePresence mode="popLayout">
-          {visiblePhotos.map((photo, index) => (
-            <motion.button
-              key={photo.file}
-              type="button"
-              className={`atat-gallery-card atat-gallery-card--${photo.frame}`}
-              layout
-              initial={{ opacity: 0, y: 18, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.94 }}
-              transition={{
-                duration: 0.35,
-                delay: Math.min(index * 0.018, 0.2),
-              }}
-              onClick={() => setSelected(index)}
-              aria-label={`${photo.title}, ${photo.year}. Büyük görüntüyü aç`}
-            >
-              <img
-                src={fileUrl(photo.file)}
-                alt=""
-                loading={index > 5 ? "lazy" : "eager"}
-              />
-              <span className="atat-gallery-shade" />
-              <span className="atat-gallery-caption">
-                <span>{photo.year}</span>
-                <strong>{photo.title}</strong>
-              </span>
-              <span className="atat-gallery-open" aria-hidden="true">
-                ↗
-              </span>
-            </motion.button>
-          ))}
-        </AnimatePresence>
+      <div className="atat-gallery-grid">
+        {visiblePhotos.map((photo, index) => (
+          <motion.button
+            key={photo.file}
+            type="button"
+            className={`atat-gallery-card atat-gallery-card--${photo.frame}`}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.35,
+              delay: Math.min(index * 0.02, 0.3),
+            }}
+            onClick={() => setSelected(index)}
+            aria-label={`${photo.title}, ${photo.year}. Büyük görüntüyü aç`}
+          >
+            <img
+              src={fileUrl(photo.file)}
+              alt=""
+              loading={index > 5 ? "lazy" : "eager"}
+            />
+            <span className="atat-gallery-shade" />
+            <span className="atat-gallery-caption">
+              <span>{photo.year}</span>
+              <strong>
+                <Tx>{photo.title}</Tx>
+              </strong>
+            </span>
+            <span className="atat-gallery-open" aria-hidden="true">
+              ↗
+            </span>
+          </motion.button>
+        ))}
         {visiblePhotos.length === 0 && (
           <p className="atat-gallery-empty">
             Bu aramayla eşleşen bir fotoğraf yok.
@@ -440,8 +446,12 @@ export default function AtaturkAlbum() {
                     {selectedPhoto.year} <span>·</span> {selected + 1} /{" "}
                     {visiblePhotos.length}
                   </p>
-                  <h3>{selectedPhoto.title}</h3>
-                  <span>{selectedPhoto.caption}</span>
+                  <h3>
+                    <Tx>{selectedPhoto.title}</Tx>
+                  </h3>
+                  <span>
+                    <Tx>{selectedPhoto.caption}</Tx>
+                  </span>
                 </div>
                 <a
                   href={filePage(selectedPhoto.file)}
