@@ -22,3 +22,9 @@ export const POMODORO_DAILY_COIN_CAP = 50; // günlük en fazla 50 Bigcoin
  * Nadirlik başına ödül, hak ve şans değerleri için bkz. src/lib/bigocuk/safari.ts.
  */
 export const SAFARI_DAILY_COINS = 80; // günlük en fazla 80 Bigcoin
+
+/**
+ * Anket ödülü: yalnızca ekranda gösterim içindir. Gerçek hesap supabase/polls_v2_upgrade.sql içindedir
+ * (bigocuk_earn_sources tablosundaki 'poll_vote' kaynağı: oy başına coin + günlük sınır).
+ */
+export const POLL_COINS = 1; // her anket oyu = 1 Bigcoin

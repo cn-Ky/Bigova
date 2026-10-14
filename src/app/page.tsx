@@ -122,16 +122,9 @@ const tiles = [
     c: "bg-sun text-deep",
   },
   {
-    kind: "poll",
-    t: "Anketler",
-    d: "Haftanın sorusuna oy ver",
-    href: "/anketler",
-    c: "bg-sun text-deep",
-  },
-  {
     kind: "bigocuk",
     t: "Bigocuk",
-    d: "Oyna, Bigcoin kazan, avatarını giydir",
+    d: "Oyna, anket doldur, Bigcoin kazan",
     href: "/bigocuk",
     c: "bg-sky text-deep",
   },
@@ -548,35 +541,6 @@ function TileArt({ kind }: { kind: string }) {
           <circle cx="56" cy="48" r="3.5" fill="currentColor" />
           <path d="M26 78q7-6 14 0t14 0 14 0 14 0" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" opacity=".55" />
           <path d="m96 20 2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5 6-2.5z" fill="currentColor" opacity=".7" />
-        </svg>
-      );
-    case "poll":
-      return (
-        <svg {...shared}>
-          <path
-            d="M26 20h52q8 0 8 8v43q0 7-8 7H26q-8 0-8-7V28q0-8 8-8z"
-            fill="currentColor"
-            opacity=".15"
-            stroke="currentColor"
-            strokeWidth="3"
-          />
-          <path
-            d="M34 35h35M34 48h27"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-          <circle cx="38" cy="64" r="7" fill="currentColor" opacity=".4" />
-          <circle cx="58" cy="64" r="7" fill="currentColor" opacity=".25" />
-          <circle cx="78" cy="64" r="7" fill="currentColor" opacity=".15" />
-          <path
-            d="m74 18 5 5 10-11"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
         </svg>
       );
     case "bigocuk":

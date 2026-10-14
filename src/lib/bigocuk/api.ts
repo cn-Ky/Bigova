@@ -57,6 +57,9 @@ const normalizePomodoro = (raw: any): PomodoroServer => ({
   minReward: Number(raw?.minReward) || 0,
 });
 
+/** Anket oyu: ok = kaydedildi (earned = kazanılan Bigcoin, günlük sınır dolduysa 0) · already = bu ankete zaten oy verilmişti. */
+export type PollVoteResult = { status: "ok" | "already"; earned: number; next: BigocukState };
+
 /** Safari: bir hayvana atılan topun sunucu sonucu (durum açıklamaları supabase/safari_upgrade.sql içinde). */
 export type SafariThrowResult = {
   status: ThrowStatus;
@@ -186,6 +189,12 @@ export function useBigocuk() {
     };
   };
 
+  /** Ankete oy verir. Sunucu hesabı, süreyi ve tekrar oyu doğrular, 1 Bigcoin yazar. Durumu kendisi değiştirmez; çağıran `commit` ile uygular. */
+  const pollVote = async (pollId: string, option: number): Promise<PollVoteResult> => {
+    const raw = await rpc("poll_vote", { p_poll_id: pollId, p_option: option });
+    return { status: raw?.status === "already" ? "already" : "ok", earned: Number(raw?.earned) || 0, next: normalize(raw) };
+  };
+
   /** Safari: çevredeki hayvanlar ve efsane noktaları (giriş yapmamış kullanıcı da görebilir). */
   const safariNearby = async (lat: number, lng: number): Promise<Nearby> => normalizeNearby(await rpc("safari_nearby", { p_lat: lat, p_lng: lng }));
   /** Safari: defter ve günlük istatistikler. */
@@ -213,6 +222,7 @@ export function useBigocuk() {
   return {
     user, status, state, loadError, refresh, addSteps, commit, buy, saveAvatar,
     pomodoroState, pomodoroStart, pomodoroComplete,
+    pollVote,
     safariNearby, safariStats, safariThrow,
   };
 }

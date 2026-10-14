@@ -14,7 +14,6 @@ import {
   faMonument,
   faNewspaper,
   faPeopleGroup,
-  faPoll,
   faScrewdriverWrench,
   faStopwatch,
   faStore,
@@ -96,16 +95,10 @@ export const sideTabs = [
     hint: "Odaklan, mola ver, hedefe ulaş",
   },
   {
-    href: "/anketler",
-    l: "Anketler",
-    i: faPoll,
-    hint: "Haftalık öğrenci anketi",
-  },
-  {
     href: "/bigocuk",
     l: "Bigocuk",
     i: faGamepad,
-    hint: "Oyunlar, Bigcoin ve avatar",
+    hint: "Oyunlar, anketler, Bigcoin ve avatar",
   },
   {
     href: "/hakkimizda",

@@ -15,13 +15,21 @@ export const PROTECTED_ROUTES: { prefix: string; what: string }[] = [
   { prefix: "/arkadaslar", what: "Arkadaş eklemek ve mesajlaşmak" },
   { prefix: "/topluluk", what: "Topluluğu kullanmak" },
   { prefix: "/bigocuk", what: "Bigocuk'u oynamak" },
-  { prefix: "/anketler", what: "Anketlere katılmak" },
   // Diğer hesap gerektiren sayfalar
   { prefix: "/profil", what: "Profilleri görmek" },
 ];
 
+/**
+ * Korumalı bir önek altında olsa da girişsiz görülebilen sayfalar.
+ * /bigocuk/anketler: haftalık sonuçlar herkese açıktır (yalnızca yüzde); oy vermek için giriş sayfanın içinde istenir.
+ */
+const PUBLIC_ROUTES = ["/bigocuk/anketler"];
+const isPublic = (pathname: string) => PUBLIC_ROUTES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+
 const match = (pathname: string) =>
-  PROTECTED_ROUTES.find((r) => pathname === r.prefix || pathname.startsWith(`${r.prefix}/`));
+  isPublic(pathname)
+    ? undefined
+    : PROTECTED_ROUTES.find((r) => pathname === r.prefix || pathname.startsWith(`${r.prefix}/`));
 
 /**
  * Korumalı bir sayfada oturum yoksa sayfa yerine "Giriş yapman gerekiyor" ekranını gösterir.

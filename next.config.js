@@ -77,6 +77,10 @@ module.exports = {
       ? { NEXT_PUBLIC_SUPABASE_ANON_KEY: supabaseAnonKey }
       : {}),
   },
+  // Anketler artık Bigocuk'un içinde; eski adres yeni adrese yönlenir.
+  async redirects() {
+    return [{ source: "/anketler", destination: "/bigocuk/anketler", permanent: true }];
+  },
   async headers() {
     return [
       { source: "/:path*", headers: commonHeaders },

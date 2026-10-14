@@ -28,6 +28,7 @@ hedeflenmektedir.
 Oyunlar, Bigcoin kazanma ve avatar giydirme bölümü (`/bigocuk`).
 
 - **Yürüyüş** (`/bigocuk/yuruyus`): telefonun hareket sensörüyle adım sayar, her 50 adım = 1 Bigcoin. Günlük sınır 10.000 adım.
+- **Anketler** (`/bigocuk/anketler`): haftalık öğrenci anketleri, her oy = 1 Bigcoin. Sonuçlar yalnızca yüzde olarak, hafta bitince herkese açılır.
 - **Avatar** (`/bigocuk/avatar`): Bigcoin ile saç, kıyafet, ayakkabı, gözlük, şapka, aksesuar ve arka plan satın al.
 - **Kurulum:** Supabase SQL Editor'de `supabase/bigocuk_upgrade.sql` dosyasını çalıştır (tekrar çalıştırmak güvenlidir).
 - **Yeni oyun eklemek:** `src/lib/bigocuk/games.ts` dizisine kayıt ekle, sayfasını `src/app/bigocuk/<oyun>/` altına yaz.
@@ -100,11 +101,11 @@ Kullanıcılar:
 
 ## Uygulama Veritabanı Kurulumu
 
-Supabase SQL Editor'de ilk kurulumda `supabase/schema.sql` dosyasını çalıştırın. Mevcut kurulumda not alanları eksikse `supabase/notes_upgrade.sql` dosyasını, kitap pazarı/arkadaşlık serileri için `supabase/social_marketplace_upgrade.sql` dosyasını, haftalık anketler için `supabase/polls_upgrade.sql` dosyasını çalıştırın. İşletme ve ulaşım için temsili örnek kayıt eklemek üzere son olarak `supabase/sample_data.sql` dosyasını çalıştırabilirsiniz. Bu dosyadaki fiyat, telefon, adres, güzergâh ve saatler gerçek bilgi değildir; yayından önce doğrulanmış bilgilerle değiştirin.
+Supabase SQL Editor'de ilk kurulumda `supabase/schema.sql` dosyasını çalıştırın. Mevcut kurulumda not alanları eksikse `supabase/notes_upgrade.sql` dosyasını, kitap pazarı/arkadaşlık serileri için `supabase/social_marketplace_upgrade.sql` dosyasını, haftalık anketler için önce `supabase/polls_upgrade.sql`, ardından (Bigocuk kurulduktan sonra) `supabase/polls_v2_upgrade.sql` dosyasını çalıştırın. İşletme ve ulaşım için temsili örnek kayıt eklemek üzere son olarak `supabase/sample_data.sql` dosyasını çalıştırabilirsiniz. Bu dosyadaki fiyat, telefon, adres, güzergâh ve saatler gerçek bilgi değildir; yayından önce doğrulanmış bilgilerle değiştirin.
 
 Notlar sayfasındaki iki örnek PDF ile kitap pazarı örnek ilanları uygulama içi demo içeriğidir. Kitap ilanı yayınlama, arkadaş arama/istek gönderme ve bire bir sohbet için öğrencinin giriş yapmış olması gerekir. Seri, iki arkadaşın aynı gün birbirine en az birer mesaj göndermesiyle başlar ve ardışık karşılıklı mesaj günlerinde artar.
 
-Anketler girişsiz deneme oylarını tarayıcıda tutar; gerçek oylar öğrenci hesabıyla haftada bir kez kaydedilir. Yeni haftalık anket yayımlayacak hesabın Supabase Dashboard'daki `app_metadata` alanında `role: admin` yetkisi olmalıdır. Bu yetkiyi istemci uygulamasından vermeyin. Anket sayfasında yetkili hesap, o haftanın sorusunu ve 2–8 seçeneğini yayımlayabilir.
+Anketler artık Bigocuk'un içindedir (`/bigocuk/anketler`; eski `/anketler` adresi yönlenir). Oy vermek için giriş yapmış ve e-postası doğrulanmış gerçek hesap gerekir; oy kaydı ve 1 Bigcoin ödülü `poll_vote` fonksiyonuyla tek işlemde yazılır, her hesap her ankete bir kez oy verir. Oylar isimsizdir: istemci yalnızca kendi oyunu okuyabilir, sonuçlar yalnızca yüzde olarak ve hafta bittikten sonra (`get_poll_results`) herkese açılır; sayfa girişsiz de açılır (`AuthGate` istisnası). Ödül miktarı ve günlük sınır `bigocuk_earn_sources` tablosundaki `poll_vote` satırındadır. Anket yayımlayacak hesabın Supabase Dashboard'daki `app_metadata` alanında `role: admin` yetkisi olmalıdır (bu yetkiyi istemci uygulamasından vermeyin); yönetici, anket sayfasından o haftaya birden fazla anket ekleyebilir.
 
 Ders programı sayfası Biga İİBF ve Biga MYO'nun resmî 2026–2027 güz dönemi kaynaklarına bağlanır. Yeni dönem duyurusu yayımlandığında bölüm PDF adreslerini `src/lib/scheduleData.ts` içinde güncelleyin. Hakkımızda sayfasındaki kulüp/ekip kişi bilgileri ve tüzük metni, resmî bilgiler ve kulüp danışmanı onayı geldikten sonra güncellenmelidir; mevcut tüzük metni taslaktır.
 
