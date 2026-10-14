@@ -150,6 +150,13 @@ const tiles = [
     c: "bg-tide text-deep",
   },
   {
+    kind: "kultur",
+    t: "Kültür Rehberi",
+    d: "Biga'nın tarihi, doğası, özel günler",
+    href: "/kultur",
+    c: "bg-sky text-deep",
+  },
+  {
     kind: "ubys",
     t: "ÜBYS",
     d: "ÇOMÜ öğrenci bilgi sistemi",
@@ -618,6 +625,15 @@ function TileArt({ kind }: { kind: string }) {
             height="30"
             preserveAspectRatio="xMidYMid meet"
           />
+        </svg>
+      );
+    case "kultur":
+      return (
+        <svg {...shared}>
+          <path d="M20 30 56 14l36 16z" fill="currentColor" opacity=".24" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
+          <path d="M26 35h60" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          <path d="M33 40v26M49 40v26M65 40v26M81 40v26" stroke="currentColor" strokeWidth="6" strokeLinecap="round" opacity=".35" />
+          <path d="M22 72h68" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
         </svg>
       );
     case "ubys":

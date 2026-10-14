@@ -48,10 +48,10 @@ export const CATEGORIES: Category[] = [
   {
     id: "about",
     label: "Bigova & Kültür",
-    blurb: "Hakkımızda ve Atatürk Köşesi",
+    blurb: "Hakkımızda, Atatürk Köşesi, Kültür Rehberi",
     icon: faFlag,
     tone: "sky",
-    hrefs: ["/hakkimizda", "/ataturk"],
+    hrefs: ["/hakkimizda", "/ataturk", "/kultur"],
   },
 ];
 

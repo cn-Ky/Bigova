@@ -11,6 +11,7 @@ import {
   faGear,
   faLandmark,
   faMapLocationDot,
+  faMonument,
   faNewspaper,
   faPeopleGroup,
   faPoll,
@@ -117,6 +118,12 @@ export const sideTabs = [
     l: "Atatürk Köşesi",
     i: faLandmark,
     hint: "Cumhuriyetin metinleri ve mirası",
+  },
+  {
+    href: "/kultur",
+    l: "Kültür Rehberi",
+    i: faMonument,
+    hint: "Biga ve Çanakkale'nin tarihi, doğası, lezzetleri",
   },
   {
     href: "https://ubys.comu.edu.tr/",
