@@ -114,9 +114,9 @@ export const sideTabs = [
   },
   {
     href: "/kultur",
-    l: "Kültür Rehberi",
+    l: "Kültür Ajandası",
     i: faMonument,
-    hint: "Biga ve Çanakkale'nin tarihi, doğası, lezzetleri",
+    hint: "Özel günler, tatiller ve sınav takvimi",
   },
   {
     href: "https://ubys.comu.edu.tr/",

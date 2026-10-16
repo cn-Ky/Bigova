@@ -144,8 +144,8 @@ const tiles = [
   },
   {
     kind: "kultur",
-    t: "Kültür Rehberi",
-    d: "Biga'nın tarihi, doğası, özel günler",
+    t: "Kültür Ajandası",
+    d: "Özel günler, tatiller, sınav takvimi",
     href: "/kultur",
     c: "bg-sky text-deep",
   },
