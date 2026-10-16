@@ -1,6 +1,72 @@
 "use client";
 import { motion } from "framer-motion";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
+
+/** Açık bir açılır menüyü dışına tıklayınca veya Esc ile kapatır; menüyü saran öğeye verilecek ref döner. */
+export function useDismiss(open: boolean, setOpen: (v: boolean) => void) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent | KeyboardEvent) => {
+      if (e instanceof KeyboardEvent ? e.key === "Escape" : !ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", close);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", close);
+    };
+  }, [open, setOpen]);
+  return ref;
+}
+
+/** Zaman çizelgesi (X/Threads tarzı): kartsız satırlar tek yuvarlak çerçevede, ince ayraçlarla. */
+export const TIMELINE_CLASS = "overflow-hidden rounded-[24px] bg-card shadow-sm divide-y divide-ink/[0.07]";
+
+/** Kenarlıksız, yuvarlak eylem düğmesi (yanıtla, yeniden paylaş, beğen…). `tone` etkin/hover rengini belirler. */
+const TONES = {
+  sea: { hover: "hover:bg-sea/10 hover:text-sea", on: "text-sea" },
+  tide: { hover: "hover:bg-tide/15 hover:text-tide", on: "text-tide" },
+  coral: { hover: "hover:bg-coral/10 hover:text-coral", on: "text-coral" },
+  sun: { hover: "hover:bg-sun/20 hover:text-sun", on: "text-sun" },
+} as const;
+export function ActionButton({
+  tone,
+  active = false,
+  label,
+  count,
+  onClick,
+  pressed,
+  children,
+  size = "md",
+}: {
+  tone: keyof typeof TONES;
+  active?: boolean;
+  label: string;
+  count?: string;
+  onClick: () => void;
+  pressed?: boolean;
+  children: ReactNode;
+  size?: "md" | "lg";
+}) {
+  const t = TONES[tone];
+  return (
+    <motion.button
+      type="button"
+      whileTap={{ scale: 0.82 }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      aria-label={label}
+      aria-pressed={pressed}
+      className={`group/act flex items-center gap-1 rounded-full py-1.5 pl-2 pr-2.5 font-bold transition-colors ${size === "lg" ? "text-lg" : "text-sm"} ${active ? t.on : "text-ink/55"} ${t.hover}`}
+    >
+      {children}
+      {count ? <span className="min-w-[1ch] text-xs tabular-nums">{count}</span> : null}
+    </motion.button>
+  );
+}
 
 /**
  * Topluluk bölümünün ortak görsel dili. Sitenin diğer sayfalarındaki (İşletmeler, Notlar, Haberler…)

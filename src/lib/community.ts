@@ -23,7 +23,10 @@ export type Community = {
 };
 export type CommunityDetail = Community & { can_moderate: boolean; join_code: string | null; owner_name: string | null };
 export type FeedPost = {
+  /** Gösterilen gönderi (düz yeniden paylaşımda orijinal gönderi). */
   id: string;
+  /** Akıştaki satırın kendi kimliği (yeniden paylaşım satırı orijinalden farklıdır). */
+  feed_id: string;
   community_id: string;
   community_name: string;
   community_slug: string;
@@ -36,12 +39,28 @@ export type FeedPost = {
   images: string[];
   like_count: number;
   comment_count: number;
+  repost_count: number;
   accepted_comment_id: string | null;
   liked: boolean;
+  reposted: boolean;
+  bookmarked: boolean;
   mine: boolean;
   can_moderate: boolean;
   hidden: boolean;
   created_at: string;
+  /** Akış sırası ve sayfalama zamanı (yeniden paylaşımda paylaşım zamanı). */
+  sort_at: string;
+  reposted_by_id: string | null;
+  reposted_by_name: string | null;
+  quoted_id: string | null;
+  quoted_author_id: string | null;
+  quoted_author_name: string | null;
+  quoted_body: string | null;
+  quoted_images: string[] | null;
+  quoted_community_name: string | null;
+  quoted_created_at: string | null;
+  /** Alıntılanan gönderi silinmiş, gizlenmiş veya bu kullanıcıya kapalı. */
+  quoted_unavailable: boolean;
 };
 export type PostComment = {
   id: string;
@@ -56,6 +75,8 @@ export type PostComment = {
   hidden: boolean;
   is_accepted: boolean;
   created_at: string;
+  parent_id: string | null;
+  reply_to_name: string | null;
 };
 export type Channel = {
   id: string;
@@ -148,6 +169,44 @@ export function timeAgo(iso: string, now = Date.now()) {
   const d = new Date(iso);
   return d.toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: d.getFullYear() === new Date().getFullYear() ? undefined : "numeric" });
 }
+
+/** 1250 → "1,2 B", 3400000 → "3,4 Mn". Sıfır boş gösterilir (X gibi). */
+export function formatCount(n: number): string {
+  if (!n || n < 0) return "";
+  if (n < 1000) return String(n);
+  if (n < 1_000_000) return `${(n / 1000).toFixed(n < 10_000 ? 1 : 0).replace(".", ",").replace(/,0$/, "")} B`;
+  return `${(n / 1_000_000).toFixed(1).replace(".", ",").replace(/,0$/, "")} Mn`;
+}
+
+/** Tam tarih/saat ("14:32 · 16 Eki 2026") — gönderi ayrıntısında gösterilir. */
+export function fullDate(iso: string): string {
+  const d = new Date(iso);
+  const time = d.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+  const date = d.toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: "numeric" });
+  return `${time} · ${date}`;
+}
+
+/** Gönderi bağlantısını paylaşır (destekleyen cihazlarda paylaşım menüsü, değilse panoya kopyalar). */
+export async function sharePostLink(id: string, text?: string): Promise<"shared" | "copied" | "failed"> {
+  const url = `${window.location.origin}/topluluk/gonderi/${id}`;
+  try {
+    if (navigator.share) {
+      await navigator.share({ url, text: text ? text.slice(0, 120) : undefined, title: "Bigova" });
+      return "shared";
+    }
+  } catch (e) {
+    if ((e as { name?: string })?.name === "AbortError") return "failed";
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    return "copied";
+  } catch {
+    return "failed";
+  }
+}
+
+/** Satırdaki #etiketleri ve bağlantıları ayıklamak için: "#Çalışma" gibi. */
+export const HASHTAG_RE = /(#[\p{L}\p{N}_]{2,40})/u;
 
 /* ───────── Fotoğraf: küçült, yükle, imzalı adres ───────── */
 export const MAX_IMAGES = 4;
@@ -271,8 +330,12 @@ export function useCommunityProfile(enabled: boolean) {
 
 /* ───────── Akış (sayfalı gönderi listesi) ───────── */
 export type FeedParams = {
-  scope: "mine" | "all" | "community";
+  scope: "mine" | "all" | "community" | "saved" | "user";
   community?: string;
+  /** scope = "user" için: gönderileri listelenecek kullanıcı. */
+  author?: string;
+  /** Metin veya #etiket araması. */
+  q?: string;
   kind?: "post" | "question";
   status?: "open" | "solved";
 };
@@ -296,6 +359,8 @@ export function useFeed(params: FeedParams, enabled: boolean) {
         p_status: params.status ?? null,
         p_before: before,
         p_limit: PAGE,
+        p_author: params.author ?? null,
+        p_q: params.q?.trim() || null,
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -329,10 +394,11 @@ export function useFeed(params: FeedParams, enabled: boolean) {
     const id = seq.current;
     setLoadingMore(true);
     try {
-      const rows = (await fetchPage(last.created_at)) ?? [];
+      const rows = (await fetchPage(last.sort_at ?? last.created_at)) ?? [];
       if (id !== seq.current) return;
-      setPosts((cur) => [...cur, ...rows.filter((r) => !cur.some((c) => c.id === r.id))]);
+      setPosts((cur) => [...cur, ...rows.filter((r) => !cur.some((c) => c.feed_id === r.feed_id))]);
       setHasMore(rows.length === PAGE);
+      setError(null);
     } catch (e) {
       setError(errText(e));
     } finally {
@@ -340,7 +406,14 @@ export function useFeed(params: FeedParams, enabled: boolean) {
     }
   }, [posts, loadingMore, fetchPage]);
 
+  /** Aynı gönderi akışta birden çok satırda (orijinal + yeniden paylaşımlar) olabilir; hepsi birlikte güncellenir. */
   const patch = useCallback((id: string, p: Partial<FeedPost>) => setPosts((cur) => cur.map((x) => (x.id === id ? { ...x, ...p } : x))), []);
   const remove = useCallback((id: string) => setPosts((cur) => cur.filter((x) => x.id !== id)), []);
-  return { posts, loading, loadingMore, hasMore, error, refresh, loadMore, patch, remove };
+  /** Yeniden paylaşım geri alınınca o kişinin yeniden paylaşım satırını akıştan kaldırır. */
+  const removeRepostRows = useCallback((id: string, byUser: string) => setPosts((cur) => cur.filter((x) => !(x.id === id && x.feed_id !== x.id && x.reposted_by_id === byUser))), []);
+  return { posts, loading, loadingMore, hasMore, error, refresh, loadMore, patch, remove, removeRepostRows };
 }
+
+/* ───────── Gönderi eylemleri (beğen, yeniden paylaş, kaydet) ───────── */
+export const toggleRepost = (id: string) => rpc<{ reposted: boolean; count: number; id: string }>("community_toggle_repost", { p_post: id });
+export const toggleBookmark = (id: string) => rpc<{ bookmarked: boolean }>("community_toggle_bookmark", { p_post: id });
