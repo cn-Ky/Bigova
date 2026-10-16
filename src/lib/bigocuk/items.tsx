@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { Grad, bgRect, mir, shade, sparkle, star5 } from "./draw";
+import { EXTRA_A } from "./itemsExtraA";
+import { EXTRA_B } from "./itemsExtraB";
 import { EYE_COLORS, PATTERNS, SPECIES, SPECIES_MAP } from "./species";
 
 export { shade };
@@ -1048,7 +1050,7 @@ const SPECIES_ITEMS: Item[] = SPECIES.map((s) => ({
   draw: () => ({}),
 }));
 
-export const ITEMS: Item[] = [...SPECIES_ITEMS, ...ACCESSORIES];
+export const ITEMS: Item[] = [...SPECIES_ITEMS, ...ACCESSORIES, ...EXTRA_A, ...EXTRA_B];
 export const ITEM_MAP: Record<string, Item> = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
 export const itemsOf = (slot: Slot) => ITEMS.filter((i) => i.slot === slot);
 export const isFree = (id: string) => (ITEM_MAP[id]?.price ?? 1) === 0;
