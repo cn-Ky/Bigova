@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { accent, mir, shade, star5, tint, heart } from "./draw";
 import { EXTRA_SPECIES } from "./speciesExtra";
+import { EXTRA_SPECIES_2 } from "./speciesExtra2";
 
 /* ═════════════ Tipler ═════════════ */
 export type Pal = { id: string; name: string; c: string; b?: string };
@@ -615,6 +616,7 @@ export const SPECIES: SpeciesDef[] = [
 
   /* ───── Ek türler (speciesExtra.tsx) ───── */
   ...EXTRA_SPECIES,
+  ...EXTRA_SPECIES_2,
 ];
 
 export const SPECIES_MAP: Record<string, SpeciesDef> = Object.fromEntries(SPECIES.map((s) => [s.id, s]));

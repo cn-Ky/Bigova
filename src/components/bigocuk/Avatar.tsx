@@ -91,7 +91,7 @@ function AvatarImpl({
   const foot = P.foot ?? shade(limb, -0.14);
   const eyeC = (EYE_COLORS.find((e) => e.id === config.eyes) ?? EYE_COLORS[0]).c;
   const E = P.eyes ?? {};
-  const es = E.s ?? 1;
+  const es = (E.s ?? 1) * 1.1;
   const hrx = P.headRx ?? 44;
   const hry = P.headRy ?? 46;
   const k = idx(config.pattern);
@@ -102,6 +102,11 @@ function AvatarImpl({
   const ctx: DrawCtx = { uid, c, cs, limb };
   const L = (slot: Slot): Layers => ITEM_MAP[config[slot]]?.draw(ctx) ?? {};
   const bg = L("bg"), tp = L("top"), nk = L("neck"), gl = L("glasses"), ht = L("hat"), hd = L("hand"), bk = L("back");
+
+  // Küçük (liste/sohbet) avatarlarda filtre kullanılmaz: hızlı kalsın. Büyüklerde oyuncak gibi işleme uygulanır.
+  const fx = size === "fluid" || size >= 72;
+  const fid = (n: string) => `url(#${uid}${n})`;
+  const bev = (node: ReactNode) => (fx && node ? <g filter={fid("bv")}>{node}</g> : node);
 
   const vb = VIEWS[view];
   const [, , vw, vh] = vb.split(" ").map(Number);
@@ -116,11 +121,37 @@ function AvatarImpl({
       role="img"
       aria-label={label}
     >
+      {fx && (
+        <defs>
+          {/* siluet çerçevesi + doygunluk */}
+          <filter id={`${uid}ol`} x="-10%" y="-10%" width="120%" height="120%" colorInterpolationFilters="sRGB">
+            <feMorphology in="SourceAlpha" operator="erode" radius="1.2" result="e" />
+            <feMorphology in="e" operator="dilate" radius="3.3" result="d" />
+            <feFlood floodColor="#1A2744" floodOpacity=".88" result="c" />
+            <feComposite in="c" in2="d" operator="in" result="o" />
+            <feColorMatrix in="SourceGraphic" type="saturate" values="1.16" result="s" />
+            <feMerge><feMergeNode in="o" /><feMergeNode in="s" /></feMerge>
+          </filter>
+          {/* üst kenar parlaması + alt kenar gölgesi (yumuşak kabartma) */}
+          <filter id={`${uid}bv`} x="-5%" y="-5%" width="110%" height="110%" colorInterpolationFilters="sRGB">
+            <feOffset in="SourceAlpha" dy="3.4" result="o1" />
+            <feComposite in="SourceAlpha" in2="o1" operator="out" result="t" />
+            <feFlood floodColor="#fff" floodOpacity=".32" />
+            <feComposite in2="t" operator="in" result="hi" />
+            <feOffset in="SourceAlpha" dy="-4.4" result="o2" />
+            <feComposite in="SourceAlpha" in2="o2" operator="out" result="b" />
+            <feFlood floodColor="#0B1B33" floodOpacity=".2" />
+            <feComposite in2="b" operator="in" result="lo" />
+            <feMerge><feMergeNode in="SourceGraphic" /><feMergeNode in="hi" /><feMergeNode in="lo" /></feMerge>
+          </filter>
+        </defs>
+      )}
       {bg.back}
       <ellipse cx="100" cy="259" rx="54" ry="7" fill="#000" opacity=".14" />
+      <g filter={fx ? fid("ol") : undefined}>
 
       {/* gövdenin arkası: kabuk, kanat, pelerin… */}
-      <g transform={UP}>{P.back}{bk.back}</g>
+      <g transform={UP}>{P.back}{bev(bk.back)}</g>
 
       {/* kısa bacaklar */}
       <g transform={LOW}>
@@ -140,7 +171,7 @@ function AvatarImpl({
       </g>
 
       {/* minik gövde: kollar, eller, karın, kıyafet */}
-      <g transform={UP}>
+      <g transform={UP} filter={fx ? fid("bv") : undefined}>
         <g stroke={limb} strokeWidth="16" strokeLinecap="round" fill="none">
           <path d="M64 150 L52 196" />
           <path d="M136 150 L148 196" />
@@ -155,20 +186,24 @@ function AvatarImpl({
           {bodyPat}
           <ellipse cx="100" cy="140" rx="32" ry="10" fill="#000" opacity=".1" />
         </g>
-        {tp.mid}
+        {bev(tp.mid)}
         {nk.mid}
         {bk.mid}
       </g>
 
       {/* büyük kafa */}
-      <g transform={HEAD}>
+      <g transform={HEAD} filter={fx ? fid("bv") : undefined}>
         {P.headBack}
         <clipPath id={`${uid}hc`}><ellipse cx="100" cy="84" rx={hrx} ry={hry} /></clipPath>
         <ellipse cx="100" cy="84" rx={hrx} ry={hry} fill={headFill} {...edge(headFill)} />
         {P.face}
-        <g clipPath={`url(#${uid}hc)`}>{pat.head}</g>
-        <ellipse cx="68" cy="104" rx="8" ry="5.2" fill="#FF6B57" opacity=".34" />
-        <ellipse cx="132" cy="104" rx="8" ry="5.2" fill="#FF6B57" opacity=".34" />
+        <g clipPath={`url(#${uid}hc)`}>
+          {pat.head}
+          <ellipse cx="100" cy="128" rx="58" ry="26" fill="#0B1B33" opacity=".07" />
+          <ellipse cx="76" cy="54" rx="19" ry="8.5" fill="#fff" opacity=".2" transform="rotate(-24 76 54)" />
+        </g>
+        <ellipse cx="67" cy="104" rx="9.4" ry="6.2" fill="#FF6F8C" opacity=".4" />
+        <ellipse cx="133" cy="104" rx="9.4" ry="6.2" fill="#FF6F8C" opacity=".4" />
         <g className="bc-blink">
           {[84, 116].map((x) => (
             <g key={x}>
@@ -184,11 +219,12 @@ function AvatarImpl({
         {P.after}
         {P.over}
         {gl.over}
-        {ht.over}
+        {bev(ht.over)}
       </g>
 
       {/* elde tutulanlar kafanın önünde görünür */}
-      <g transform={UP}>{hd.over}</g>
+      <g transform={UP}>{bev(hd.over)}</g>
+      </g>
     </svg>
   );
 }

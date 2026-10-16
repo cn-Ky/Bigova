@@ -173,7 +173,7 @@ const BACKS: Item[] = [
     id: "back-wings-angel", slot: "back", name: "Melek kanatları", price: 240,
     draw: () => ({
       back: mir(
-        <g strokeLinejoin="round">
+        <g strokeLinejoin="round" transform="translate(72 150) scale(1.24) translate(-72 -150)">
           <path d="M72 152 C36 142 6 112 4 56 C18 66 30 70 42 66 C38 84 50 96 64 98 C58 112 66 126 76 132Z" fill="#fff" stroke="#9FB6CC" strokeWidth="2.4" />
           <path d="M18 72 C24 100 44 124 68 138 M32 76 C36 98 50 116 68 128" stroke="#9FB6CC" strokeWidth="2" fill="none" />
           <path d="M4 56 C18 66 30 70 42 66" stroke="#FFF3A8" strokeWidth="2.4" fill="none" opacity=".8" />
@@ -185,7 +185,7 @@ const BACKS: Item[] = [
     id: "back-wings-bat", slot: "back", name: "Yarasa kanatları", price: 220,
     draw: () => ({
       back: mir(
-        <g strokeLinejoin="round">
+        <g strokeLinejoin="round" transform="translate(72 150) scale(1.24) translate(-72 -150)">
           <path d="M72 148 L36 96 Q30 112 26 124 Q20 114 12 120 Q12 98 2 84 Q26 86 38 70 Q60 92 74 132Z" fill="#4A3470" stroke="#2D1F4A" strokeWidth="2" />
           <path d="M72 148 L38 72 M72 148 L26 124 M72 148 L12 120" stroke="#2D1F4A" strokeWidth="2.4" strokeLinecap="round" />
         </g>,
@@ -196,7 +196,7 @@ const BACKS: Item[] = [
     id: "back-wings-dragon", slot: "back", name: "Ejderha kanatları", price: 280,
     draw: () => ({
       back: mir(
-        <g strokeLinejoin="round" strokeLinecap="round">
+        <g strokeLinejoin="round" strokeLinecap="round" transform="translate(72 150) scale(1.24) translate(-72 -150)">
           <path d="M70 148 L4 62 Q16 92 12 108 Q26 112 24 128 Q40 128 38 144 Q54 144 72 154Z" fill="#4FA06E" stroke="#2E6E48" strokeWidth="2" />
           <path d="M70 148 L4 62 M70 148 L12 108 M70 148 L24 128 M70 148 L38 144" stroke="#2E6E48" strokeWidth="3" fill="none" />
           <path d="M4 62 L-2 52 M12 108 L4 108 M24 128 L16 132" stroke="#2E6E48" strokeWidth="3" />
