@@ -429,12 +429,7 @@ export default function DirectMessage() {
     const { error } = await sb.rpc("delete_message", { p_id: m.id });
     if (error) {
       setMessages(before);
-      const code = (error as { code?: string }).code;
-      setNotice(
-        code === "PGRST202" || code === "42883"
-          ? "Mesaj silme henüz kurulmadı: Supabase'de supabase/chat_safety_upgrade.sql dosyasını çalıştır."
-          : "Mesaj silinemedi. Tekrar dene.",
-      );
+      setNotice("Mesaj silinemedi. Tekrar dene.");
     }
   }
   async function blockFriend() {

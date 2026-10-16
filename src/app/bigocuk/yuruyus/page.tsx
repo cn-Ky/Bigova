@@ -233,9 +233,9 @@ export default function Yuruyus() {
         )}
         {status === "setup" && (
           <div className="mt-5 rounded-[20px] bg-card p-5 text-sm shadow-sm">
-            <b className="font-display text-lg">Bigocuk veritabanı henüz kurulmamış</b>
+            <b className="font-display text-lg">Yürüyüş şu anda kullanılamıyor</b>
             <p className="mt-1 text-ink/70">
-              Supabase SQL Editor'de <code>supabase/bigocuk_upgrade.sql</code> dosyasını bir kez çalıştır.
+              Biraz sonra tekrar dene.
             </p>
           </div>
         )}

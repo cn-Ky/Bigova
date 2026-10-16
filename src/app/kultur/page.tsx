@@ -1,4 +1,5 @@
 "use client";
+import AgendaEditor from "@/components/agenda/AgendaEditor";
 import Mascot from "@/components/Mascot";
 import {
   AKADEMIK_DONEM,
@@ -25,6 +26,7 @@ import {
   type AgendaKind,
   type Cell,
 } from "@/lib/agendaData";
+import { useAgendaNotes, type AgendaNote } from "@/lib/agendaNotes";
 import { KULTUR_NOTES, noteOfTheDay } from "@/lib/kulturData";
 import { useStudentData } from "@/lib/studentHome";
 import {
@@ -38,9 +40,12 @@ import {
   faLandmark,
   faLocationDot,
   faMapLocationDot,
+  faPen,
   faPenToSquare,
+  faPlus,
   faStar,
   faUserGraduate,
+  faXmark,
   type IconDefinition,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -67,6 +72,7 @@ const KIND_UI: Record<AgendaKind, { icon: IconDefinition; bg: string; dot: strin
 
 const TAG_CHIP: Record<string, string> = { Tarih: "bg-sun/30", Gezi: "bg-sky/30", Doğa: "bg-tide/25", Lezzet: "bg-coral/25" };
 
+const chipOf = (e: AgendaEvent) => (e.own === "note" ? "Notum" : e.own === "exam" ? "Sınavım" : KIND_META[e.kind].chip);
 const topKindOf = (evs: AgendaEvent[]) => KIND_PRIORITY.find((k) => evs.some((e) => e.kind === k)) ?? null;
 
 /* ───────── WebGL yoksa: düz ay ızgarası ───────── */
@@ -118,7 +124,7 @@ function FlatMonth({
 }
 
 /* ───────── Seçili günün kayıt kartı ───────── */
-function EventRow({ e }: { e: AgendaEvent }) {
+function EventRow({ e, onEdit, onDelete }: { e: AgendaEvent; onEdit?: () => void; onDelete?: () => void }) {
   const u = KIND_UI[e.kind];
   return (
     <li className="flex gap-3 rounded-[20px] bg-foam p-3">
@@ -127,7 +133,7 @@ function EventRow({ e }: { e: AgendaEvent }) {
       </span>
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-extrabold ${u.bg}`}>{KIND_META[e.kind].chip}</span>
+          <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-extrabold ${u.bg}`}>{chipOf(e)}</span>
           {e.half && <span className="rounded-full bg-sun/30 px-2.5 py-0.5 text-[11px] font-extrabold">Yarım gün</span>}
           {e.start !== e.end && <span className="text-[11px] font-bold text-ink/60">{fmtRange(e.start, e.end)}</span>}
         </div>
@@ -148,6 +154,20 @@ function EventRow({ e }: { e: AgendaEvent }) {
           </p>
         )}
       </div>
+      {(onEdit || onDelete) && (
+        <div className="ml-auto flex shrink-0 items-start gap-1">
+          {onEdit && (
+            <button type="button" onClick={onEdit} aria-label={`${e.title} notunu düzenle`} className="grid h-8 w-8 place-items-center rounded-full text-ink/60 hover:bg-card">
+              <FontAwesomeIcon icon={faPen} />
+            </button>
+          )}
+          {onDelete && (
+            <button type="button" onClick={onDelete} aria-label={`${e.title} kaydını sil`} className="grid h-8 w-8 place-items-center rounded-full text-ink/60 hover:bg-card">
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
+          )}
+        </div>
+      )}
     </li>
   );
 }
@@ -160,7 +180,10 @@ export default function Kultur() {
   const [active, setActive] = useState<Set<AgendaKind>>(() => new Set(ALL_KINDS));
   const [noGL, setNoGL] = useState(false);
   const stage = useRef<HTMLDivElement>(null);
-  const { exams, status } = useStudentData();
+  const { exams, addExam, removeExam } = useStudentData();
+  const nd = useAgendaNotes();
+  const [editor, setEditor] = useState<{ note: AgendaNote | null; tab: "note" | "exam" } | null>(null);
+  const logged = nd.status === "ready" || nd.status === "local";
 
   useEffect(() => {
     const t = todayKey();
@@ -170,7 +193,7 @@ export default function Kultur() {
     setSelected(t);
   }, []);
 
-  const events = useMemo(() => buildAgenda(exams), [exams]);
+  const events = useMemo(() => buildAgenda(logged ? exams : [], nd.notes), [logged, exams, nd.notes]);
   const shown = useMemo(() => events.filter((e) => active.has(e.kind)), [events, active]);
   const cells = useMemo(() => (view ? monthCells(view.y, view.m) : []), [view]);
   const monthKey = view ? `${view.y}-${view.m}` : "";
@@ -226,12 +249,20 @@ export default function Kultur() {
     return shown.filter((e) => e.end >= a && e.start <= b).sort((x, y) => x.start.localeCompare(y.start) || KIND_PRIORITY.indexOf(x.kind) - KIND_PRIORITY.indexOf(y.kind));
   }, [shown, view]);
   const nextHoliday = useMemo(() => (today ? nextOf(events, ["tatil"], today, { skipHalf: true }) : null), [events, today]);
-  const nextExam = useMemo(() => (today ? nextOf(events, ["kisisel", "sinav"], today) : null), [events, today]);
+  const nextExam = useMemo(() => (today ? nextOf(events.filter((e) => e.kind === "sinav" || e.own === "exam"), ["kisisel", "sinav"], today) : null), [events, today]);
+  const myUpcoming = useMemo(
+    () => (today ? events.filter((e) => e.kind === "kisisel" && e.end >= today).sort((a, b) => a.start.localeCompare(b.start)).slice(0, 4) : []),
+    [events, today],
+  );
   const note = useMemo(() => (today ? noteOfTheDay(dateOf(today)) : null), [today]);
 
   const label = view ? `${MONTHS[view.m]} ${view.y} ajandası. Ok tuşlarıyla gün, Page Up ve Page Down ile ay değiştir.` : "Ajanda";
   const live = selected ? `${fmtDay(selected)}: ${dayEvents.length ? dayEvents.map((e) => e.title).join(", ") : "kayıt yok"}` : "";
 
+  const deleteOwn = (e: AgendaEvent) => {
+    if (!e.ownId || !window.confirm("Bu kaydı silmek istiyor musun?")) return;
+    void (e.own === "note" ? nd.removeNote(e.ownId) : removeExam(e.ownId));
+  };
   const jumpTo = (e: AgendaEvent) => {
     if (!view) return;
     const a = monthStart(view.y, view.m);
@@ -400,7 +431,12 @@ export default function Kultur() {
               {dayEvents.length > 0 ? (
                 <ul className="mt-3 grid gap-2">
                   {dayEvents.map((e) => (
-                    <EventRow key={e.id} e={e} />
+                    <EventRow
+                      key={e.id}
+                      e={e}
+                      onEdit={e.own === "note" ? () => setEditor({ note: nd.notes.find((n) => n.id === e.ownId) ?? null, tab: "note" }) : undefined}
+                      onDelete={e.own ? () => deleteOwn(e) : undefined}
+                    />
                   ))}
                 </ul>
               ) : (
@@ -411,41 +447,79 @@ export default function Kultur() {
                   </p>
                 </div>
               )}
+              {logged && (
+                <button
+                  type="button"
+                  onClick={() => setEditor({ note: null, tab: "note" })}
+                  className="mt-3 inline-flex items-center gap-2 rounded-full bg-sea px-4 py-2 text-sm font-bold text-white transition active:scale-95"
+                >
+                  <FontAwesomeIcon icon={faPlus} /> Bu güne not ekle
+                </button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
       </section>
 
-      {/* Öğrenci: kendi sınavların */}
-      <section className="px-5 pt-3" aria-label="Sınavlarım">
-        <div className="flex items-center gap-3 rounded-[22px] bg-foam p-4">
-          <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${KIND_UI.kisisel.bg}`}>
-            <FontAwesomeIcon icon={faUserGraduate} />
-          </span>
-          <div className="min-w-0 flex-1 text-sm">
-            {status === "guest" ? (
-              <>
-                <b className="font-display">Sınavların ajandada görünsün</b>
-                <p className="text-ink/70">Giriş yaptığında “Sınavlarım”a eklediğin vize, final ve ödev tarihleri bu ajandaya da işlenir.</p>
-              </>
-            ) : exams.length > 0 ? (
-              <>
-                <b className="font-display">{exams.length} sınavın ajandada</b>
-                <p className="text-ink/70">“Sınavlarım” filtresiyle yalnızca kendi tarihlerini görebilirsin.</p>
-              </>
+      {/* Benim günlerim: yalnızca kayıtlı kullanıcı */}
+      <section className="px-5 pt-3" aria-label="Benim günlerim">
+        <div className="rounded-[22px] bg-foam p-4">
+          <div className="flex items-center gap-3">
+            <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${KIND_UI.kisisel.bg}`}>
+              <FontAwesomeIcon icon={faUserGraduate} />
+            </span>
+            <div className="min-w-0 flex-1 text-sm">
+              <b className="font-display">Benim günlerim</b>
+              <p className="text-ink/70">
+                {nd.status === "guest"
+                  ? "Giriş yaparak kendi özel tarihlerini, sınavlarını ve notlarını ajandana ekleyebilirsin; hesabında saklanır."
+                  : "Kendi özel tarihlerini ve sınavlarını not yazarak ajandana ekle. Yalnızca sen görürsün."}
+              </p>
+            </div>
+            {nd.status === "guest" ? (
+              <Link href="/giris" className="shrink-0 rounded-full bg-sun px-4 py-2 text-sm font-extrabold text-deep transition active:scale-95">
+                Giriş yap
+              </Link>
             ) : (
-              <>
-                <b className="font-display">Henüz sınav eklemedin</b>
-                <p className="text-ink/70">Ana sayfadaki “Sınavlarım” bölümünden eklediğin tarihler burada kendi renginde belirir.</p>
-              </>
+              <button
+                type="button"
+                disabled={!logged}
+                onClick={() => setEditor({ note: null, tab: "note" })}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-sun px-4 py-2 text-sm font-extrabold text-deep transition active:scale-95 disabled:opacity-50"
+              >
+                <FontAwesomeIcon icon={faPlus} /> Ekle
+              </button>
             )}
           </div>
-          <Link
-            href={status === "guest" ? "/giris" : "/"}
-            className="shrink-0 rounded-full bg-sun px-4 py-2 text-sm font-extrabold text-deep transition active:scale-95"
-          >
-            {status === "guest" ? "Giriş yap" : "Ekle"}
-          </Link>
+          {logged && (
+            <ul className="mt-3 grid gap-2">
+              {myUpcoming.length === 0 && <li className="text-sm text-ink/60">Yaklaşan kaydın yok. “Ekle” ile ilk kaydını oluştur.</li>}
+              {myUpcoming.map((e) => (
+                <li key={e.id}>
+                  <button
+                    type="button"
+                    onClick={() => jumpTo(e)}
+                    className="flex w-full items-center gap-3 rounded-[16px] bg-card px-3 py-2 text-left text-sm shadow-sm transition active:scale-[0.98]"
+                  >
+                    <span className="min-w-0 flex-1 truncate">
+                      <b className="font-display">{e.title}</b>
+                      <span className="text-ink/60">
+                        {" "}
+                        · {chipOf(e)} · {fmtRange(e.start, e.end)}
+                        {e.time ? ` ${e.time}` : ""}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-xs font-extrabold text-ink/60">{today ? inLabel(Math.max(0, daysBetween(today, e.start))) : ""}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {nd.error && (
+            <p role="alert" className="mt-2 text-sm font-bold text-coral">
+              {nd.error}
+            </p>
+          )}
         </div>
       </section>
 
@@ -473,7 +547,7 @@ export default function Kultur() {
                     <span className="min-w-0">
                       <b className="block font-display text-[15px] leading-tight">{e.title}</b>
                       <span className="text-xs text-ink/60">
-                        {KIND_META[e.kind].chip}
+                        {chipOf(e)}
                         {e.start !== e.end ? ` · ${fmtRange(e.start, e.end)}` : e.half ? " · yarım gün" : ""}
                         {e.time ? ` · ${e.time}` : ""}
                       </span>
@@ -540,6 +614,30 @@ export default function Kultur() {
       <p className="px-5 pb-2 pt-5 text-center text-xs text-ink/55">
         Tarihler bilgilendirme amaçlıdır. Sınav ve tatil değişikliklerini üniversitenin resmî duyurularından kontrol et.
       </p>
+
+      <AnimatePresence>
+        {editor && today && (
+          <AgendaEditor
+            key={editor.note?.id ?? `new-${editor.tab}`}
+            onClose={() => setEditor(null)}
+            initialDate={selected ?? today}
+            today={today}
+            editing={editor.note}
+            startTab={editor.tab}
+            notes={nd.notes}
+            exams={exams}
+            error={nd.error}
+            local={nd.status === "local"}
+            addNote={nd.addNote}
+            updateNote={nd.updateNote}
+            removeNote={nd.removeNote}
+            addExam={addExam}
+            removeExam={removeExam}
+            onSaved={selectKey}
+            onEdit={(n) => setEditor({ note: n, tab: "note" })}
+          />
+        )}
+      </AnimatePresence>
     </main>
   );
 }

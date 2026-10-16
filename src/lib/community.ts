@@ -118,7 +118,7 @@ export const REPORT_REASONS = [
   { id: "diger", label: "Diğer" },
 ] as const;
 
-export const SETUP_MESSAGE = "Topluluk henüz kurulmadı: Supabase'de supabase/community_upgrade.sql dosyasını çalıştır.";
+export const SETUP_MESSAGE = "Topluluk şu anda kullanılamıyor. Biraz sonra tekrar dene.";
 export const isMissingSetup = (e: unknown) => {
   const x = e as { code?: string; message?: string };
   return (

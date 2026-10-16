@@ -163,7 +163,7 @@ export function useBigocuk() {
     if (lost.length) {
       setState(next);
       throw new Error(
-        "Sunucu avatarı eksik kaydetti (" + lost.join(", ") + "). Supabase'de supabase/bigova_v3_upgrade.sql dosyasını çalıştırman gerekiyor.",
+        "Avatarın tam olarak kaydedilemedi. Tekrar dene.",
       );
     }
     setState(next);

@@ -10,7 +10,7 @@ const isMissing = (e: unknown) => {
 };
 export const blockErrorText = (e: unknown) =>
   isMissing(e)
-    ? "Engelleme henüz kurulmadı: Supabase'de supabase/chat_safety_upgrade.sql dosyasını çalıştır."
+    ? "Engelleme şu anda kullanılamıyor. Biraz sonra tekrar dene."
     : (e as { message?: string })?.message || "İşlem yapılamadı. Tekrar dene.";
 
 /** Engellediğin kişiler + engelle / kaldır. Tüm yazma işlemleri sunucu fonksiyonlarından (RPC) geçer. */

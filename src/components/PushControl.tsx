@@ -10,7 +10,7 @@ const DISMISS_KEY = "bigova-push-dismissed";
 const COPY: Record<Exclude<PushStatus, "loading">, string> = {
   unsupported: "Bu tarayıcı anlık bildirimleri desteklemiyor.",
   "ios-install": "iPhone'da bildirim için önce Paylaş (⬆︎) → “Ana Ekrana Ekle” ile uygulamayı yükle, sonra buradan aç.",
-  unconfigured: "Anlık bildirim altyapısı henüz sunucuda kurulmamış.",
+  unconfigured: "Anlık bildirimler şu anda kullanılamıyor.",
   denied: "Bildirimler tarayıcıda engellenmiş. Adres çubuğundaki site ayarlarından izin ver.",
   off: "Uygulama kapalıyken bile arkadaşlarından mesaj gelince haberin olsun.",
   on: "Açık: yeni mesaj geldiğinde bu cihaza bildirim gönderilir.",

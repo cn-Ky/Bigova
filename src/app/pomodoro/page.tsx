@@ -761,11 +761,11 @@ export default function Pomodoro() {
               </Link>
             ) : srvMissing ? (
               <p className="mt-3 text-sm font-bold text-coral">
-                Kurulum eksik: <code>supabase/pomodoro_upgrade.sql</code> dosyasını çalıştır.
+                Bigcoin kazanımı şu anda kullanılamıyor. Biraz sonra tekrar dene.
               </p>
             ) : status === "setup" ? (
               <p className="mt-3 text-sm font-bold text-coral">
-                Kurulum eksik: <code>supabase/bigocuk_upgrade.sql</code> dosyasını çalıştır.
+                Bigcoin kazanımı şu anda kullanılamıyor. Biraz sonra tekrar dene.
               </p>
             ) : status === "error" ? (
               <p className="mt-3 text-sm font-bold text-coral">Bigcoin bilgilerin yüklenemedi. Sayfayı yenile.</p>

@@ -157,7 +157,7 @@ export default function Ulasim() {
           <p className="text-sm text-ink/70">
             {err
               ? "Biraz sonra tekrar dene."
-              : "Supabase'de transport_routes tablosuna kayıt ekle."}
+              : "Güzergâhlar çok yakında burada olacak."}
           </p>
         </div>
       )}

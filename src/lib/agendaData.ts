@@ -1,3 +1,4 @@
+import type { AgendaNote } from "@/lib/agendaNotes";
 import type { Exam } from "@/lib/studentHome";
 import { OZEL_GUNLER } from "@/lib/kulturData";
 
@@ -11,7 +12,8 @@ import { OZEL_GUNLER } from "@/lib/kulturData";
  *   Lisansüstü Eğitim Enstitüsü, Tıp, Diş Hekimliği, Turizm Fakültesi, Yabancı Diller YO ve Gökçeada UBYO
  *   kendi takvimini kullanır; bu yüzden genel tarihler ajandada "Genel takvim" olarak belirtilir.
  *   Yeni akademik yıl için yalnızca AKADEMIK_2026_2027 benzeri yeni bir dizi eklemek yeterlidir.
- * - Kişisel sınavlar: öğrencinin kendi "Sınavlarım" kayıtları (useStudentData).
+ * - Kişisel kayıtlar (yalnızca giriş yapmış kullanıcı): kendi sınavları (student_exams, useStudentData) ve
+ *   kendi özel tarih notları (agenda_notes, useAgendaNotes). İkisi de `kisisel` kategorisinde görünür.
  *
  * Tüm tarihler yerel takvim günüdür: "YYYY-MM-DD" (başlangıç ve bitiş DAHİL).
  */
@@ -33,6 +35,9 @@ export type AgendaEvent = {
   half?: boolean;
   time?: string | null;
   place?: string | null;
+  /** Kullanıcının kendi kaydı: "exam" = Sınavlarım, "note" = ajanda notu. `ownId` düzenleme/silme içindir. */
+  own?: "exam" | "note";
+  ownId?: string;
 };
 
 /** Aynı günde birden çok kayıt varsa sahnede ve renkte hangisi öne çıkar (soldaki önce). */
@@ -43,7 +48,7 @@ export const KIND_META: Record<AgendaKind, { label: string; chip: string; desc: 
   ozel: { label: "Özel günler", chip: "Özel gün", desc: "Anma ve kutlama günleri" },
   sinav: { label: "Sınavlar", chip: "Sınav", desc: "Vize, final, bütünleme" },
   akademik: { label: "Akademik", chip: "Akademik", desc: "Kayıt, ders başlangıcı ve bitişi" },
-  kisisel: { label: "Sınavlarım", chip: "Sınavım", desc: "Senin eklediğin sınavlar" },
+  kisisel: { label: "Benim günlerim", chip: "Benim", desc: "Eklediğin sınav ve notlar" },
 };
 
 /* ───────── Tarih yardımcıları ───────── */
@@ -180,10 +185,10 @@ const AKADEMIK_2026_2027: AgendaEvent[] = [
 ];
 
 /* ───────── Birleştirme ───────── */
-/** Ajandada gösterilecek tüm kayıtlar. `personalExams`: öğrencinin kendi sınavları (giriş yapmamışsa boş). */
-export function buildAgenda(personalExams: Exam[] = []): AgendaEvent[] {
+/** Ajandada gösterilecek tüm kayıtlar. `personalExams` ve `notes`: kullanıcının kendi kayıtları (giriş yapmamışsa boş). */
+export function buildAgenda(personalExams: Exam[] = [], notes: AgendaNote[] = []): AgendaEvent[] {
   const years = [2025, 2026, 2027, 2028];
-  const personal: AgendaEvent[] = personalExams.map((x) => ({
+  const exams: AgendaEvent[] = personalExams.map((x) => ({
     id: `kx-${x.id}`,
     kind: "kisisel",
     title: `${x.course} · ${x.kind}`,
@@ -192,8 +197,21 @@ export function buildAgenda(personalExams: Exam[] = []): AgendaEvent[] {
     end: x.exam_date,
     time: x.exam_time,
     place: x.room,
+    own: "exam",
+    ownId: x.id,
   }));
-  return [...years.flatMap(fixedForYear), ...bayramEvents(), ...AKADEMIK_2026_2027, ...personal];
+  const mine: AgendaEvent[] = notes.map((n) => ({
+    id: `kn-${n.id}`,
+    kind: "kisisel",
+    title: n.title,
+    text: n.note ?? undefined,
+    start: n.note_date,
+    end: n.end_date && n.end_date >= n.note_date ? n.end_date : n.note_date,
+    time: n.note_time,
+    own: "note",
+    ownId: n.id,
+  }));
+  return [...years.flatMap(fixedForYear), ...bayramEvents(), ...AKADEMIK_2026_2027, ...exams, ...mine];
 }
 
 /** `from` gününden itibaren (devam edenler dahil) ilk kayıt. */

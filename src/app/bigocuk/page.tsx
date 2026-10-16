@@ -54,7 +54,7 @@ export default function Bigocuk() {
               </>
             ) : status === "setup" ? (
               <p className="text-sm font-bold text-coral">
-                Kurulum eksik: <code>supabase/bigocuk_upgrade.sql</code> dosyasını çalıştır.
+                Bu bölüm şu anda kullanılamıyor. Biraz sonra tekrar dene.
               </p>
             ) : status === "error" ? (
               <p className="text-sm font-bold text-coral">Bilgilerin yüklenemedi. Sayfayı yenile.</p>

@@ -245,7 +245,7 @@ function PrivacyToggle({ userId }: { userId: string }) {
     const next = !friendsOnly;
     setMsg(null);
     const { error } = await supabaseBrowser().rpc("set_profile_privacy", { p_value: next ? "friends" : "everyone" });
-    if (error) setMsg({ t: "Ayar kaydedilemedi. profiles_upgrade.sql çalıştırıldı mı?", ok: false });
+    if (error) setMsg({ t: "Ayar kaydedilemedi. Tekrar dene.", ok: false });
     else setFriendsOnly(next);
   }
   if (friendsOnly === null) return null;

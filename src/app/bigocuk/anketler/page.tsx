@@ -133,7 +133,7 @@ export default function Anketler() {
     setPubMsg("");
     const { error } = await sb.rpc("poll_publish", { p_question: question.trim(), p_options: options });
     setPublishing(false);
-    if (error) return setPubMsg(isMissingTable(error) ? "Kurulum eksik: supabase/polls_v3_auto_upgrade.sql dosyasını çalıştır." : errMsg(error));
+    if (error) return setPubMsg(isMissingTable(error) ? "Anket şu anda yayınlanamıyor. Biraz sonra tekrar dene." : errMsg(error));
     setQuestion("");
     setOptionsText("");
     setPubMsg("Anket bu haftaya eklendi.");
@@ -178,7 +178,7 @@ export default function Anketler() {
         {load === "loading" && <p className="mt-6 text-sm text-ink/60">Yükleniyor…</p>}
         {load === "setup" && (
           <p className="mt-6 text-sm font-bold text-coral">
-            Kurulum eksik: <code>supabase/polls_v3_auto_upgrade.sql</code> dosyasını çalıştır.
+            Anketler şu anda kullanılamıyor. Biraz sonra tekrar dene.
           </p>
         )}
         {load === "error" && <p className="mt-6 text-sm font-bold text-coral">Anketler yüklenemedi. Sayfayı yenile.</p>}

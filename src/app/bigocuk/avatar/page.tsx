@@ -221,7 +221,7 @@ export default function AvatarSayfasi() {
           )}
           {status === "setup" && (
             <p className="mt-2 text-center text-sm font-bold text-coral">
-              Kurulum eksik: <code>supabase/bigocuk_upgrade.sql</code> dosyasını çalıştır.
+              Avatar bölümü şu anda kullanılamıyor. Biraz sonra tekrar dene.
             </p>
           )}
           {status === "guest" && (

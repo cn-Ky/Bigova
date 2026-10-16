@@ -212,7 +212,7 @@ export default function Profil() {
 
         {setupMissing && (
           <p role="alert" className="mt-3 text-center text-sm font-bold text-coral">
-            Avatarlar yüklenemedi: Supabase'de <code>supabase/profiles_upgrade.sql</code> dosyası çalıştırılmamış olabilir.
+            Avatar şu anda yüklenemedi. Biraz sonra tekrar dene.
           </p>
         )}
         {card.locked && (

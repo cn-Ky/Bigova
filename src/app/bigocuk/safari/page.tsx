@@ -276,7 +276,7 @@ export default function Safari() {
 
         {setup && (
           <p className="mt-3 rounded-2xl bg-coral/15 p-4 text-sm font-bold text-coral">
-            Kurulum eksik: Supabase SQL Editor&apos;de <code>supabase/safari_upgrade.sql</code> dosyasını çalıştır.
+            Safari şu anda kullanılamıyor. Biraz sonra tekrar dene.
           </p>
         )}
         {loadErr && !setup && <p className="mt-3 rounded-2xl bg-coral/15 p-3 text-sm font-bold text-coral">Hayvanlar yüklenemedi: {loadErr}</p>}

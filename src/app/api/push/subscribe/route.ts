@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   const parsed = Sub.safeParse((await req.json().catch(() => null))?.subscription);
   if (!parsed.success) return NextResponse.json({ error: "Geçersiz abonelik." }, { status: 400 });
   const admin = supabaseAdmin();
-  if (!admin) return NextResponse.json({ error: "Sunucu yapılandırması eksik (SUPABASE_SERVICE_ROLE_KEY)." }, { status: 503 });
+  if (!admin) return NextResponse.json({ error: "Bildirim servisi şu anda kullanılamıyor." }, { status: 503 });
   const { error } = await admin.from("push_subscriptions").upsert(
     {
       endpoint: parsed.data.endpoint,
@@ -47,7 +47,7 @@ export async function DELETE(req: Request) {
   const endpoint = z.string().url().safeParse((await req.json().catch(() => null))?.endpoint);
   if (!endpoint.success) return NextResponse.json({ error: "Geçersiz uç nokta." }, { status: 400 });
   const admin = supabaseAdmin();
-  if (!admin) return NextResponse.json({ error: "Sunucu yapılandırması eksik." }, { status: 503 });
+  if (!admin) return NextResponse.json({ error: "Bildirim servisi şu anda kullanılamıyor." }, { status: 503 });
   await admin.from("push_subscriptions").delete().eq("endpoint", endpoint.data).eq("user_id", user.id);
   return NextResponse.json({ ok: true });
 }

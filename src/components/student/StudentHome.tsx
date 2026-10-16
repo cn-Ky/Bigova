@@ -98,7 +98,7 @@ export default function StudentHome() {
 
       {data.status === "local" && (
         <motion.p initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="mb-3 rounded-2xl bg-sun/25 px-4 py-2.5 text-xs font-bold text-ink">
-          Bilgilerin şimdilik yalnızca bu cihazda saklanıyor. Hesabınla eşitlenmesi için yönetici veritabanı güncellemesini yapmalı.
+          Bilgilerin şimdilik yalnızca bu cihazda saklanıyor.
         </motion.p>
       )}
       {data.error && (

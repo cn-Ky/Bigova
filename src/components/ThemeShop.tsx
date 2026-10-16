@@ -220,7 +220,7 @@ export default function ThemeShop({ current, onApply }: { current: string; onApp
 
       {status === "setup" && (
         <p role="status" className="mt-3 rounded-xl bg-sun/25 px-3 py-2 text-sm font-bold">
-          Tema mağazası henüz kurulmadı. Supabase&apos;de supabase/themes_upgrade.sql dosyasını çalıştır.
+          Tema mağazası şu anda kullanılamıyor. Biraz sonra tekrar dene.
         </p>
       )}
 
