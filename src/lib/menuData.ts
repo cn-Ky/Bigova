@@ -32,10 +32,10 @@ export const CATEGORIES: Category[] = [
   {
     id: "school",
     label: "Okul & Ders",
-    blurb: "Notlar, program, pomodoro, kitaplar, dergi, ÜBYS",
+    blurb: "Notlar, program, pomodoro, kitaplar, dergi, yemekhane, ÜBYS",
     icon: faGraduationCap,
     tone: "sun",
-    hrefs: ["/notlar", "/ders-programi", "/pomodoro", "/kitap-pazari", "/dergi", "https://ubys.comu.edu.tr/"],
+    hrefs: ["/notlar", "/ders-programi", "/pomodoro", "/kitap-pazari", "/dergi", "/yemekhane", "https://ubys.comu.edu.tr/"],
   },
   {
     id: "social",

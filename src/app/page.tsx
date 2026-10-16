@@ -150,6 +150,13 @@ const tiles = [
     c: "bg-sky text-deep",
   },
   {
+    kind: "yemekhane",
+    t: "Yemekhane",
+    d: "KYK yurtları ve Ağaköy menüsü",
+    href: "/yemekhane",
+    c: "bg-coral text-deep",
+  },
+  {
     kind: "ubys",
     t: "ÜBYS",
     d: "ÇOMÜ öğrenci bilgi sistemi",
@@ -598,6 +605,19 @@ function TileArt({ kind }: { kind: string }) {
           <path d="M26 35h60" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
           <path d="M33 40v26M49 40v26M65 40v26M81 40v26" stroke="currentColor" strokeWidth="6" strokeLinecap="round" opacity=".35" />
           <path d="M22 72h68" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+        </svg>
+      );
+    case "yemekhane":
+      return (
+        <svg {...shared}>
+          <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" opacity=".5">
+            <path d="M40 30c-5-6 5-9 0-17" />
+            <path d="M56 30c-5-6 5-9 0-17" />
+            <path d="M72 30c-5-6 5-9 0-17" />
+          </g>
+          <path d="M16 38h80c0 20-16 34-40 34S16 58 16 38z" fill="currentColor" opacity=".24" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
+          <path d="M16 38h80" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+          <path d="M38 76h36" stroke="currentColor" strokeWidth="4" strokeLinecap="round" opacity=".4" />
         </svg>
       );
     case "ubys":

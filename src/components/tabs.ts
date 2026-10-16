@@ -18,6 +18,7 @@ import {
   faStopwatch,
   faStore,
   faTowerBroadcast,
+  faUtensils,
   faUserGroup,
 } from "@fortawesome/free-solid-svg-icons";
 export const tabs = [
@@ -117,6 +118,12 @@ export const sideTabs = [
     l: "Kültür Ajandası",
     i: faMonument,
     hint: "Özel günler, tatiller ve sınav takvimi",
+  },
+  {
+    href: "/yemekhane",
+    l: "Yemekhane",
+    i: faUtensils,
+    hint: "KYK yurtları ve Ağaköy yemekhanesi menüleri",
   },
   {
     href: "https://ubys.comu.edu.tr/",

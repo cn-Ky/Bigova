@@ -1,0 +1,19 @@
+{
+  "source": "kyk",
+  "scope": "kyk-canakkale",
+  "variant": "normal",
+  "source_url": "https://kepce.org",
+  "days": [
+    {
+      "date": "2026-11-02",
+      "meal": "dinner",
+      "status": "open",
+      "items": [
+        { "name": "Mercimek Çorbası", "kcal": 150, "cat": "corba" },
+        { "name": "Tavuk Sote", "kcal": 300, "cat": "ana" },
+        { "name": "Bulgur Pilavı", "kcal": 220, "cat": "pilav" },
+        { "name": "Karışık Salata", "kcal": 40, "cat": "yan" }
+      ]
+    }
+  ]
+}
