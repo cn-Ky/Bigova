@@ -8,12 +8,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import QuotedPost from "./QuotedPost";
 import Sheet, { fieldClass } from "./Sheet";
 
-/** Gönderi veya soru paylaş: topluluk seç, metin yaz, en fazla 4 fotoğraf ekle. */
+/** Gönderi paylaş: metin yaz, en fazla 4 fotoğraf ekle (birden çok hedef grup varsa seçtirir). */
 export default function ComposeSheet({
   communities,
   defaultCommunity,
   defaultKind = "post",
-  lockKind = false,
+  lockKind = true,
   quote,
   onClose,
   onPosted,
@@ -54,7 +54,7 @@ export default function ComposeSheet({
     if (!user) return;
     if (quote) {
       if (!body.trim() && !files.length) return setErr("Alıntıya bir şeyler yaz ya da düz yeniden paylaş.");
-    } else if (!community) return setErr("Paylaşmak için bir topluluğa katılmalısın.");
+    } else if (!community) return setErr("Paylaşmak için önce bölümünü ve sınıfını seçmelisin.");
     if (!quote && kind === "question" && title.trim().length < 5) return setErr("Sorunun başlığı en az 5 karakter olmalı.");
     if (!quote && !body.trim() && !files.length && kind === "post") return setErr("Bir şeyler yaz veya fotoğraf ekle.");
     if (!quote && kind === "question" && !body.trim()) return setErr("Sorunu birkaç cümleyle açıkla.");
@@ -85,7 +85,7 @@ export default function ComposeSheet({
   return (
     <Sheet title={quote ? "Alıntıla" : kind === "question" ? "Soru sor" : "Gönderi paylaş"} onClose={onClose}>
       {!quote && communities.length === 0 ? (
-        <p className="rounded-2xl bg-foam p-4 text-sm">Paylaşım yapmak için önce bir topluluğa katıl. “Topluluklar” sekmesinden bölümünü, sınıfını veya bir çalışma grubunu seçebilirsin.</p>
+        <p className="rounded-2xl bg-foam p-4 text-sm">Paylaşım yapmak için önce Akış sayfasından bölümünü ve sınıfını seç.</p>
       ) : (
         <form onSubmit={submit} className="grid gap-3">
           {!lockKind && !quote && (
@@ -97,7 +97,7 @@ export default function ComposeSheet({
               ))}
             </div>
           )}
-          {!quote && (
+          {!quote && communities.length > 1 && (
           <label className="text-xs font-bold">
             Nerede paylaşılsın?
             <select value={community} onChange={(e) => setCommunity(e.target.value)} className={`${fieldClass} mt-1`}>

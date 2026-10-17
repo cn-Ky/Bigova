@@ -26,7 +26,7 @@ function Tags({ text }: { text: string }) {
     <>
       {text.split(HASHTAG_RE).map((part, i) =>
         i % 2 === 1 ? (
-          <Link key={i} href={`/topluluk?q=${encodeURIComponent(part)}`} className="font-bold text-sea hover:underline">
+          <Link key={i} href={`/bigola/kesfet?q=${encodeURIComponent(part)}`} className="font-bold text-sea hover:underline">
             {part}
           </Link>
         ) : (

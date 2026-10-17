@@ -41,7 +41,7 @@ function Lightbox({ paths, urls, start, onClose }: { paths: string[]; urls: Reco
 /**
  * Instagram tarzı fotoğraf galerisi: yatay kaydırmalı, noktalı, "1/3" sayaçlı.
  * Çift dokunma / çift tıklama `onDoubleTap` ile beğeniyi tetikler ve kalp animasyonu gösterir;
- * tek dokunuş fotoğrafı tam ekran açar. Tüm kareler aynı oranda (4:5) kırpılır; tam ekranda kırpılmadan görünür.
+ * tek dokunuş fotoğrafı tam ekran açar. Tüm kareler aynı oranda (telefonda 4:5, geniş ekranda 4:3; en çok 34rem yüksekliğinde) kırpılır; tam ekranda kırpılmadan görünür.
  */
 export default function Carousel({ paths, onDoubleTap, className = "" }: { paths: string[]; onDoubleTap?: () => void; className?: string }) {
   const urls = useImageUrls(paths);
@@ -103,7 +103,7 @@ export default function Carousel({ paths, onDoubleTap, className = "" }: { paths
       >
         {paths.map((p, i) => (
           <li key={p} className="w-full shrink-0 snap-center">
-            <button type="button" onClick={() => tap(i)} aria-label={`Fotoğraf ${i + 1} / ${paths.length}, büyütmek için dokun, beğenmek için çift dokun`} className="block aspect-[4/5] max-h-[75dvh] w-full select-none">
+            <button type="button" onClick={() => tap(i)} aria-label={`Fotoğraf ${i + 1} / ${paths.length}, büyütmek için dokun, beğenmek için çift dokun`} className="block aspect-[4/5] max-h-[min(72dvh,34rem)] w-full select-none sm:aspect-[4/3]">
               {urls[p] ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={urls[p]} alt="Gönderi fotoğrafı" draggable={false} loading={i === 0 ? "eager" : "lazy"} className="h-full w-full object-cover" />

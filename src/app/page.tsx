@@ -95,9 +95,9 @@ const tiles = [
   },
   {
     kind: "friends",
-    t: "Topluluk",
-    d: "Gönderi, soru-cevap ve forum",
-    href: "/topluluk",
+    t: "Bigola",
+    d: "Gönderi paylaş, #etiket keşfet",
+    href: "/bigola",
     c: "bg-sky text-deep",
   },
   {

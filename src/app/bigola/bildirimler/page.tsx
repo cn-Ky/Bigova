@@ -1,9 +1,9 @@
 "use client";
 import UserAvatar from "@/components/bigocuk/UserAvatar";
-import { BackHeader, NeedLogin, Notice } from "@/components/community/CommunityHeader";
+import { BigolaSubPage } from "@/components/community/BigolaLayout";
+import { BackHeader, NeedLogin, Notice, Skeleton } from "@/components/community/CommunityHeader";
 import { FollowButton } from "@/components/community/FollowBar";
-import { EmptyState, SoftButton, TIMELINE_CLASS } from "@/components/community/ui";
-import { TimelineSkeleton } from "@/components/community/FeedList";
+import { EmptyState, SoftButton } from "@/components/community/ui";
 import Mascot from "@/components/Mascot";
 import { useAvatars } from "@/lib/bigocuk/useAvatars";
 import {
@@ -91,7 +91,7 @@ function Requests({ list, onDone }: { list: FollowRequest[]; onDone: (id: string
 
 function Row({ n, avatar, thumb, onFollow }: { n: AppNotification; avatar?: Parameters<typeof UserAvatar>[0]["avatar"]; thumb?: string; onFollow: (r: FollowRelation) => void }) {
   const m = META[n.type];
-  const href = n.post_id ? `/topluluk/gonderi/${n.post_id}` : `/profil/${n.actor_id}`;
+  const href = n.post_id ? `/bigola/gonderi/${n.post_id}` : `/profil/${n.actor_id}`;
   const isFollow = n.type === "follow" || n.type === "follow_accept";
   return (
     <li className={`relative flex items-center gap-3 px-4 py-3 transition-colors hover:bg-foam/60 ${n.is_read ? "" : "bg-sea/[0.06]"}`}>
@@ -165,16 +165,14 @@ export default function Bildirimler() {
   const imagePaths = useMemo(() => Array.from(new Set(items.map((i) => i.image).filter((x): x is string => !!x))), [items]);
   const thumbs = useThumbUrls(imagePaths);
 
-  if (user === undefined) return <main className="p-5"><TimelineSkeleton n={3} /></main>;
+  if (user === undefined) return <main className="p-5"><Skeleton n={3} h="h-16" /></main>;
   if (!user) return <NeedLogin what="Bildirimleri görmek" />;
 
   const setFollowState = (actor: string, rel: FollowRelation) =>
     setItems((cur) => cur.map((x) => (x.actor_id === actor && x.follow_state ? { ...x, follow_state: rel === "following" ? "following" : rel === "pending" ? "pending" : "none" } : x)));
 
   return (
-    <main className="pb-28">
-      <BackHeader title="Bildirimler" subtitle="Beğeni, yorum ve takip hareketleri" />
-      <div className="grid gap-4 px-5 pt-5">
+    <BigolaSubPage header={<BackHeader title="Bildirimler" subtitle="Beğeni, yorum ve takip hareketleri" />}>
         <Requests
           list={requests}
           onDone={(id) => {
@@ -184,7 +182,7 @@ export default function Bildirimler() {
         />
         {error && <Notice text={error} />}
         {loading && !items.length ? (
-          <TimelineSkeleton n={4} />
+          <Skeleton n={4} h="h-16" />
         ) : !items.length && !error ? (
           <EmptyState>
             <Mascot size={96} className="mx-auto" />
@@ -192,7 +190,7 @@ export default function Bildirimler() {
             <p className="mt-1 text-sm text-ink/70">Biri gönderini beğenince, yorum yapınca veya seni takip edince burada görürsün.</p>
           </EmptyState>
         ) : (
-          <ul className={TIMELINE_CLASS}>
+          <ul className="min-w-0 divide-y divide-ink/[0.07] overflow-hidden rounded-[24px] bg-card shadow-sm ring-1 ring-ink/[0.04]">
             {items.map((n) => (
               <Row key={n.id} n={n} avatar={avatars[n.actor_id]} thumb={n.image ? thumbs[n.image] : undefined} onFollow={(r) => setFollowState(n.actor_id, r)} />
             ))}
@@ -203,7 +201,6 @@ export default function Bildirimler() {
             Daha eski bildirimler
           </SoftButton>
         )}
-      </div>
-    </main>
+    </BigolaSubPage>
   );
 }

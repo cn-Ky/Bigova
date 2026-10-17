@@ -58,7 +58,7 @@ export default function QuotedPost({
     </>
   );
   return asLink ? (
-    <Link href={`/topluluk/gonderi/${id}`} onClick={(e) => e.stopPropagation()} className={`${cls} hover:bg-foam/70`}>
+    <Link href={`/bigola/gonderi/${id}`} onClick={(e) => e.stopPropagation()} className={`${cls} hover:bg-foam/70`}>
       {inner}
     </Link>
   ) : (

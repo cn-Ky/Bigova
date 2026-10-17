@@ -40,10 +40,10 @@ export const CATEGORIES: Category[] = [
   {
     id: "social",
     label: "Sosyal & Eğlence",
-    blurb: "Arkadaşlar, topluluk, Bigocuk (oyunlar ve anketler)",
+    blurb: "Arkadaşlar, Bigola, Bigocuk (oyunlar ve anketler)",
     icon: faUsers,
     tone: "coral",
-    hrefs: ["/arkadaslar", "/topluluk", "/bigocuk"],
+    hrefs: ["/arkadaslar", "/bigola", "/bigocuk"],
   },
   {
     id: "about",

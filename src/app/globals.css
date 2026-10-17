@@ -148,6 +148,27 @@ select:focus-visible {
     border-radius: 32px;
   }
 }
+/* Bigola: yapışkan başlık/yan çubuk çalışsın diye (overflow:hidden yapışmayı bozar) taşmayı "clip" ile kes. */
+.shell:has(.bigola-page),
+.shell:has(.bigola-sticky) {
+  overflow: clip;
+}
+.bigola-sticky {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 20;
+}
+@media (max-width: 1023px) {
+  html[data-mobile-nav="top"] .bigola-sticky,
+  html[data-mobile-nav="drawer"] .bigola-sticky {
+    top: 4.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  html[data-desktop-nav="top"] .bigola-sticky {
+    top: 5rem;
+  }
+}
 .m-bob {
   animation: bob 3.2s ease-in-out infinite;
 }

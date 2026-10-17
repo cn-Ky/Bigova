@@ -6,41 +6,52 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { Notice } from "./CommunityHeader";
 import PostCard from "./PostCard";
-import { EmptyState, TIMELINE_CLASS } from "./ui";
+import { EmptyState } from "./ui";
 
-/** İskelet satırı: avatar + üç çizgi. */
-function SkeletonRow() {
+/** İskelet kart: avatar + isim çizgileri + metin + görsel alanı. */
+function SkeletonCard({ media = false }: { media?: boolean }) {
   return (
-    <div className="flex gap-3 px-4 py-4">
-      <span className="shimmer h-11 w-11 shrink-0 rounded-full" />
-      <div className="flex-1 space-y-2.5 pt-1">
-        <span className="shimmer block h-3 w-1/3 rounded-full" />
+    <div className="rounded-[26px] bg-card p-4 shadow-sm ring-1 ring-ink/[0.04] sm:p-5">
+      <div className="flex items-center gap-3">
+        <span className="shimmer h-[46px] w-[46px] shrink-0 rounded-full" />
+        <div className="flex-1 space-y-2">
+          <span className="shimmer block h-3 w-2/5 rounded-full" />
+          <span className="shimmer block h-2.5 w-1/5 rounded-full" />
+        </div>
+      </div>
+      <div className="mt-4 space-y-2.5">
         <span className="shimmer block h-3 w-full rounded-full" />
         <span className="shimmer block h-3 w-4/5 rounded-full" />
+      </div>
+      {media && <span className="shimmer mt-4 block aspect-[4/3] w-full rounded-[20px]" />}
+      <div className="mt-4 flex gap-3 border-t border-ink/[0.07] pt-3">
+        <span className="shimmer h-5 w-12 rounded-full" />
+        <span className="shimmer h-5 w-12 rounded-full" />
+        <span className="shimmer h-5 w-12 rounded-full" />
       </div>
     </div>
   );
 }
 
-/** Yüklenirken zaman çizelgesi biçiminde iskelet satırları. */
+/** Yüklenirken kart biçiminde iskeletler. */
 export function TimelineSkeleton({ n = 3 }: { n?: number }) {
   return (
-    <div className={TIMELINE_CLASS} aria-busy="true" aria-label="Yükleniyor">
+    <div className="grid gap-3 sm:gap-4" aria-busy="true" aria-label="Yükleniyor">
       {Array.from({ length: n }, (_, i) => (
-        <SkeletonRow key={i} />
+        <SkeletonCard key={i} media={i === 1} />
       ))}
     </div>
   );
 }
 
 /**
- * useFeed sonucunu X/Threads tarzı tek bir zaman çizelgesi olarak listeler: ince ayraçlı satırlar,
+ * useFeed sonucunu kart yığını olarak listeler: her gönderi ayrı bir kart,
  * sona yaklaşınca otomatik daha fazla yükleme, boş durum.
  */
 export default function FeedList({
   feed,
   empty,
-  showCommunity = true,
+  showCommunity = false,
 }: {
   feed: ReturnType<typeof useFeed>;
   empty: ReactNode;
@@ -68,9 +79,9 @@ export default function FeedList({
   if (feed.error && !feed.posts.length) return <Notice text={feed.error} />;
   if (!feed.posts.length) return <EmptyState>{empty}</EmptyState>;
   return (
-    <div className="grid gap-3">
+    <div className="grid min-w-0 gap-3">
       {feed.error && <Notice text={feed.error} />}
-      <div className={TIMELINE_CLASS}>
+      <div className="grid min-w-0 gap-3 sm:gap-4">
         <AnimatePresence initial={false}>
           {feed.posts.map((p) => (
             <PostCard
@@ -86,7 +97,7 @@ export default function FeedList({
             />
           ))}
         </AnimatePresence>
-        {feed.loadingMore && <SkeletonRow />}
+        {feed.loadingMore && <SkeletonCard />}
       </div>
       <div ref={sentinel} aria-hidden className="h-px" />
       {feed.hasMore && !feed.loadingMore && feed.error && (

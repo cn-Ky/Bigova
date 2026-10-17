@@ -26,7 +26,7 @@ export default function ProfilePosts({ userId, isSelf, firstName, enabled }: { u
   return (
     <section aria-label="Paylaşımlar" className="grid gap-3">
       <TabChips label="Profil sekmeleri" value={tab} onChange={setTab} items={items} />
-      {tab === "grid" && <PhotoGrid feed={grid} ownerId={userId} empty={none(isSelf ? "Henüz fotoğraf paylaşmadın. Akıştaki kamera düğmesiyle ilk fotoğrafını paylaş." : `${firstName} henüz fotoğraf paylaşmamış.`)} />}
+      {tab === "grid" && <PhotoGrid feed={grid} ownerId={userId} empty={none(isSelf ? "Henüz fotoğraf paylaşmadın. Bigola akışındaki paylaşım kutusundan ilk fotoğrafını paylaş." : `${firstName} henüz fotoğraf paylaşmamış.`)} />}
       {tab === "all" && <FeedList feed={all} empty={none(isSelf ? "Henüz bir gönderi paylaşmadın." : `${firstName} henüz gönderi paylaşmamış.`)} />}
       {tab === "saved" && isSelf && <FeedList feed={saved} empty={none("Kaydettiğin gönderiler burada görünür. Bir gönderideki yer imi simgesine dokunarak kaydedebilirsin.")} />}
     </section>

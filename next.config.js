@@ -78,8 +78,16 @@ module.exports = {
       : {}),
   },
   // Anketler artık Bigocuk'un içinde; eski adres yeni adrese yönlenir.
+  // Topluluk bölümü "Bigola" oldu (/topluluk → /bigola). Kaldırılan alt sayfalar (topluluklar, soru-cevap, forum, t/…) Bigola akışına gider;
+  // eski #etiket aramaları (/topluluk?q=…) Keşfet'e. Sıra önemli: özel kurallar genel kuraldan önce gelir.
   async redirects() {
-    return [{ source: "/anketler", destination: "/bigocuk/anketler", permanent: true }];
+    return [
+      { source: "/anketler", destination: "/bigocuk/anketler", permanent: true },
+      { source: "/topluluk/:section(topluluklar|soru-cevap|forum|t)/:rest*", destination: "/bigola", permanent: true },
+      { source: "/topluluk", has: [{ type: "query", key: "q" }], destination: "/bigola/kesfet", permanent: true },
+      { source: "/topluluk", destination: "/bigola", permanent: true },
+      { source: "/topluluk/:path*", destination: "/bigola/:path*", permanent: true },
+    ];
   },
   async headers() {
     return [

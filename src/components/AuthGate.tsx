@@ -13,7 +13,7 @@ import type { ReactNode } from "react";
 export const PROTECTED_ROUTES: { prefix: string; what: string }[] = [
   // Sosyal & Eğlence
   { prefix: "/arkadaslar", what: "Arkadaş eklemek ve mesajlaşmak" },
-  { prefix: "/topluluk", what: "Topluluğu kullanmak" },
+  { prefix: "/bigola", what: "Bigola'yı kullanmak" },
   { prefix: "/bigocuk", what: "Bigocuk'u oynamak" },
   // Diğer hesap gerektiren sayfalar
   { prefix: "/profil", what: "Profilleri görmek" },

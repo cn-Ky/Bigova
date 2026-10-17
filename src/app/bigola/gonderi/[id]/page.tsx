@@ -1,5 +1,6 @@
 "use client";
 import UserAvatar from "@/components/bigocuk/UserAvatar";
+import { BigolaSubPage } from "@/components/community/BigolaLayout";
 import { BackHeader, NeedLogin, Notice, Skeleton } from "@/components/community/CommunityHeader";
 import PostCard, { ItemMenu, RichText } from "@/components/community/PostCard";
 import ReportSheet from "@/components/community/ReportSheet";
@@ -192,46 +193,28 @@ export default function GonderiDetay() {
     box.current?.focus();
   };
 
-  if (user === undefined || (user && post === undefined)) return <main><BackHeader title="Gönderi" /><div className="p-5"><Skeleton n={2} /></div></main>;
+  if (user === undefined || (user && post === undefined)) return <BigolaSubPage header={<BackHeader title="Gönderi" />}><Skeleton n={2} /></BigolaSubPage>;
   if (!user) return <NeedLogin />;
   if (!post)
     return (
-      <main>
-        <BackHeader title="Gönderi bulunamadı" />
-        <div className="grid gap-3 p-5"><Notice text={err || "Bu gönderi silinmiş olabilir ya da erişimin yok."} /></div>
-      </main>
+      <BigolaSubPage header={<BackHeader title="Gönderi bulunamadı" />}>
+        <Notice text={err || "Bu gönderi silinmiş olabilir ya da erişimin yok."} />
+      </BigolaSubPage>
     );
   const isQuestion = post.kind === "question";
   const actions: Actions = { isQuestion, postMine: post.mine, avatars, children, like, del, accept, report: setReporting, reply };
   return (
-    <main className="pb-32">
-      <BackHeader title={isQuestion ? "Soru" : "Gönderi"} subtitle={post.community_name} />
-      <div className="grid gap-4 px-5 pt-5">
-        <PostCard
-          post={post}
-          avatar={avatars[post.author_id]}
-          quotedAvatar={post.quoted_author_id ? avatars[post.quoted_author_id] : undefined}
-          detail
-          onPatch={(p) => setPost((cur) => (cur ? { ...cur, ...p } : cur))}
-          onRemove={() => router.replace("/topluluk")}
-          onChanged={() => router.push("/topluluk")}
-        />
-        <section aria-label={isQuestion ? "Yanıtlar" : "Yorumlar"}>
-          <h2 className="mb-2 font-display text-lg font-extrabold">{isQuestion ? "Yanıtlar" : "Yorumlar"} ({post.comment_count})</h2>
-          {comments === null ? <Skeleton n={2} h="h-20" /> : roots.length === 0 ? (
-            <EmptyState><Mascot size={80} className="mx-auto" /><p className="mt-1 text-sm text-ink/70">{isQuestion ? "Henüz yanıt yok. Bildiğin bir şey varsa ilk yanıtı sen yaz." : "Henüz yorum yok. İlk yorumu sen yaz."}</p></EmptyState>
-          ) : (
-            <ul className={`${TIMELINE_CLASS} pb-1`}>
-              <AnimatePresence initial={false}>
-                {roots.map((c) => (
-                  <CommentNode key={c.id} c={c} depth={0} a={actions} />
-                ))}
-              </AnimatePresence>
-            </ul>
-          )}
-        </section>
-      </div>
-      <form onSubmit={send} className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-[720px] border-t border-ink/5 bg-foam/95 px-3 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:bottom-0">
+    <BigolaSubPage header={<BackHeader title={isQuestion ? "Soru" : "Gönderi"} subtitle={post.author_name || undefined} />}>
+      <PostCard
+        post={post}
+        avatar={avatars[post.author_id]}
+        quotedAvatar={post.quoted_author_id ? avatars[post.quoted_author_id] : undefined}
+        detail
+        onPatch={(p) => setPost((cur) => (cur ? { ...cur, ...p } : cur))}
+        onRemove={() => router.replace("/bigola")}
+        onChanged={() => router.push("/bigola")}
+      />
+      <form onSubmit={send} className="min-w-0">
         {err && <p role="alert" className="mb-1 px-2 text-xs font-bold text-coral">{err}</p>}
         <AnimatePresence initial={false}>
           {replyTo && (
@@ -242,12 +225,26 @@ export default function GonderiDetay() {
             </motion.p>
           )}
         </AnimatePresence>
-        <div className="flex items-end gap-2 rounded-[26px] bg-card p-1.5 shadow-sm ring-1 ring-ink/5 focus-within:ring-2 focus-within:ring-sun">
+        <div className="flex items-end gap-2 rounded-[26px] bg-card p-1.5 shadow-sm ring-1 ring-ink/5 transition-shadow focus-within:shadow-md focus-within:ring-2 focus-within:ring-sun">
           <textarea id="yanit-kutusu" ref={box} value={text} onChange={(e) => setText(e.target.value.slice(0, 2000))} rows={1} placeholder={replyTo ? "Yanıtını yaz…" : isQuestion ? "Yanıtını yaz…" : "Yorum yaz…"} aria-label={isQuestion ? "Yanıt yaz" : "Yorum yaz"} className="max-h-32 min-h-11 flex-1 resize-none bg-transparent px-3.5 py-2.5 text-base leading-snug outline-none placeholder:text-ink/45" />
           <motion.button whileTap={{ scale: 0.88 }} disabled={!text.trim() || sending} aria-label="Gönder" className={`grid h-11 w-11 shrink-0 place-items-center rounded-full transition-colors ${text.trim() && !sending ? "bg-sea text-white" : "bg-ink/10 text-ink/35"}`}><FontAwesomeIcon icon={faPaperPlane} /></motion.button>
         </div>
       </form>
+      <section aria-label={isQuestion ? "Yanıtlar" : "Yorumlar"} className="min-w-0">
+        <h2 className="mb-2 font-display text-lg font-extrabold">{isQuestion ? "Yanıtlar" : "Yorumlar"} ({post.comment_count})</h2>
+        {comments === null ? <Skeleton n={2} h="h-20" /> : roots.length === 0 ? (
+          <EmptyState><Mascot size={80} className="mx-auto" /><p className="mt-1 text-sm text-ink/70">{isQuestion ? "Henüz yanıt yok. Bildiğin bir şey varsa ilk yanıtı sen yaz." : "Henüz yorum yok. İlk yorumu sen yaz."}</p></EmptyState>
+        ) : (
+          <ul className={`${TIMELINE_CLASS} pb-1`}>
+            <AnimatePresence initial={false}>
+              {roots.map((c) => (
+                <CommentNode key={c.id} c={c} depth={0} a={actions} />
+              ))}
+            </AnimatePresence>
+          </ul>
+        )}
+      </section>
       <AnimatePresence>{reporting && <ReportSheet type="comment" id={reporting} onClose={() => setReporting(null)} />}</AnimatePresence>
-    </main>
+    </BigolaSubPage>
   );
 }

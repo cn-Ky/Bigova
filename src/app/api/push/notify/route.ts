@@ -62,9 +62,9 @@ export async function POST(req: Request) {
   if (!safeSubs.length) return NextResponse.json({ sent: 0 });
 
   const message = JSON.stringify({
-    title: "Bigova Topluluk",
+    title: "Bigola",
     body: `${actor?.name || "Bir öğrenci"} ${TEXT[type]}`,
-    url: post_id ? `/topluluk/gonderi/${post_id}` : type === "follow_request" ? "/topluluk/bildirimler" : `/profil/${actor_id}`,
+    url: post_id ? `/bigola/gonderi/${post_id}` : type === "follow_request" ? "/bigola/bildirimler" : `/profil/${actor_id}`,
     tag: `topluluk-${type}-${post_id ?? actor_id}`,
   });
 

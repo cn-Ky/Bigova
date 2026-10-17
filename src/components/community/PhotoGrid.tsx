@@ -29,7 +29,7 @@ export function GridSkeleton({ n = 9 }: { n?: number }) {
 export function PhotoTile({ id, thumb, imageCount, likes, comments, label }: { id: string; thumb?: string; imageCount: number; likes: number; comments: number; label: string }) {
   return (
     <li className="group relative aspect-square bg-foam">
-      <Link href={`/topluluk/gonderi/${id}`} aria-label={`Gönderiyi aç: ${label || "fotoğraflı gönderi"}, ${likes} beğeni, ${comments} yorum`} className="block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sun">
+      <Link href={`/bigola/gonderi/${id}`} aria-label={`Gönderiyi aç: ${label || "fotoğraflı gönderi"}, ${likes} beğeni, ${comments} yorum`} className="block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sun">
         {thumb ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={thumb} alt="" loading="lazy" draggable={false} className="h-full w-full object-cover" />

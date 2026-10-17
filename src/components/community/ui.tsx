@@ -60,16 +60,16 @@ export function ActionButton({
       }}
       aria-label={label}
       aria-pressed={pressed}
-      className={`group/act flex items-center gap-1 rounded-full py-1.5 pl-2 pr-2.5 font-bold transition-colors ${size === "lg" ? "text-lg" : "text-sm"} ${active ? t.on : "text-ink/55"} ${t.hover}`}
+      className={`group/act flex min-h-9 items-center gap-1.5 rounded-full py-1.5 pl-2.5 pr-3 font-bold transition-colors ${size === "lg" ? "text-[17px]" : "text-sm"} ${active ? t.on : "text-ink/55"} ${t.hover}`}
     >
       {children}
-      {count ? <span className="min-w-[1ch] text-xs tabular-nums">{count}</span> : null}
+      {count ? <span className="min-w-[1ch] text-[13px] tabular-nums">{count}</span> : null}
     </motion.button>
   );
 }
 
 /**
- * Topluluk bölümünün ortak görsel dili. Sitenin diğer sayfalarındaki (İşletmeler, Notlar, Haberler…)
+ * Bigola bölümünün ortak görsel dili. Sitenin diğer sayfalarındaki (İşletmeler, Notlar, Haberler…)
  * kalıpların aynısıdır; böylece yükleme, hover ve basma animasyonları her yerde aynı hissettirir.
  * Renkler yalnızca tema değişkenlerinden (bg-card, bg-sea, bg-sun…) gelir; Ayarlar'daki tüm temalarla çalışır.
  */
@@ -204,7 +204,7 @@ export function Fab({
       whileHover={{ scale: 1.08 }}
       whileTap={{ scale: 0.88 }}
       transition={SPRING}
-      className={`fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-5 z-30 flex h-14 items-center justify-center gap-2 rounded-full bg-sun font-display font-bold text-deep shadow-xl lg:bottom-8 ${wide ? "px-5 text-sm" : "w-14 text-xl"}`}
+      className={`fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-5 z-30 flex h-14 items-center justify-center gap-2 rounded-full bg-sun font-display font-bold text-deep shadow-xl lg:bottom-8 lg:right-8 ${wide ? "px-5 text-sm" : "w-14 text-xl"}`}
     >
       {children}
     </motion.button>

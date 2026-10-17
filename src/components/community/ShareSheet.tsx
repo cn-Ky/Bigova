@@ -51,7 +51,7 @@ export default function ShareSheet({ postId, onClose, onLink }: { postId: string
     if (busy || sent.has(f.id)) return;
     setBusy(f.id);
     setErr("");
-    const link = `${window.location.origin}/topluluk/gonderi/${postId}`;
+    const link = `${window.location.origin}/bigola/gonderi/${postId}`;
     const body = note.trim() ? `${note.trim()}\n${link}` : link;
     const { error } = await sb.from("messages").insert({ to_id: f.id, body });
     if (error) setErr((error as { code?: string }).code === "42501" ? "Bu kişiye şu an mesaj gönderilemiyor." : "Mesaj gönderilemedi. Bağlantını kontrol edip tekrar dene.");

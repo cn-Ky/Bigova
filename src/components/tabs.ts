@@ -13,7 +13,7 @@ import {
   faMapLocationDot,
   faMonument,
   faNewspaper,
-  faPeopleGroup,
+  faFeatherPointed,
   faScrewdriverWrench,
   faStopwatch,
   faStore,
@@ -72,10 +72,10 @@ export const sideTabs = [
     hint: "Arkadaş ekle, mesajlaş",
   },
   {
-    href: "/topluluk",
-    l: "Topluluk",
-    i: faPeopleGroup,
-    hint: "Gönderi, soru-cevap ve forum",
+    href: "/bigola",
+    l: "Bigola",
+    i: faFeatherPointed,
+    hint: "Gönderi paylaş, #etiket keşfet",
   },
   {
     href: "/dergi",

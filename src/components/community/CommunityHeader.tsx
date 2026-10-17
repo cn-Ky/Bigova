@@ -3,44 +3,36 @@ import Mascot from "@/components/Mascot";
 import { SPRING } from "./ui";
 import { formatCount, useUnreadNotifications } from "@/lib/community";
 import { useUser } from "@/lib/useUser";
-import {
-  faArrowLeft,
-  faBell,
-  faCircleQuestion,
-  faCompass,
-  faComments,
-  faNewspaper,
-  faPeopleGroup,
-} from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft, faBell, faHouse, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
-export type CommunityTab = "akis" | "kesfet" | "topluluklar" | "soru" | "forum";
-const TABS: { id: CommunityTab; href: string; l: string; i: typeof faNewspaper }[] = [
-  { id: "akis", href: "/topluluk", l: "Akış", i: faNewspaper },
-  { id: "kesfet", href: "/topluluk/kesfet", l: "Keşfet", i: faCompass },
-  { id: "topluluklar", href: "/topluluk/topluluklar", l: "Topluluklar", i: faPeopleGroup },
-  { id: "soru", href: "/topluluk/soru-cevap", l: "Soru-Cevap", i: faCircleQuestion },
-  { id: "forum", href: "/topluluk/forum", l: "Forum", i: faComments },
+/** Bölümün adı: tek yerden değişir. */
+export const BIGOLA = "Bigola";
+
+export type CommunityTab = "akis" | "kesfet";
+const TABS: { id: CommunityTab; href: string; l: string; i: typeof faHouse }[] = [
+  { id: "akis", href: "/bigola", l: "Akış", i: faHouse },
+  { id: "kesfet", href: "/bigola/kesfet", l: "Keşfet", i: faMagnifyingGlass },
 ];
 
-/** Topluluk bölümleri arasında gezinti. */
+/** Bigola sekmeleri: Akış ve Keşfet, satırı eşit paylaşır. */
 export function CommunityTabs({ active, className = "" }: { active: CommunityTab; className?: string }) {
   return (
-    <nav aria-label="Topluluk bölümleri" className={`-mx-5 overflow-x-auto px-5 [scrollbar-width:none] ${className}`}>
-      <ul className="flex w-max gap-2">
+    <nav aria-label="Bigola bölümleri" className={className}>
+      <ul className="grid grid-cols-2 gap-2 sm:max-w-sm">
         {TABS.map((t) => {
           const on = t.id === active;
           return (
             <li key={t.id}>
-              <motion.div whileTap={{ scale: 0.9 }}>
+              <motion.div whileTap={{ scale: 0.95 }}>
                 <Link
                   href={t.href}
                   aria-current={on ? "page" : undefined}
-                  className={`relative flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${on ? "bg-sun text-deep" : "bg-white/15 text-white"}`}
+                  className={`flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-colors ${on ? "bg-sun text-deep" : "bg-white/15 text-white hover:bg-white/25"}`}
                 >
                   <FontAwesomeIcon icon={t.i} className="text-xs" />
                   {t.l}
@@ -61,7 +53,7 @@ export function NotificationBell({ className = "" }: { className?: string }) {
   const n = formatCount(count);
   return (
     <motion.div whileTap={{ scale: 0.88 }} className={`relative ${className}`}>
-      <Link href="/topluluk/bildirimler" aria-label={count > 0 ? `Bildirimler, ${count} okunmamış` : "Bildirimler"} className="grid h-9 w-9 place-items-center rounded-full bg-white/15 text-white">
+      <Link href="/bigola/bildirimler" aria-label={count > 0 ? `Bildirimler, ${count} okunmamış` : "Bildirimler"} className="grid h-9 w-9 place-items-center rounded-full bg-white/15 text-white">
         <FontAwesomeIcon icon={faBell} />
       </Link>
       {count > 0 && (
@@ -75,23 +67,23 @@ export function NotificationBell({ className = "" }: { className?: string }) {
 
 export default function CommunityHeader({ active, subtitle, children }: { active: CommunityTab; subtitle?: string; children?: ReactNode }) {
   return (
-    <header className="rounded-b-[24px] bg-sea px-5 pb-3 pt-[max(.75rem,env(safe-area-inset-top))] text-white shadow-lg">
+    <header className="rounded-b-[24px] bg-sea px-5 pb-4 pt-[max(.75rem,env(safe-area-inset-top))] text-white shadow-lg">
       <div className="flex items-center gap-3">
-        <h1 className="min-w-0 flex-1 truncate font-display text-xl font-extrabold">Topluluk</h1>
+        <h1 className="min-w-0 flex-1 truncate font-display text-2xl font-extrabold">{BIGOLA}</h1>
         <NotificationBell />
       </div>
-      {subtitle && <p className="mt-0.5 text-xs text-white/75">{subtitle}</p>}
-      <CommunityTabs active={active} className="mt-2" />
+      <p className="mt-0.5 text-xs text-white/75">{subtitle ?? "Biga'daki öğrencilerle paylaş, #etiketlerle keşfet"}</p>
+      <CommunityTabs active={active} className="mt-3" />
       {children}
     </header>
   );
 }
 
-/** Alt sayfalar (topluluk, gönderi, sohbet) için geri düğmeli üst bar. */
-export function BackHeader({ title, subtitle, fallback = "/topluluk", right }: { title: string; subtitle?: string; fallback?: string; right?: ReactNode }) {
+/** Alt sayfalar (gönderi, bildirimler) için geri düğmeli üst bar. */
+export function BackHeader({ title, subtitle, fallback = "/bigola", right }: { title: string; subtitle?: string; fallback?: string; right?: ReactNode }) {
   const router = useRouter();
   return (
-    <header className="sticky top-0 z-20 flex items-center gap-3 rounded-b-[28px] bg-sea px-4 pb-3 pt-[max(.75rem,env(safe-area-inset-top))] text-white shadow-lg">
+    <header className="bigola-sticky flex items-center gap-3 rounded-b-[28px] bg-sea px-4 pb-3 pt-[max(.75rem,env(safe-area-inset-top))] text-white shadow-lg">
       <motion.button
         type="button"
         aria-label="Geri"
@@ -111,7 +103,7 @@ export function BackHeader({ title, subtitle, fallback = "/topluluk", right }: {
   );
 }
 
-export function NeedLogin({ what = "Topluluğu kullanmak" }: { what?: string }) {
+export function NeedLogin({ what = "Bigola'yı kullanmak" }: { what?: string }) {
   return (
     <main className="grid min-h-[60vh] place-items-center p-6">
       <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={SPRING} className="max-w-sm rounded-[24px] bg-card p-6 text-center shadow-sm">

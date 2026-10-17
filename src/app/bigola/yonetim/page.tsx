@@ -1,4 +1,5 @@
 "use client";
+import { BigolaSubPage } from "@/components/community/BigolaLayout";
 import { BackHeader, NeedLogin, Notice, Skeleton } from "@/components/community/CommunityHeader";
 import { REPORT_REASONS, errText, rpc, timeAgo, type AdminReport } from "@/lib/community";
 import { useUser } from "@/lib/useUser";
@@ -27,9 +28,7 @@ export default function Yonetim() {
   if (user === undefined) return <main className="p-5"><Skeleton n={2} /></main>;
   if (!user) return <NeedLogin what="Bu sayfayı görmek" />;
   return (
-    <main className="pb-16">
-      <BackHeader title="Şikâyet kuyruğu" subtitle="Yönetici" fallback="/topluluk" />
-      <div className="grid gap-3 px-5 pt-5">
+    <BigolaSubPage header={<BackHeader title="Şikâyet kuyruğu" subtitle="Yönetici" fallback="/bigola" />}>
         {err && <Notice text={err} />}
         {list === null ? <Skeleton /> : list.length === 0 && !err ? (
           <EmptyState><p className="text-sm text-ink/70">Bekleyen şikâyet yok. 🎉</p></EmptyState>
@@ -56,7 +55,6 @@ export default function Yonetim() {
             </AnimatePresence>
           </ul>
         )}
-      </div>
-    </main>
+    </BigolaSubPage>
   );
 }

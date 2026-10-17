@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { fieldClass } from "./Sheet";
 import { SPRING } from "./ui";
 
-/** İlk girişte bölüm ve sınıf seçtirir; ilgili bölüm/sınıf topluluklarına otomatik üye yapar. */
+/** İlk girişte bölüm ve sınıf seçtirir; akışın buna göre kişiselleşir (ilgili gruplara otomatik üyelik arka planda yapılır). */
 export default function OnboardingCard({ initialDepartment, initialGrade, onDone, compact = false }: { initialDepartment?: string | null; initialGrade?: number | null; onDone: () => void; compact?: boolean }) {
   const [depts, setDepts] = useState<Community[]>([]);
   const [classes, setClasses] = useState<Community[]>([]);
@@ -41,8 +41,8 @@ export default function OnboardingCard({ initialDepartment, initialGrade, onDone
   };
   return (
     <motion.section initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={SPRING} aria-label="Bölüm ve sınıf seçimi" className={`rounded-[24px] bg-card p-4 shadow-sm ${compact ? "" : "border-2 border-tide/40"}`}>
-      <h2 className="font-display text-lg font-extrabold">{compact ? "Bölümün ve sınıfın" : "Topluluğunu bul"}</h2>
-      <p className="mt-1 text-sm text-ink/70">Bölümünü ve sınıfını seç; sana özel topluluklara otomatik katılırsın. İstediğin zaman değiştirebilirsin.</p>
+      <h2 className="font-display text-lg font-extrabold">{compact ? "Bölümün ve sınıfın" : "Bölümünü seç"}</h2>
+      <p className="mt-1 text-sm text-ink/70">Bölümünü ve sınıfını seç; akışında sana özel gönderiler görünür. İstediğin zaman değiştirebilirsin.</p>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
         <select value={dept} onChange={(e) => { setDept(e.target.value); setGrade(""); }} aria-label="Bölüm" className={fieldClass}>
           <option value="">Bölüm seç…</option>
@@ -67,7 +67,7 @@ export default function OnboardingCard({ initialDepartment, initialGrade, onDone
         </p>
       )}
       <motion.button whileTap={{ scale: 0.92 }} type="button" disabled={busy} onClick={save} className="shine mt-3 rounded-full bg-sea px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60">
-        {busy ? "Kaydediliyor…" : "Kaydet ve katıl"}
+        {busy ? "Kaydediliyor…" : "Kaydet"}
       </motion.button>
     </motion.section>
   );

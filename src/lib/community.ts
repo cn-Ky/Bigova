@@ -139,7 +139,7 @@ export const REPORT_REASONS = [
   { id: "diger", label: "Diğer" },
 ] as const;
 
-export const SETUP_MESSAGE = "Topluluk şu anda kullanılamıyor. Biraz sonra tekrar dene.";
+export const SETUP_MESSAGE = "Bigola şu anda kullanılamıyor. Biraz sonra tekrar dene.";
 export const isMissingSetup = (e: unknown) => {
   const x = e as { code?: string; message?: string };
   return (
@@ -188,7 +188,7 @@ export function fullDate(iso: string): string {
 
 /** Gönderi bağlantısını paylaşır (destekleyen cihazlarda paylaşım menüsü, değilse panoya kopyalar). */
 export async function sharePostLink(id: string, text?: string): Promise<"shared" | "copied" | "failed"> {
-  const url = `${window.location.origin}/topluluk/gonderi/${id}`;
+  const url = `${window.location.origin}/bigola/gonderi/${id}`;
   try {
     if (navigator.share) {
       await navigator.share({ url, text: text ? text.slice(0, 120) : undefined, title: "Bigova" });
@@ -339,6 +339,15 @@ export function useMyCommunities(enabled: boolean) {
     void refresh();
   }, [refresh]);
   return { list, error, refresh };
+}
+
+/**
+ * Bigola'da paylaşım tek bir yere gider: genel kampüs topluluğu (üye değilse üye olunan ilk topluluk).
+ * Veritabanı gönderileri hâlâ bir topluluğa bağlar; arayüz bunu kullanıcıya göstermez.
+ */
+export function pickPostTarget(list: Community[]): Community[] {
+  const c = list.find((x) => x.kind === "general") ?? list[0];
+  return c ? [c] : [];
 }
 
 export function useCommunityProfile(enabled: boolean) {
@@ -540,7 +549,7 @@ export type SuggestedPerson = { user_id: string; name: string; reason: "mutual" 
 export const SUGGEST_REASON: Record<SuggestedPerson["reason"], string> = {
   mutual: "Takip ettiklerin takip ediyor",
   department: "Aynı bölümden",
-  active: "Toplulukta aktif",
+  active: "Bigola'da aktif",
 };
 
 const EXPLORE_PAGE = 24;
