@@ -25,6 +25,22 @@ export function CommunityTabs({ active, className = "", onCompose }: { active: C
   return (
     <nav aria-label="Bigola bölümleri" className={className}>
       <ul className="grid grid-cols-3 gap-2 sm:max-w-md">
+        {/* Yeni gönderi: Akış düğmesinin solunda, sayfada sabit durur. Akış'ta pencere açar, Keşfet'te Akış'a gidip açar. */}
+        <li>
+          <motion.div whileTap={{ scale: 0.95 }}>
+            {onCompose ? (
+              <button type="button" onClick={onCompose} aria-label="Yeni gönderi" className={`${tabClass} w-full bg-white text-sea hover:bg-white/90`}>
+                <FontAwesomeIcon icon={faPlus} className="text-xs" />
+                Paylaş
+              </button>
+            ) : (
+              <Link href="/bigola?yeni=1" aria-label="Yeni gönderi" className={`${tabClass} bg-white text-sea hover:bg-white/90`}>
+                <FontAwesomeIcon icon={faPlus} className="text-xs" />
+                Paylaş
+              </Link>
+            )}
+          </motion.div>
+        </li>
         {TABS.map((t) => {
           const on = t.id === active;
           return (
@@ -42,22 +58,6 @@ export function CommunityTabs({ active, className = "", onCompose }: { active: C
             </li>
           );
         })}
-        {/* Yeni gönderi: sayfada sabit durur (eskiden sağ alttaki yüzen düğmeydi). Akış'ta pencere açar, Keşfet'te Akış'a gidip açar. */}
-        <li>
-          <motion.div whileTap={{ scale: 0.95 }}>
-            {onCompose ? (
-              <button type="button" onClick={onCompose} aria-label="Yeni gönderi" className={`${tabClass} w-full bg-white text-sea hover:bg-white/90`}>
-                <FontAwesomeIcon icon={faPlus} className="text-xs" />
-                Paylaş
-              </button>
-            ) : (
-              <Link href="/bigola?yeni=1" aria-label="Yeni gönderi" className={`${tabClass} bg-white text-sea hover:bg-white/90`}>
-                <FontAwesomeIcon icon={faPlus} className="text-xs" />
-                Paylaş
-              </Link>
-            )}
-          </motion.div>
-        </li>
       </ul>
     </nav>
   );

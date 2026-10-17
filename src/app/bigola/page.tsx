@@ -3,13 +3,11 @@ import { BigolaPage } from "@/components/community/BigolaLayout";
 import { NeedLogin, Notice, Skeleton } from "@/components/community/CommunityHeader";
 import ComposeSheet from "@/components/community/ComposeSheet";
 import FeedList from "@/components/community/FeedList";
-import InlineComposer from "@/components/community/InlineComposer";
 import OnboardingCard from "@/components/community/OnboardingCard";
 import StoryTray from "@/components/community/StoryTray";
 import SuggestedPeople from "@/components/community/SuggestedPeople";
 import { PrimaryButton, TabChips } from "@/components/community/ui";
 import Mascot from "@/components/Mascot";
-import { useAvatars } from "@/lib/bigocuk/useAvatars";
 import { GRADE_LABELS, pickPostTarget, useCommunityProfile, useFeed, useMyCommunities } from "@/lib/community";
 import { useUser } from "@/lib/useUser";
 import { AnimatePresence, motion } from "framer-motion";
@@ -37,8 +35,6 @@ function BigolaAkis() {
   const profile = useCommunityProfile(enabled);
   const mine = useMyCommunities(enabled);
   const feed = useFeed({ scope }, enabled);
-  const meIds = useMemo(() => (user ? [user.id] : []), [user]);
-  const me = useAvatars(meIds);
   const target = useMemo(() => pickPostTarget(mine.list ?? []), [mine.list]);
 
   // Keşfet'teki "Paylaş" düğmesi /bigola?yeni=1 ile gelir: gönderi penceresini aç, adresi temizle.
@@ -87,7 +83,6 @@ function BigolaAkis() {
         />
       )}
       <StoryTray userId={user.id} name={name} enabled={enabled} />
-      {mine.list !== null && <InlineComposer communities={target} avatar={me[user.id]} name={name} onPosted={feed.refresh} />}
       <div className="bigola-sticky -mx-5 bg-foam/90 px-5 py-2 backdrop-blur">
         <TabChips label="Akış türü" value={scope} onChange={setScope} items={SCOPES} />
       </div>
