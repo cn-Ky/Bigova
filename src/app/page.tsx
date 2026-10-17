@@ -1,4 +1,5 @@
 "use client";
+import GlobalSearch from "@/components/GlobalSearch";
 import Mascot from "@/components/Mascot";
 import EventAnnouncement from "@/components/EventAnnouncement";
 import Weather from "@/components/Weather";
@@ -14,11 +15,9 @@ import {
   faChevronDown,
   faMessage,
   faHand,
-  faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  AnimatePresence,
   motion,
   useMotionValue,
   useScroll,
@@ -26,8 +25,7 @@ import {
   useTransform,
 } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 const tiles = [
   {
@@ -165,7 +163,6 @@ const tiles = [
     external: true,
   },
 ];
-const words = ["Kafe", "Kırtasiye", "Eczane", "Çamaşırhane", "Market"];
 const list = {
   hidden: {},
   show: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } },
@@ -880,24 +877,9 @@ function UnreadCard() {
 }
 
 export default function Home() {
-  const router = useRouter();
   const { user, name } = useUser();
   const { scrollY } = useScroll();
   const hy = useTransform(scrollY, [0, 300], [0, -18]);
-  const [q, setQ] = useState("");
-  const [i, setI] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setI((n) => (n + 1) % words.length), 2200);
-    return () => clearInterval(t);
-  }, []);
-  const go = (e: React.FormEvent) => {
-    e.preventDefault();
-    router.push(
-      q.trim()
-        ? `/isletmeler?q=${encodeURIComponent(q.trim())}`
-        : "/isletmeler",
-    );
-  };
   return (
     <main>
       <header className="hero-cq relative overflow-hidden rounded-b-[36px] bg-gradient-to-b from-sea to-sea2 px-5 pb-16 pt-[max(4rem,calc(env(safe-area-inset-top)+3.25rem))] text-white lg:pt-6">
@@ -933,47 +915,7 @@ export default function Home() {
         </div>
       </header>
 
-      <motion.form
-        onSubmit={go}
-        whileHover={{ scale: 1.01 }}
-        whileFocus={{ scale: 1.02 }}
-        className="relative z-10 mx-5 -mt-7 flex items-center gap-3 rounded-full bg-card px-5 py-4 text-ink shadow-[0_10px_30px_rgba(14,58,91,.16)] transition-shadow focus-within:shadow-[0_14px_40px_rgba(44,196,181,.45)] focus-within:ring-2 focus-within:ring-tide"
-      >
-        <FontAwesomeIcon icon={faMagnifyingGlass} className="text-ink/60" />
-        <div className="relative flex-1">
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            aria-label="İşletme ara"
-            className="w-full bg-transparent !outline-none"
-          />
-          {!q && (
-            <span className="pointer-events-none absolute inset-0 flex items-center gap-1 text-ink/60">
-              <AnimatePresence mode="wait">
-                <motion.b
-                  key={i}
-                  initial={{ y: 12, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -12, opacity: 0 }}
-                  transition={{ duration: 0.25 }}
-                  className="font-semibold"
-                >
-                  {words[i]}
-                </motion.b>
-              </AnimatePresence>{" "}
-              ara…
-            </span>
-          )}
-        </div>
-        <motion.button
-          whileTap={{ scale: 0.88 }}
-          whileHover={{ scale: 1.1 }}
-          aria-label="Ara"
-          className="grid h-9 w-9 place-items-center rounded-full bg-sea text-white"
-        >
-          <FontAwesomeIcon icon={faArrowRight} />
-        </motion.button>
-      </motion.form>
+      <GlobalSearch />
 
       <UnreadCard />
       <PushControl variant="banner" />

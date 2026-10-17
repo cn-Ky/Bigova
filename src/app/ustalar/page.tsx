@@ -59,6 +59,13 @@ export default function Ustalar() {
   const sb = useMemo(() => supabaseBrowser(), []);
   const [items, setItems] = useState<Usta[] | null>(null);
   const [q, setQ] = useState("");
+  // Keşfet'teki genel aramadan gelen ?q= değeri
+  useEffect(() => {
+    const v = new URLSearchParams(window.location.search).get("q");
+    if (v) {
+      setQ(v.slice(0, 80));
+    }
+  }, []);
   const [cat, setCat] = useState("Tümü");
   const [sort, setSort] = useState<SortId>("new");
   const [onlyEmergency, setOnlyEmergency] = useState(false);

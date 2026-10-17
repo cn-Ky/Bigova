@@ -112,6 +112,14 @@ export default function BigaMapPage() {
   const [activeFilter, setActiveFilter] = useState<FilterId>("all");
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  // Keşfet'teki genel aramadan gelen ?q= değeri
+  useEffect(() => {
+    const v = new URLSearchParams(window.location.search).get("q");
+    if (v) {
+      setQuery(v.slice(0, 80));
+      setSearchOpen(true);
+    }
+  }, []);
   const [selected, setSelected] = useState<MapPlace | null>(null);
   const [focus, setFocus] = useState<MapFocus | null>(null);
 

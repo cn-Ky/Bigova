@@ -82,6 +82,13 @@ export default function Haberler() {
   const { saved, toggle, isSaved } = useSavedNews();
   const [items, setItems] = useState<NewsArticle[] | null>(null);
   const [q, setQ] = useState("");
+  // Keşfet'teki genel aramadan gelen ?q= değeri
+  useEffect(() => {
+    const v = new URLSearchParams(window.location.search).get("q");
+    if (v) {
+      setQ(v.slice(0, 80));
+    }
+  }, []);
   const [cat, setCat] = useState("Tümü");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);

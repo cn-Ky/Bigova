@@ -61,6 +61,13 @@ export default function IsIlanlari() {
   const sb = useMemo(() => supabaseBrowser(), []);
   const [jobs, setJobs] = useState<Job[] | null>(null);
   const [q, setQ] = useState("");
+  // Keşfet'teki genel aramadan gelen ?q= değeri
+  useEffect(() => {
+    const v = new URLSearchParams(window.location.search).get("q");
+    if (v) {
+      setQ(v.slice(0, 80));
+    }
+  }, []);
   const [type, setType] = useState<string>("Tümü");
   const [cat, setCat] = useState("Tümü");
   const [onlyStudent, setOnlyStudent] = useState(false);

@@ -59,6 +59,13 @@ export default function Notlar() {
   const [items, setItems] = useState<N[] | null>(null);
   const [err, setErr] = useState("");
   const [q, setQ] = useState("");
+  // Keşfet'teki genel aramadan gelen ?q= değeri
+  useEffect(() => {
+    const v = new URLSearchParams(window.location.search).get("q");
+    if (v) {
+      setQ(v.slice(0, 80));
+    }
+  }, []);
   const [course, setCourse] = useState("Tümü");
   const [sheet, setSheet] = useState(false);
 

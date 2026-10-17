@@ -32,6 +32,13 @@ export default function KitapPazari() {
   const sb = useMemo(() => supabaseBrowser(), []);
   const [books, setBooks] = useState<Book[]>(demoBooks);
   const [query, setQuery] = useState("");
+  // Keşfet'teki genel aramadan gelen ?q= değeri
+  useEffect(() => {
+    const v = new URLSearchParams(window.location.search).get("q");
+    if (v) {
+      setQuery(v.slice(0, 80));
+    }
+  }, []);
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
