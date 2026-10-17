@@ -384,23 +384,36 @@
 .fb-zoom-nav {
   justify-content: space-between;
 }
-.fb-zoom-scroll {
-  display: flex;
+.fb-zoom-view {
+  position: relative;
   flex: 1;
   min-height: 0;
-  overflow: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
+  touch-action: none; /* sıkıştırma ve sürükleme uygulama tarafından yönetilir */
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: zoom-in;
 }
-.fb-zoom-scroll[data-grab="1"] {
+.fb-zoom-view[data-grab="grab"] {
   cursor: grab;
 }
+.fb-zoom-view[data-grab="grabbing"] {
+  cursor: grabbing;
+}
 .fb-zoom-sheet {
-  position: relative;
-  flex: none;
-  margin: auto;
+  position: absolute;
+  transform-origin: center center;
+  will-change: transform;
   background: #fff;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+.fb-zoom-sheet img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  -webkit-user-drag: none;
 }
 .fb-zoom-busy {
   position: absolute;
@@ -409,14 +422,41 @@
   width: 22px;
   height: 22px;
   border-radius: 999px;
-  border: 3px solid rgba(0, 0, 0, 0.15);
-  border-top-color: #0e3a5b;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #fff;
   animation: fb-rotate 0.8s linear infinite;
+  pointer-events: none;
+}
+.fb-zoom-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 0.9rem;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 0.4rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: fb-hint 4s ease both;
+}
+@keyframes fb-hint {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  10%,
+  80% {
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .fb-intro,
   .fb-toast,
+  .fb-zoom-hint,
   .fb-closed-book,
   .fb-progress i[data-indeterminate="1"] {
     animation: none;

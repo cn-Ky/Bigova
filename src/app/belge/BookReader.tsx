@@ -113,6 +113,8 @@ export default function BookReader({
   const [sound, setSound] = useState(true);
   const soundRef = useRef(true);
   const [zoomPage, setZoomPage] = useState<number | null>(null);
+  const [zoomInit, setZoomInit] = useState(1);
+  const visibleRef = useRef<number[]>([1]);
   const [announce, setAnnounce] = useState("");
 
   // ───────── ölçü ve yerleşim ─────────
@@ -296,6 +298,43 @@ export default function BookReader({
   useEffect(() => {
     setAnnounce(label);
   }, [label]);
+  visibleRef.current = visible;
+
+  const openZoom = useCallback((x: number | null, scale = 1) => {
+    // Çift sayfada imlecin / parmakların olduğu yarıdaki sayfa açılır
+    const list = visibleRef.current;
+    const stage = stageRef.current;
+    let target = list[0];
+    if (x !== null && list.length === 2 && stage) {
+      const rect = stage.getBoundingClientRect();
+      const book = stage.querySelector(".fb-book")?.getBoundingClientRect();
+      const mid = book ? book.left + book.width / 2 : rect.left + rect.width / 2;
+      if (x > mid) target = list[1];
+    }
+    setZoomInit(scale);
+    setZoomPage(target);
+  }, []);
+
+  // Kitap üzerinde iki parmakla sıkıştırma ya da Ctrl+tekerlek (dokunmatik yüzey sıkıştırması) → yakınlaştırma görünümü
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    const onTouchStart = (event: TouchEvent) => {
+      if (event.touches.length !== 2) return;
+      openZoom((event.touches[0].clientX + event.touches[1].clientX) / 2, 1.8);
+    };
+    const onWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey) return;
+      event.preventDefault();
+      openZoom(event.clientX, 1.8);
+    };
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("wheel", onWheel);
+    };
+  }, [openZoom, ready]);
 
   const next = useCallback(() => flipRef.current?.flipNext(), []);
   const prev = useCallback(() => flipRef.current?.flipPrev(), []);
@@ -335,7 +374,7 @@ export default function BookReader({
           break;
         case "z":
         case "Z":
-          setZoomPage(visible[0]);
+          openZoom(null);
           break;
         case "f":
         case "F":
@@ -348,7 +387,7 @@ export default function BookReader({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [zoomPage, next, prev, jump, numPages, onToggleImmersive, visible]);
+  }, [zoomPage, next, prev, jump, numPages, onToggleImmersive, openZoom]);
 
   function toggleSound() {
     const value = !sound;
@@ -441,9 +480,9 @@ export default function BookReader({
           <div className="flex items-center gap-1.5">
             <button
               type="button"
-              onClick={() => setZoomPage(visible[0])}
+              onClick={() => openZoom(null)}
               aria-label="Sayfayı yakınlaştır"
-              title="Yakınlaştır (Z)"
+              title="Yakınlaştır (Z) · kitapta iki parmakla sıkıştırabilirsin"
               className={tool}
             >
               <FontAwesomeIcon icon={faMagnifyingGlassPlus} />
@@ -492,6 +531,7 @@ export default function BookReader({
           numPages={numPages}
           aspect={aspect}
           startPage={zoomPage}
+          initialScale={zoomInit}
           title={title}
           onClose={(page) => {
             setZoomPage(null);
