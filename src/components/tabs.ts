@@ -135,5 +135,15 @@ export const sideTabs = [
 ];
 export type SideTab = (typeof sideTabs)[number] & { external?: boolean };
 export const settingsTab = tabs[4];
+/** Mobil alt menü (dock): Keşfet, Bigola, Kültür Ajandası, Arkadaşlar, Ayarlar.
+ *  `tabs` yan menü/çekmece tarafından da kullanıldığı için ayrı bir liste olarak tutulur. */
+const pick = (href: string) => sideTabs.find((t) => t.href === href)!;
+export const mobileTabs = [
+  tabs[0],
+  pick("/bigola"),
+  pick("/kultur"),
+  pick("/arkadaslar"),
+  settingsTab,
+];
 export const isOn = (p: string, h: string) =>
   h === "/" ? p === "/" : p.startsWith(h);

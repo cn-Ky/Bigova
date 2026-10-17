@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import Mascot from "./Mascot";
-import { isOn, tabs } from "./tabs";
+import UnreadBadge from "./UnreadBadge";
+import { isOn, mobileTabs } from "./tabs";
 
 const WAVE = "M0 30 Q150 0 300 30 T600 30 T900 30 T1200 30 V60 H0Z";
 const Wave = ({ c, cls }: { c: string; cls: string }) => (
@@ -38,7 +39,7 @@ export default function BottomNav() {
       className="adaptive-mobile-dock fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[440px] px-3 pb-[max(.75rem,env(safe-area-inset-bottom))] md:max-w-[520px] lg:hidden"
     >
       <ul className="flex items-end rounded-[30px] bg-card/90 p-1.5 shadow-[0_12px_38px_rgba(14,58,91,.28)] ring-1 ring-ink/5 backdrop-blur-xl">
-        {tabs.map((t) => {
+        {mobileTabs.map((t) => {
           const on = isOn(p, t.href);
           return (
             <motion.li
@@ -90,6 +91,7 @@ export default function BottomNav() {
                   className={`relative text-[18px] ${on ? "text-white" : "text-ink/60"}`}
                 >
                   <FontAwesomeIcon icon={t.i} />
+                  {t.href === "/arkadaslar" && <UnreadBadge className="absolute -right-2.5 -top-2 !h-4 !min-w-[1rem] !text-[.6rem]" />}
                 </motion.span>
                 {on && (
                   <motion.span
