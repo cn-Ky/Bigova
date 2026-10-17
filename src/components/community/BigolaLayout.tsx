@@ -20,6 +20,7 @@ export function BigolaPage({
   header,
   rail = true,
   railSearch = true,
+  onCompose,
   children,
 }: {
   active: CommunityTab;
@@ -29,11 +30,15 @@ export function BigolaPage({
   rail?: boolean;
   /** Yan çubukta arama kutusu (Keşfet sayfasında zaten var, orada kapatılır). */
   railSearch?: boolean;
+  /** Başlıktaki "Paylaş" düğmesi; verilmezse Akış sayfasına gidip paylaşım penceresini açar. */
+  onCompose?: () => void;
   children: ReactNode;
 }) {
   return (
     <main className="bigola-page pb-28 lg:pb-12" style={{ maxWidth: "66.5rem" }}>
-      <CommunityHeader active={active}>{header}</CommunityHeader>
+      <CommunityHeader active={active} onCompose={onCompose}>
+        {header}
+      </CommunityHeader>
       <BigolaColumns rail={rail} railSearch={railSearch}>
         {children}
       </BigolaColumns>

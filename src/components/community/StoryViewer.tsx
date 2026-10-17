@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 const DURATION = 5000;
 
@@ -171,10 +172,12 @@ export default function StoryViewer({ users, start, selfId, onClose, onChanged }
     }
   };
 
-  if (!cur) return null;
+  if (!cur || typeof document === "undefined") return null;
   const url = story ? urls[story.image] : undefined;
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} role="dialog" aria-modal="true" aria-label={`${cur.name} hikayesi`} className="fixed inset-0 z-[95] grid place-items-center bg-black">
+  // Sayfa kabuğunun (.shell / .page-in) dışında, doğrudan body'ye çizilir: böylece "fixed" gerçekten
+  // görünür ekrana oturur (sayfa geçiş animasyonu ya da kaydırma yüzünden aşağıda kalmaz) ve menüleri de örter.
+  return createPortal(
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} role="dialog" aria-modal="true" aria-label={`${cur.name} hikayesi`} className="fixed inset-0 z-[1000] grid h-[100dvh] w-screen place-items-center bg-black">
       <div className="relative h-full max-h-[100dvh] w-full max-w-[460px] select-none overflow-hidden bg-deep sm:aspect-[9/16] sm:h-auto sm:max-h-[96dvh] sm:rounded-[28px]">
         {url ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -277,6 +280,7 @@ export default function StoryViewer({ users, start, selfId, onClose, onChanged }
           </motion.div>
         )}
       </div>
-    </motion.div>
+    </motion.div>,
+    document.body,
   );
 }

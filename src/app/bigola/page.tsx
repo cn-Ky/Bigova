@@ -7,13 +7,11 @@ import InlineComposer from "@/components/community/InlineComposer";
 import OnboardingCard from "@/components/community/OnboardingCard";
 import StoryTray from "@/components/community/StoryTray";
 import SuggestedPeople from "@/components/community/SuggestedPeople";
-import { Fab, PrimaryButton, TabChips } from "@/components/community/ui";
+import { PrimaryButton, TabChips } from "@/components/community/ui";
 import Mascot from "@/components/Mascot";
 import { useAvatars } from "@/lib/bigocuk/useAvatars";
 import { GRADE_LABELS, pickPostTarget, useCommunityProfile, useFeed, useMyCommunities } from "@/lib/community";
 import { useUser } from "@/lib/useUser";
-import { faPlus } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -43,6 +41,14 @@ function BigolaAkis() {
   const me = useAvatars(meIds);
   const target = useMemo(() => pickPostTarget(mine.list ?? []), [mine.list]);
 
+  // Keşfet'teki "Paylaş" düğmesi /bigola?yeni=1 ile gelir: gönderi penceresini aç, adresi temizle.
+  const wantsCompose = params.get("yeni") === "1";
+  useEffect(() => {
+    if (!wantsCompose || mine.list === null) return;
+    setComposing(true);
+    router.replace("/bigola");
+  }, [wantsCompose, mine.list, router]);
+
   // Eski ?q= adresleri (paylaşılmış #etiket bağlantıları) Keşfet'e yönlenir: arama artık orada.
   useEffect(() => {
     if (oldQuery) router.replace(`/bigola/kesfet?q=${encodeURIComponent(oldQuery)}`);
@@ -55,6 +61,7 @@ function BigolaAkis() {
   return (
     <BigolaPage
       active="akis"
+      onCompose={() => setComposing(true)}
       header={
         profile.department && (
           <p className="mt-3 text-xs font-bold text-white/85">
@@ -106,8 +113,10 @@ function BigolaAkis() {
           ) : (
             <>
               <Mascot size={96} className="mx-auto" />
-              <p className="font-display text-lg font-extrabold">{scope === "mine" ? "Akışın henüz boş" : "Henüz paylaşım yok"}</p>
-              <p className="mt-1 text-sm text-ink/70">İlk gönderiyi sen paylaş ya da Keşfet&apos;ten yeni kişiler bul.</p>
+              <p className="font-display text-lg font-extrabold">{scope === "mine" ? "Sınıfından henüz paylaşım yok" : "Henüz paylaşım yok"}</p>
+              <p className="mt-1 text-sm text-ink/70">
+                {scope === "mine" ? "Aynı bölüm ve sınıftaki arkadaşlarının gönderileri burada görünür. İlk gönderiyi sen paylaş ya da Herkes sekmesine göz at." : "İlk gönderiyi sen paylaş ya da Keşfet'ten yeni kişiler bul."}
+              </p>
               <div className="mt-3 flex flex-wrap justify-center gap-2">
                 <PrimaryButton type="button" onClick={() => setComposing(true)}>Paylaş</PrimaryButton>
                 <motion.div whileTap={{ scale: 0.92 }}>
@@ -118,9 +127,6 @@ function BigolaAkis() {
           )
         }
       />
-      <Fab onClick={() => setComposing(true)} label="Yeni gönderi">
-        <FontAwesomeIcon icon={faPlus} />
-      </Fab>
       <AnimatePresence>{composing && <ComposeSheet communities={target} onClose={() => setComposing(false)} onPosted={feed.refresh} />}</AnimatePresence>
     </BigolaPage>
   );

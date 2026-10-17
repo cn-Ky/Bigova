@@ -3,7 +3,7 @@ import Mascot from "@/components/Mascot";
 import { SPRING } from "./ui";
 import { formatCount, useUnreadNotifications } from "@/lib/community";
 import { useUser } from "@/lib/useUser";
-import { faArrowLeft, faBell, faHouse, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft, faBell, faHouse, faMagnifyingGlass, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -20,10 +20,11 @@ const TABS: { id: CommunityTab; href: string; l: string; i: typeof faHouse }[] =
 ];
 
 /** Bigola sekmeleri: Akış ve Keşfet, satırı eşit paylaşır. */
-export function CommunityTabs({ active, className = "" }: { active: CommunityTab; className?: string }) {
+export function CommunityTabs({ active, className = "", onCompose }: { active: CommunityTab; className?: string; onCompose?: () => void }) {
+  const tabClass = "flex items-center justify-center gap-2 rounded-full px-3 py-2 text-sm font-bold transition-colors";
   return (
     <nav aria-label="Bigola bölümleri" className={className}>
-      <ul className="grid grid-cols-2 gap-2 sm:max-w-sm">
+      <ul className="grid grid-cols-3 gap-2 sm:max-w-md">
         {TABS.map((t) => {
           const on = t.id === active;
           return (
@@ -32,7 +33,7 @@ export function CommunityTabs({ active, className = "" }: { active: CommunityTab
                 <Link
                   href={t.href}
                   aria-current={on ? "page" : undefined}
-                  className={`flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-colors ${on ? "bg-sun text-deep" : "bg-white/15 text-white hover:bg-white/25"}`}
+                  className={`${tabClass} ${on ? "bg-sun text-deep" : "bg-white/15 text-white hover:bg-white/25"}`}
                 >
                   <FontAwesomeIcon icon={t.i} className="text-xs" />
                   {t.l}
@@ -41,6 +42,22 @@ export function CommunityTabs({ active, className = "" }: { active: CommunityTab
             </li>
           );
         })}
+        {/* Yeni gönderi: sayfada sabit durur (eskiden sağ alttaki yüzen düğmeydi). Akış'ta pencere açar, Keşfet'te Akış'a gidip açar. */}
+        <li>
+          <motion.div whileTap={{ scale: 0.95 }}>
+            {onCompose ? (
+              <button type="button" onClick={onCompose} aria-label="Yeni gönderi" className={`${tabClass} w-full bg-white text-sea hover:bg-white/90`}>
+                <FontAwesomeIcon icon={faPlus} className="text-xs" />
+                Paylaş
+              </button>
+            ) : (
+              <Link href="/bigola?yeni=1" aria-label="Yeni gönderi" className={`${tabClass} bg-white text-sea hover:bg-white/90`}>
+                <FontAwesomeIcon icon={faPlus} className="text-xs" />
+                Paylaş
+              </Link>
+            )}
+          </motion.div>
+        </li>
       </ul>
     </nav>
   );
@@ -65,7 +82,7 @@ export function NotificationBell({ className = "" }: { className?: string }) {
   );
 }
 
-export default function CommunityHeader({ active, subtitle, children }: { active: CommunityTab; subtitle?: string; children?: ReactNode }) {
+export default function CommunityHeader({ active, subtitle, onCompose, children }: { active: CommunityTab; subtitle?: string; onCompose?: () => void; children?: ReactNode }) {
   return (
     <header className="rounded-b-[24px] bg-sea px-5 pb-4 pt-[max(.75rem,env(safe-area-inset-top))] text-white shadow-lg">
       <div className="flex items-center gap-3">
@@ -73,7 +90,7 @@ export default function CommunityHeader({ active, subtitle, children }: { active
         <NotificationBell />
       </div>
       <p className="mt-0.5 text-xs text-white/75">{subtitle ?? "Biga'daki öğrencilerle paylaş, #etiketlerle keşfet"}</p>
-      <CommunityTabs active={active} className="mt-3" />
+      <CommunityTabs active={active} className="mt-3" onCompose={onCompose} />
       {children}
     </header>
   );
