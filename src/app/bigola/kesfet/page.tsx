@@ -2,17 +2,17 @@
 import UserAvatar from "@/components/bigocuk/UserAvatar";
 import { BigolaPage } from "@/components/community/BigolaLayout";
 import { NeedLogin, Notice } from "@/components/community/CommunityHeader";
-import FeedList from "@/components/community/FeedList";
+import FeedList, { TimelineSkeleton } from "@/components/community/FeedList";
 import { FollowButton } from "@/components/community/FollowBar";
 import { GRID_CLASS, GridSkeleton, PhotoTile, RetryButton, useInfiniteSentinel } from "@/components/community/PhotoGrid";
 import SuggestedPeople from "@/components/community/SuggestedPeople";
-import Trending, { tagHref } from "@/components/community/Trending";
+import { tagHref } from "@/components/community/Trending";
 import { EmptyState, TabChips } from "@/components/community/ui";
 import Mascot from "@/components/Mascot";
 import { useAvatars } from "@/lib/bigocuk/useAvatars";
-import { useExplore, useFeed, useSearchPeople, useThumbUrls, useTrendingTags, type FollowRelation, type TrendingTag } from "@/lib/community";
+import { HASHTAG_RE, useExplore, useFeed, useSearchPeople, useThumbUrls, useTrendingTags, type FollowRelation, type TrendingTag } from "@/lib/community";
 import { useUser } from "@/lib/useUser";
-import { faHashtag, faMagnifyingGlass, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faFire, faHashtag, faMagnifyingGlass, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -168,13 +168,52 @@ function Results({ q, tags, enabled }: { q: string; tags: TrendingTag[]; enabled
   );
 }
 
+/** Akımdaki etiketler: arama yapmadan, Keşfet açılır açılmaz görünür; dokununca o etiketin gönderileri açılır. */
+function TrendingChips({ tags }: { tags: TrendingTag[] }) {
+  if (!tags.length) return null;
+  return (
+    <section aria-label="Akımdaki etiketler" className="min-w-0">
+      <h2 className="mb-2 flex items-center gap-2 font-display text-lg font-extrabold">
+        <FontAwesomeIcon icon={faFire} className="text-sm text-coral" />
+        Akımdaki etiketler
+      </h2>
+      <ul className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
+        {tags.slice(0, 10).map((t) => (
+          <li key={t.tag} className="shrink-0">
+            <Link href={tagHref(t.tag)} className="flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm font-extrabold text-sea shadow-sm ring-1 ring-ink/[0.04] transition-colors hover:bg-foam">
+              {t.tag}
+              <span className="text-xs font-semibold text-ink/55">{t.uses}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/** İçinde #etiket geçen en yeni gönderiler: arama yazmadan Keşfet'te akım olarak akar. */
+function TaggedPosts({ enabled }: { enabled: boolean }) {
+  const feed = useFeed({ scope: "all", q: "#" }, enabled);
+  const posts = useMemo(() => feed.posts.filter((p) => HASHTAG_RE.test(`${p.title ?? ""} ${p.body}`)), [feed.posts]);
+  const shown = useMemo(() => ({ ...feed, posts }), [feed, posts]);
+  if (feed.loading && !feed.posts.length) return <TimelineSkeleton n={2} />;
+  if (!posts.length) return null;
+  return (
+    <section aria-label="Etiketli gönderiler" className="grid min-w-0 gap-3">
+      <h2 className="font-display text-lg font-extrabold">Akımdaki gönderiler</h2>
+      <FeedList feed={shown} empty={null} />
+    </section>
+  );
+}
+
 /** Popüler ve yeni fotoğraflı gönderilerden oluşan sonsuz kaydırmalı ızgara. */
-function ExploreGrid({ enabled }: { enabled: boolean }) {
+function ExploreGrid({ enabled, hideEmpty = false }: { enabled: boolean; hideEmpty?: boolean }) {
   const ex = useExplore(enabled);
   const thumbs = useThumbUrls(useMemo(() => ex.tiles.map((t) => t.image), [ex.tiles]));
   const sentinel = useInfiniteSentinel(ex.hasMore, ex.loadingMore, ex.error, ex.loadMore, ex.tiles.length);
   if (ex.loading && !ex.tiles.length) return <GridSkeleton />;
   if (ex.error && !ex.tiles.length) return <Notice text={ex.error} />;
+  if (!ex.tiles.length && hideEmpty) return null;
   if (!ex.tiles.length)
     return (
       <EmptyState>
@@ -216,9 +255,10 @@ function KesfetIcerik() {
       ) : (
         <>
           {/* Geniş ekranda aynı içerik sağ yan çubukta durur */}
-          <Trending tags={tags} className="xl:hidden" />
+          <TrendingChips tags={tags} />
+          <TaggedPosts enabled={enabled} />
           <SuggestedPeople enabled={enabled} className="xl:hidden" />
-          <ExploreGrid enabled={enabled} />
+          <ExploreGrid enabled={enabled} hideEmpty={tags.length > 0} />
         </>
       )}
     </BigolaPage>
