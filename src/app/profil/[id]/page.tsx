@@ -1,11 +1,11 @@
 "use client";
 import Avatar from "@/components/bigocuk/Avatar";
 import UserAvatar from "@/components/bigocuk/UserAvatar";
-import FeedList from "@/components/community/FeedList";
+import FollowBar from "@/components/community/FollowBar";
+import ProfilePosts from "@/components/community/ProfilePosts";
 import { DEFAULT_AVATAR, ITEM_MAP, SLOTS, speciesOf, type AvatarConfig } from "@/lib/bigocuk/items";
 import { rememberAvatar, useAvatars } from "@/lib/bigocuk/useAvatars";
 import { blockErrorText, useBlocks } from "@/lib/blocks";
-import { useFeed } from "@/lib/community";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useUser } from "@/lib/useUser";
 import {
@@ -151,9 +151,6 @@ export default function Profil() {
     await load();
   }
 
-  // Profil sahibinin topluluk gönderileri ve yeniden paylaşımları (gizli profilde yüklenmez)
-  const posts = useFeed({ scope: "user", author: targetId }, !!user && UUID.test(targetId) && !!card && !card.locked);
-
   const back = (
     <Link href="/arkadaslar" className="font-bold text-sea">
       <FontAwesomeIcon icon={faArrowLeft} /> Arkadaşlara dön
@@ -235,6 +232,8 @@ export default function Profil() {
             <span className="text-xs text-ink/60">Ortak arkadaş</span>
           </li>
         </ul>
+
+        <FollowBar userId={card.id} blocked={blocks.isBlocked(card.id)} />
 
         {notice && (
           <p role="status" className={`mt-4 text-center text-sm font-bold ${notice.ok ? "text-tide" : "text-coral"}`}>
@@ -368,13 +367,7 @@ export default function Profil() {
                 ))}
               </ul>
             </section>
-            <section aria-label="Gönderiler">
-              <h2 className="mb-2 font-display text-lg font-extrabold">Gönderiler</h2>
-              <FeedList
-                feed={posts}
-                empty={<p className="text-sm text-ink/70">{card.relation === "self" ? "Henüz bir gönderi paylaşmadın." : `${first} henüz gönderi paylaşmamış.`}</p>}
-              />
-            </section>
+            <ProfilePosts userId={targetId} isSelf={card.relation === "self"} firstName={first} enabled={!!user && UUID.test(targetId) && !card.locked} />
             {friends.length > 0 && (
               <section className="rounded-[22px] bg-card p-4 shadow-sm">
                 <h2 className="font-display text-lg font-extrabold">

@@ -1,9 +1,7 @@
 "use client";
 import UserAvatar from "@/components/bigocuk/UserAvatar";
 import type { AvatarConfig } from "@/lib/bigocuk/items";
-import { splitLinks } from "@/lib/chatUtils";
 import {
-  HASHTAG_RE,
   errText,
   formatCount,
   fullDate,
@@ -13,7 +11,6 @@ import {
   timeAgo,
   toggleBookmark,
   toggleRepost,
-  useImageUrls,
   type FeedPost,
 } from "@/lib/community";
 import {
@@ -30,51 +27,23 @@ import {
   faRetweet,
   faTrash,
   faUser,
-  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import Carousel from "./Carousel";
+import CommentsSheet from "./CommentsSheet";
 import ComposeSheet from "./ComposeSheet";
+import ShareSheet from "./ShareSheet";
 import QuotedPost from "./QuotedPost";
 import ReportSheet from "./ReportSheet";
 import { ActionButton, CARD_CLASS, SPRING, cardMotion, useDismiss } from "./ui";
+import RichText from "./RichText";
 
-/** Düz metni gösterir: yalnızca http/https bağlantıları ve #etiketler tıklanabilir. */
-export function RichText({ text, className = "" }: { text: string; className?: string }) {
-  return (
-    <p className={`whitespace-pre-wrap break-words ${className}`}>
-      {splitLinks(text).map((p, i) =>
-        p.href ? (
-          <a key={i} href={p.href} target="_blank" rel="noopener noreferrer nofollow ugc" className="font-bold text-sea underline decoration-tide decoration-2 underline-offset-2">
-            {p.text}
-          </a>
-        ) : (
-          <Tags key={i} text={p.text} />
-        ),
-      )}
-    </p>
-  );
-}
-
-/** Metindeki #etiketleri, akışta o etiketi arayan bağlantıya çevirir. */
-function Tags({ text }: { text: string }) {
-  return (
-    <>
-      {text.split(HASHTAG_RE).map((part, i) =>
-        i % 2 === 1 ? (
-          <Link key={i} href={`/topluluk?q=${encodeURIComponent(part)}`} className="font-bold text-sea hover:underline">
-            {part}
-          </Link>
-        ) : (
-          <span key={i}>{part}</span>
-        ),
-      )}
-    </>
-  );
-}
+/** Eski içe aktarmalar (gönderi sayfası vb.) bozulmasın. */
+export { RichText };
 
 const MENU_ITEM = "flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-bold transition-colors hover:bg-foam";
 const MENU_BOX = "absolute z-20 w-52 overflow-hidden rounded-2xl bg-card py-1 shadow-xl ring-1 ring-ink/10";
@@ -151,59 +120,6 @@ function RepostMenu({ post, onRepost, onQuote, size }: { post: FeedPost; onRepos
   );
 }
 
-function Photos({ paths }: { paths: string[] }) {
-  const urls = useImageUrls(paths);
-  const [open, setOpen] = useState<number | null>(null);
-  useEffect(() => {
-    if (open === null) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(null);
-      if (e.key === "ArrowRight") setOpen((i) => (i === null ? i : (i + 1) % paths.length));
-      if (e.key === "ArrowLeft") setOpen((i) => (i === null ? i : (i - 1 + paths.length) % paths.length));
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, paths.length]);
-  if (!paths.length) return null;
-  const grid = paths.length === 1 ? "grid-cols-1" : "grid-cols-2";
-  return (
-    <>
-      <ul className={`mt-3 grid gap-0.5 overflow-hidden rounded-[20px] ring-1 ring-ink/10 ${grid}`}>
-        {paths.map((p, i) => (
-          <li key={p} className={paths.length === 3 && i === 0 ? "row-span-2" : ""}>
-            <button type="button" onClick={(e) => { e.stopPropagation(); setOpen(i); }} aria-label={`Fotoğraf ${i + 1} / ${paths.length} büyüt`} className="group/ph block h-full w-full overflow-hidden bg-foam">
-              {urls[p] ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={urls[p]} alt="Gönderi fotoğrafı" loading="lazy" className={`w-full object-cover transition-transform duration-500 group-hover/ph:scale-105 ${paths.length === 1 ? "max-h-[420px]" : "aspect-square h-full"}`} />
-              ) : (
-                <span className={`shimmer block ${paths.length === 1 ? "h-56" : "aspect-square"}`} />
-              )}
-            </button>
-          </li>
-        ))}
-      </ul>
-      {open !== null && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} role="dialog" aria-modal="true" aria-label="Fotoğraf" className="fixed inset-0 z-[90] grid place-items-center bg-deep/90 p-4 backdrop-blur-sm" onClick={(e) => { e.stopPropagation(); setOpen(null); }}>
-          <motion.button whileTap={{ scale: 0.88 }} type="button" aria-label="Kapat" className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white" onClick={() => setOpen(null)}>
-            <FontAwesomeIcon icon={faXmark} />
-          </motion.button>
-          {urls[paths[open]] && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <motion.img key={open} initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING} src={urls[paths[open]]} alt="Gönderi fotoğrafı" className="max-h-full max-w-full rounded-2xl object-contain" onClick={(e) => e.stopPropagation()} />
-          )}
-          {paths.length > 1 && (
-            <div className="absolute bottom-6 flex gap-2" onClick={(e) => e.stopPropagation()}>
-              {paths.map((p, i) => (
-                <button key={p} type="button" aria-label={`Fotoğraf ${i + 1}`} onClick={() => setOpen(i)} className={`h-2.5 w-2.5 rounded-full ${i === open ? "bg-white" : "bg-white/40"}`} />
-              ))}
-            </div>
-          )}
-        </motion.div>
-      )}
-    </>
-  );
-}
-
 export default function PostCard({
   post,
   avatar,
@@ -232,6 +148,9 @@ export default function PostCard({
   const [note, setNote] = useState("");
   const [reporting, setReporting] = useState(false);
   const [quoting, setQuoting] = useState(false);
+  const [commenting, setCommenting] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [capOpen, setCapOpen] = useState(false);
   const busy = useRef(false);
   const solved = post.kind === "question" && !!post.accepted_comment_id;
   const href = `/topluluk/gonderi/${post.id}`;
@@ -259,6 +178,10 @@ export default function PostCard({
         setErr(errText(e));
       }
     });
+  /** Fotoğrafa çift dokununca yalnızca beğenir (zaten beğenilmişse geri almaz). */
+  const doubleTapLike = () => {
+    if (!post.liked) void toggleLike();
+  };
   const doRepost = () =>
     run(async () => {
       const prev = { reposted: post.reposted, repost_count: post.repost_count };
@@ -286,13 +209,15 @@ export default function PostCard({
         setErr(errText(e));
       }
     });
-  const share = async () => {
+  const shareLink = async () => {
     const r = await sharePostLink(post.id, post.title || post.body);
     if (r === "copied") {
       setNote("Bağlantı kopyalandı.");
       window.setTimeout(() => setNote(""), 2200);
     } else if (r === "failed") setErr("Bağlantı paylaşılamadı.");
   };
+  /** Paylaş düğmesi: bağlantı veya arkadaşa mesajla gönderme seçeneklerini açar. */
+  const share = () => setSharing(true);
   const del = async () => {
     if (!window.confirm(post.mine ? "Bu gönderiyi silmek istediğine emin misin?" : "Bu gönderi moderatör olarak kaldırılsın mı?")) return;
     try {
@@ -405,7 +330,7 @@ export default function PostCard({
           ))}
           {post.body && <RichText text={post.body} className={`mt-1 leading-relaxed ${detail ? "text-[17px]" : `text-[15px] ${long ? "line-clamp-6" : ""}`}`} />}
           {long && <span className="text-sm font-bold text-sea">Devamını oku</span>}
-          <Photos paths={post.images} />
+          {post.images.length > 0 && <Carousel paths={post.images} onDoubleTap={doubleTapLike} className="mt-3 rounded-[20px] ring-1 ring-ink/10" />}
           {(post.quoted_id || post.quoted_unavailable) && (
             <QuotedPost
               id={post.quoted_id}
@@ -446,6 +371,107 @@ export default function PostCard({
     </>
   );
 
+  /* Instagram düzeni: fotoğraflı gönderiler (akışta) — üstte kişi, tam genişlik galeri, eylem çubuğu, beğeni sayısı, açıklama. */
+  const isMedia = !detail && post.images.length > 0;
+  const captionText = post.title ? `${post.title}\n${post.body}`.trim() : post.body;
+  const captionLong = captionText.length > 140 || captionText.split("\n").length > 3;
+  const mediaBody = (
+    <>
+      {post.reposted_by_name && (
+        <p className="flex items-center gap-1.5 px-4 pb-1.5 text-xs font-bold text-ink/55">
+          <FontAwesomeIcon icon={faRetweet} className="text-tide" />
+          <Link href={`/profil/${post.reposted_by_id}`} onClick={(e) => e.stopPropagation()} className="truncate hover:underline">
+            {post.reposted_by_name}
+          </Link>{" "}
+          yeniden paylaştı
+        </p>
+      )}
+      <div className="flex items-center gap-3 px-4 pb-2.5">
+        <Link href={`/profil/${post.author_id}`} aria-label={`${post.author_name} profili`} onClick={(e) => e.stopPropagation()} className="shrink-0 transition-transform hover:scale-105">
+          <UserAvatar name={post.author_name} avatar={avatar} size={40} />
+        </Link>
+        <div className="min-w-0 flex-1 leading-tight">
+          <Link href={`/profil/${post.author_id}`} onClick={(e) => e.stopPropagation()} className="block truncate text-[15px] font-extrabold hover:underline">
+            {post.author_name || "Öğrenci"}
+          </Link>
+          {showCommunity && (
+            <Link href={`/topluluk/t/${post.community_slug}`} onClick={(e) => e.stopPropagation()} className="block truncate text-xs font-bold text-sea hover:underline">
+              {post.community_name}
+            </Link>
+          )}
+        </div>
+        <Link href={href} onClick={(e) => e.stopPropagation()} className="shrink-0 text-xs text-ink/55 hover:underline">
+          {timeAgo(post.created_at)}
+        </Link>
+        <ItemMenu authorId={post.author_id} canDelete={post.mine || post.can_moderate} canReport={!post.mine} onDelete={del} onReport={() => setReporting(true)} label="Gönderi" />
+      </div>
+      {post.hidden && (
+        <p className="mx-4 mb-2 rounded-xl bg-sun/25 px-3 py-2 text-xs font-bold">
+          {post.mine ? "Bu gönderi şikâyetler nedeniyle inceleniyor; şimdilik diğer öğrenciler görmüyor." : "Şikâyetler nedeniyle gizlendi; yalnızca moderatörler görüyor."}
+        </p>
+      )}
+      <Carousel paths={post.images} onDoubleTap={doubleTapLike} />
+      <div className="flex items-center px-2 pt-1">
+        <ActionButton tone="coral" size="lg" active={post.liked} pressed={post.liked} label={post.liked ? "Beğenmekten vazgeç" : "Beğen"} onClick={toggleLike}>
+          <motion.span key={String(post.liked)} initial={post.liked ? { scale: 0.4 } : false} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 12 }} className="inline-flex">
+            <FontAwesomeIcon icon={faHeart} className={post.liked ? "" : "opacity-60"} />
+          </motion.span>
+        </ActionButton>
+        <ActionButton tone="sea" size="lg" label={`${post.comment_count} yorum, yorumları aç`} onClick={() => setCommenting(true)}>
+          <FontAwesomeIcon icon={faComment} />
+        </ActionButton>
+        <RepostMenu post={post} size="lg" onRepost={doRepost} onQuote={() => setQuoting(true)} />
+        <ActionButton tone="sea" size="lg" label="Bağlantıyı paylaş" onClick={share}>
+          <FontAwesomeIcon icon={faArrowUpFromBracket} />
+        </ActionButton>
+        <span className="ml-auto" />
+        <ActionButton tone="sun" size="lg" active={post.bookmarked} pressed={post.bookmarked} label={post.bookmarked ? "Kaydedilenlerden çıkar" : "Kaydet"} onClick={doBookmark}>
+          <FontAwesomeIcon icon={faBookmark} className={post.bookmarked ? "" : "opacity-60"} />
+        </ActionButton>
+      </div>
+      <div className="px-4 pb-1">
+        {post.like_count > 0 && <p className="text-sm font-extrabold">{formatCount(post.like_count)} beğeni</p>}
+        {post.kind === "question" && (
+          <p className="mt-1 flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-sky px-2.5 py-1 text-[11px] font-extrabold text-deep">
+              <FontAwesomeIcon icon={faCircleQuestion} className="mr-1" />
+              Soru
+            </span>
+            {solved && (
+              <span className="rounded-full bg-tide px-2.5 py-1 text-[11px] font-extrabold text-deep">
+                <FontAwesomeIcon icon={faCircleCheck} className="mr-1" />
+                Çözüldü
+              </span>
+            )}
+          </p>
+        )}
+        {captionText && (
+          <div className={`mt-0.5 text-[15px] leading-snug ${captionLong && !capOpen ? "line-clamp-3" : ""}`}>
+            <Link href={`/profil/${post.author_id}`} onClick={(e) => e.stopPropagation()} className="font-extrabold hover:underline">
+              {post.author_name || "Öğrenci"}
+            </Link>{" "}
+            <RichText text={captionText} className="inline" />
+          </div>
+        )}
+        {captionLong && !capOpen && (
+          <button type="button" onClick={() => setCapOpen(true)} className="text-sm font-bold text-ink/55 hover:text-ink">
+            devamı
+          </button>
+        )}
+        {(post.quoted_id || post.quoted_unavailable) && (
+          <QuotedPost id={post.quoted_id} authorName={post.quoted_author_name} body={post.quoted_body} images={post.quoted_images} community={post.quoted_community_name} at={post.quoted_created_at} avatar={quotedAvatar} unavailable={post.quoted_unavailable} />
+        )}
+        <button type="button" onClick={() => setCommenting(true)} className="mt-1 block text-sm text-ink/55 hover:text-ink">
+          {post.comment_count > 0 ? `${post.comment_count} yorumun tümünü gör` : "Yorum yap…"}
+        </button>
+        <div aria-live="polite">
+          {err && <p role="alert" className="mt-1 text-xs font-bold text-coral">{err}</p>}
+          {note && !err && <p className="mt-1 text-xs font-bold text-tide">{note}</p>}
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <>
       {detail ? (
@@ -453,12 +479,14 @@ export default function PostCard({
           {body}
         </motion.article>
       ) : (
-        <motion.article layout="position" initial={cardMotion.initial} animate={cardMotion.animate} exit={{ opacity: 0 }} transition={SPRING} onClick={open} className="cursor-pointer px-4 pb-2 pt-3 transition-colors hover:bg-foam/60">
-          {body}
+        <motion.article layout="position" initial={cardMotion.initial} animate={cardMotion.animate} exit={{ opacity: 0 }} transition={SPRING} onClick={open} className={`cursor-pointer transition-colors hover:bg-foam/60 ${isMedia ? "pb-3 pt-3" : "px-4 pb-2 pt-3"}`}>
+          {isMedia ? mediaBody : body}
         </motion.article>
       )}
       <AnimatePresence>
         {reporting && <ReportSheet type="post" id={post.id} onClose={() => setReporting(false)} />}
+        {sharing && <ShareSheet postId={post.id} onClose={() => setSharing(false)} onLink={shareLink} />}
+        {commenting && <CommentsSheet postId={post.id} title={post.kind === "question" ? "Yanıtlar" : "Yorumlar"} onClose={() => setCommenting(false)} onCount={(n) => onPatch({ comment_count: n })} />}
         {quoting && <ComposeSheet communities={[]} quote={post} onClose={() => setQuoting(false)} onPosted={() => onChanged?.()} />}
       </AnimatePresence>
     </>

@@ -232,10 +232,13 @@ export async function compressImage(file: File, max = 1600, quality = 0.82): Pro
   return blob;
 }
 
+/** Küçük boyutlu (ızgara) kopyanın yolu: "uid/abc.jpg" → "uid/abc_t.jpg". Gönderiye yalnızca asıl yol kaydedilir. */
+export const thumbPath = (p: string) => p.replace(/\.jpg$/, "_t.jpg");
+
 export async function removeImages(paths: string[]) {
   if (!paths.length) return;
   try {
-    await supabaseBrowser().storage.from("community").remove(paths);
+    await supabaseBrowser().storage.from("community").remove([...paths, ...paths.map(thumbPath)]);
   } catch {}
 }
 
@@ -250,6 +253,10 @@ export async function uploadPostImages(uid: string, files: File[]): Promise<stri
       const { error } = await sb.storage.from("community").upload(path, blob, { contentType: "image/jpeg" });
       if (error) throw error;
       done.push(path);
+      // Izgara görünümleri için küçük kopya; yüklenemezse sorun değil, o zaman asıl fotoğraf kullanılır.
+      try {
+        await sb.storage.from("community").upload(thumbPath(path), await compressImage(f, 480, 0.72), { contentType: "image/jpeg" });
+      } catch {}
     }
     return done;
   } catch (e) {
@@ -259,6 +266,8 @@ export async function uploadPostImages(uid: string, files: File[]): Promise<stri
 }
 
 const urlCache = new Map<string, { url: string; exp: number }>();
+/** Depoda bulunamayan yollar (eski gönderilerin küçük kopyası yoktur); tekrar tekrar istenmez. */
+const missingPaths = new Set<string>();
 const SIGN_SECONDS = 3600;
 
 /** Özel kovadaki fotoğraflar için imzalı adresleri toplu alır (bir istekte) ve önbellekler. */
@@ -267,14 +276,18 @@ export function useImageUrls(paths: string[]): Record<string, string> {
   const key = useMemo(() => Array.from(new Set(paths)).sort().join("|"), [paths]);
   useEffect(() => {
     const list = key.split("|").filter(Boolean);
-    const need = list.filter((p) => !urlCache.has(p) || urlCache.get(p)!.exp < Date.now() + 60_000);
+    const need = list.filter((p) => !missingPaths.has(p) && (!urlCache.has(p) || urlCache.get(p)!.exp < Date.now() + 60_000));
     if (!need.length) return;
     let alive = true;
     supabaseBrowser()
       .storage.from("community")
       .createSignedUrls(need, SIGN_SECONDS)
       .then(({ data }) => {
-        for (const r of data ?? []) if (r.path && r.signedUrl) urlCache.set(r.path, { url: r.signedUrl, exp: Date.now() + SIGN_SECONDS * 1000 });
+        for (const r of data ?? []) {
+          if (!r.path) continue;
+          if (r.signedUrl && !r.error) urlCache.set(r.path, { url: r.signedUrl, exp: Date.now() + SIGN_SECONDS * 1000 });
+          else missingPaths.add(r.path);
+        }
         if (alive) bump((n) => n + 1);
       })
       .catch(() => {});
@@ -286,6 +299,23 @@ export function useImageUrls(paths: string[]): Record<string, string> {
   for (const p of paths) {
     const hit = urlCache.get(p);
     if (hit) out[p] = hit.url;
+  }
+  return out;
+}
+
+/**
+ * Izgara/küçük görünümler için küçük kopyaların adreslerini döndürür (anahtar: asıl fotoğraf yolu).
+ * Küçük kopyası olmayan eski fotoğraflarda asıl fotoğrafa geri döner.
+ */
+export function useThumbUrls(paths: string[]): Record<string, string> {
+  const thumbs = useMemo(() => paths.map(thumbPath), [paths]);
+  const t = useImageUrls(thumbs);
+  const fallback = paths.filter((p) => missingPaths.has(thumbPath(p)));
+  const full = useImageUrls(fallback);
+  const out: Record<string, string> = {};
+  for (const p of paths) {
+    const hit = t[thumbPath(p)] ?? full[p];
+    if (hit) out[p] = hit;
   }
   return out;
 }
@@ -330,7 +360,7 @@ export function useCommunityProfile(enabled: boolean) {
 
 /* ───────── Akış (sayfalı gönderi listesi) ───────── */
 export type FeedParams = {
-  scope: "mine" | "all" | "community" | "saved" | "user";
+  scope: "mine" | "all" | "community" | "saved" | "user" | "following";
   community?: string;
   /** scope = "user" için: gönderileri listelenecek kullanıcı. */
   author?: string;
@@ -338,6 +368,8 @@ export type FeedParams = {
   q?: string;
   kind?: "post" | "question";
   status?: "open" | "solved";
+  /** Yalnızca fotoğraflı gönderiler (profil ve keşfet ızgaraları için). */
+  media?: boolean;
 };
 const PAGE = 15;
 
@@ -361,6 +393,8 @@ export function useFeed(params: FeedParams, enabled: boolean) {
         p_limit: PAGE,
         p_author: params.author ?? null,
         p_q: params.q?.trim() || null,
+        // Yalnızca gerektiğinde gönderilir: instagram_upgrade.sql çalıştırılmadan da eski akış bozulmasın.
+        ...(params.media ? { p_media: true } : {}),
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -417,3 +451,253 @@ export function useFeed(params: FeedParams, enabled: boolean) {
 /* ───────── Gönderi eylemleri (beğen, yeniden paylaş, kaydet) ───────── */
 export const toggleRepost = (id: string) => rpc<{ reposted: boolean; count: number; id: string }>("community_toggle_repost", { p_post: id });
 export const toggleBookmark = (id: string) => rpc<{ bookmarked: boolean }>("community_toggle_bookmark", { p_post: id });
+
+/* ───────── Takip sistemi (supabase/instagram_upgrade.sql) ───────── */
+export type FollowRelation = "self" | "following" | "pending" | "none";
+export type FollowStats = { followers: number; following: number; posts: number; relation: FollowRelation; follows_me: boolean; locked: boolean };
+export type FollowListUser = { user_id: string; name: string; relation: FollowRelation; created_at: string };
+export type FollowRequest = { user_id: string; name: string; created_at: string };
+
+/** "accepted" (takip ediyorsun) veya "pending" (gizli profile istek gönderildi) döner. */
+export const followUser = (id: string) => rpc<"accepted" | "pending">("community_follow", { p_user: id });
+export const unfollowUser = (id: string) => rpc<boolean>("community_unfollow", { p_user: id });
+export const respondFollow = (id: string, accept: boolean) => rpc<boolean>("community_follow_respond", { p_user: id, p_accept: accept });
+export const removeFollower = (id: string) => rpc<boolean>("community_remove_follower", { p_user: id });
+
+export function useFollowStats(userId: string | undefined, enabled = true) {
+  const [stats, setStats] = useState<FollowStats | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const reload = useCallback(async () => {
+    if (!userId || !enabled) return;
+    try {
+      const rows = await rpc<FollowStats[]>("community_follow_stats", { p_user: userId });
+      setStats(rows?.[0] ?? null);
+      setError(null);
+    } catch (e) {
+      setError(errText(e));
+    }
+  }, [userId, enabled]);
+  useEffect(() => {
+    setStats(null);
+    void reload();
+  }, [reload]);
+  return { stats, error, reload, setStats };
+}
+
+/* ───────── Bildirimler ───────── */
+export type NotificationType = "like" | "comment" | "reply" | "repost" | "quote" | "follow" | "follow_request" | "follow_accept";
+export type AppNotification = {
+  id: string;
+  type: NotificationType;
+  actor_id: string;
+  actor_name: string;
+  post_id: string | null;
+  comment_id: string | null;
+  snippet: string | null;
+  image: string | null;
+  created_at: string;
+  is_read: boolean;
+  /** Takip bildirimlerinde actor ile ilişkim: following | pending | incoming | none. */
+  follow_state: "following" | "pending" | "incoming" | "none" | null;
+};
+/** Sayfalar arası "bildirim sayısı değişti" olayı (okundu işaretlenince rozet güncellensin). */
+export const NOTIFS_EVENT = "bigova:notifs";
+
+/** Okunmamış bildirim sayısı: açılışta, sekmeye dönünce ve dakikada bir yenilenir. */
+export function useUnreadNotifications(enabled: boolean) {
+  const [count, setCount] = useState(0);
+  const load = useCallback(async () => {
+    if (!enabled) return;
+    try {
+      const n = await rpc<number>("community_notifications_unread_count");
+      setCount(typeof n === "number" ? n : 0);
+    } catch {
+      /* kurulum yoksa veya geçici hata: rozeti gösterme */
+    }
+  }, [enabled]);
+  useEffect(() => {
+    if (!enabled) return;
+    void load();
+    const visible = () => document.visibilityState === "visible" && void load();
+    const id = window.setInterval(visible, 60_000);
+    document.addEventListener("visibilitychange", visible);
+    window.addEventListener(NOTIFS_EVENT, load);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", visible);
+      window.removeEventListener(NOTIFS_EVENT, load);
+    };
+  }, [enabled, load]);
+  return { count, reload: load };
+}
+
+/* ───────── Keşfet, arama, öneriler (supabase/explore_stories_upgrade.sql) ───────── */
+export type ExploreTile = { id: string; image: string; image_count: number; like_count: number; comment_count: number };
+export type TrendingTag = { tag: string; uses: number };
+export type PersonResult = { user_id: string; name: string; relation: "following" | "pending" | "none"; department: string | null };
+export type SuggestedPerson = { user_id: string; name: string; reason: "mutual" | "department" | "active"; mutual: number; department: string | null };
+
+export const SUGGEST_REASON: Record<SuggestedPerson["reason"], string> = {
+  mutual: "Takip ettiklerin takip ediyor",
+  department: "Aynı bölümden",
+  active: "Toplulukta aktif",
+};
+
+const EXPLORE_PAGE = 24;
+
+/** Keşfet ızgarası: popüler ve yeni fotoğraflı gönderiler, sayfa sayfa (offset). */
+export function useExplore(enabled: boolean) {
+  const [tiles, setTiles] = useState<ExploreTile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const seq = useRef(0);
+
+  const fetchPage = useCallback((offset: number) => rpc<ExploreTile[]>("community_explore", { p_limit: EXPLORE_PAGE, p_offset: offset }), []);
+  const refresh = useCallback(async () => {
+    if (!enabled) return;
+    const id = ++seq.current;
+    setLoading(true);
+    try {
+      const rows = (await fetchPage(0)) ?? [];
+      if (id !== seq.current) return;
+      setTiles(rows);
+      setHasMore(rows.length === EXPLORE_PAGE);
+      setError(null);
+    } catch (e) {
+      if (id === seq.current) setError(errText(e));
+    } finally {
+      if (id === seq.current) setLoading(false);
+    }
+  }, [enabled, fetchPage]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !tiles.length) return;
+    const id = seq.current;
+    setLoadingMore(true);
+    try {
+      const rows = (await fetchPage(tiles.length)) ?? [];
+      if (id !== seq.current) return;
+      setTiles((cur) => [...cur, ...rows.filter((r) => !cur.some((c) => c.id === r.id))]);
+      setHasMore(rows.length === EXPLORE_PAGE);
+      setError(null);
+    } catch (e) {
+      setError(errText(e));
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, tiles, fetchPage]);
+  return { tiles, loading, loadingMore, hasMore, error, refresh, loadMore };
+}
+
+/** Gündem etiketleri (yüklenemezse sessizce boş liste: keşfet sayfası yine çalışır). */
+export function useTrendingTags(enabled: boolean) {
+  const [tags, setTags] = useState<TrendingTag[]>([]);
+  useEffect(() => {
+    if (!enabled) return;
+    let live = true;
+    rpc<TrendingTag[]>("community_trending_tags", { p_limit: 12, p_days: 7 })
+      .then((r) => live && setTags(r ?? []))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [enabled]);
+  return tags;
+}
+
+/** "Tanıyor olabilirsin" önerileri; takip edilince ya da kapatılınca listeden çıkarılabilir. */
+export function useSuggestedPeople(enabled: boolean, limit = 10) {
+  const [people, setPeople] = useState<SuggestedPerson[] | null>(null);
+  useEffect(() => {
+    if (!enabled) return;
+    let live = true;
+    rpc<SuggestedPerson[]>("community_suggested_people", { p_limit: limit })
+      .then((r) => live && setPeople(r ?? []))
+      .catch(() => live && setPeople([]));
+    return () => {
+      live = false;
+    };
+  }, [enabled, limit]);
+  const dismiss = useCallback((id: string) => setPeople((cur) => (cur ? cur.filter((p) => p.user_id !== id) : cur)), []);
+  return { people, dismiss };
+}
+
+/** Ada göre kişi arama (250 ms bekleyerek); en az 2 karakter. */
+export function useSearchPeople(q: string, enabled: boolean) {
+  const [results, setResults] = useState<PersonResult[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const term = q.replace(/^#/, "").trim();
+  useEffect(() => {
+    if (!enabled || term.length < 2 || q.startsWith("#")) {
+      setResults(null);
+      setError(null);
+      return;
+    }
+    let live = true;
+    const t = window.setTimeout(() => {
+      rpc<PersonResult[]>("community_search_people", { p_q: term, p_limit: 12 })
+        .then((r) => {
+          if (!live) return;
+          setResults(r ?? []);
+          setError(null);
+        })
+        .catch((e) => live && setError(errText(e)));
+    }, 250);
+    return () => {
+      live = false;
+      window.clearTimeout(t);
+    };
+  }, [term, q, enabled]);
+  return { results, error };
+}
+
+/* ───────── Hikayeler (24 saat) ───────── */
+export type StoryTrayItem = { user_id: string; name: string; story_count: number; unseen_count: number; latest_at: string; is_self: boolean };
+export type Story = { id: string; image: string; caption: string; created_at: string; expires_at: string; seen: boolean; view_count: number };
+export type StoryViewerRow = { user_id: string; name: string; viewed_at: string };
+
+/** Halka şeridi verisi. Açılışta kendi süresi dolmuş hikayelerini depodan da temizler. */
+export function useStoryTray(enabled: boolean) {
+  const [tray, setTray] = useState<StoryTrayItem[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const reload = useCallback(async () => {
+    if (!enabled) return;
+    try {
+      setTray((await rpc<StoryTrayItem[]>("community_stories_tray")) ?? []);
+    } catch {
+      /* kurulum yoksa veya geçici hata: şerit gösterilmez */
+    } finally {
+      setLoaded(true);
+    }
+  }, [enabled]);
+  useEffect(() => {
+    if (!enabled) return;
+    void reload();
+    rpc<string[]>("community_story_collect_expired")
+      .then((paths) => (paths?.length ? removeImages(paths) : undefined))
+      .catch(() => {});
+  }, [enabled, reload]);
+  return { tray, loaded, reload };
+}
+
+/** Fotoğrafı yükleyip hikaye olarak paylaşır; paylaşım başarısız olursa yüklenen dosyayı geri siler. */
+export async function postStory(userId: string, file: File, caption: string) {
+  const paths = await uploadPostImages(userId, [file]);
+  try {
+    await rpc("community_story_create", { p_image: paths[0], p_caption: caption.trim() });
+  } catch (e) {
+    await removeImages(paths);
+    throw e;
+  }
+}
+
+/** Kendi hikayeni siler; fotoğrafı depodan da kaldırır. */
+export async function deleteStory(id: string) {
+  const path = await rpc<string | null>("community_story_delete", { p_id: id });
+  if (path) await removeImages([path]);
+}

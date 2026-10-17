@@ -4,22 +4,26 @@ import ComposeSheet from "@/components/community/ComposeSheet";
 import FeedList from "@/components/community/FeedList";
 import InlineComposer from "@/components/community/InlineComposer";
 import OnboardingCard from "@/components/community/OnboardingCard";
+import PhotoShareSheet from "@/components/community/PhotoShareSheet";
+import StoryTray from "@/components/community/StoryTray";
+import SuggestedPeople from "@/components/community/SuggestedPeople";
 import { Fab, PrimaryButton, TabChips } from "@/components/community/ui";
 import Mascot from "@/components/Mascot";
 import { useAvatars } from "@/lib/bigocuk/useAvatars";
 import { GRADE_LABELS, useCommunityProfile, useFeed, useMyCommunities } from "@/lib/community";
 import { useUser } from "@/lib/useUser";
-import { faMagnifyingGlass, faPlus, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faCamera, faMagnifyingGlass, faPlus, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 
-type Scope = "mine" | "all" | "saved";
+type Scope = "mine" | "following" | "all" | "saved";
 const SCOPES = [
   { id: "mine", label: "Topluluklarım" },
-  { id: "all", label: "Keşfet" },
+  { id: "following", label: "Takip" },
+  { id: "all", label: "Herkes" },
   { id: "saved", label: "Kaydedilenler" },
 ] as const;
 
@@ -63,6 +67,7 @@ function ToplulukAkis() {
   const enabled = !!user;
   const [scope, setScope] = useState<Scope>("mine");
   const [composing, setComposing] = useState(false);
+  const [sharingPhoto, setSharingPhoto] = useState(false);
   const [editProfile, setEditProfile] = useState(false);
   const profile = useCommunityProfile(enabled);
   const mine = useMyCommunities(enabled);
@@ -103,8 +108,16 @@ function ToplulukAkis() {
             }}
           />
         )}
+        {!q && <StoryTray userId={user.id} name={name} enabled={enabled} />}
         {mine.list !== null && <InlineComposer communities={mine.list} avatar={me[user.id]} name={name} onPosted={feed.refresh} />}
-        <SearchBar q={q} onSearch={search} />
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <SearchBar q={q} onSearch={search} />
+          </div>
+          <motion.button whileTap={{ scale: 0.88 }} whileHover={{ scale: 1.05 }} type="button" onClick={() => setSharingPhoto(true)} aria-label="Fotoğraf paylaş" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-sea text-white shadow-sm">
+            <FontAwesomeIcon icon={faCamera} />
+          </motion.button>
+        </div>
         {q ? (
           <div className="flex items-center gap-2">
             <p className="min-w-0 flex-1 truncate text-sm font-bold">
@@ -116,7 +129,7 @@ function ToplulukAkis() {
           </div>
         ) : (
           <div className="sticky top-0 z-10 -mx-5 bg-foam/90 px-5 py-2 backdrop-blur">
-            <TabChips label="Akış türü" fill value={scope} onChange={setScope} items={SCOPES} />
+            <TabChips label="Akış türü" value={scope} onChange={setScope} items={SCOPES} />
           </div>
         )}
         <FeedList
@@ -127,6 +140,16 @@ function ToplulukAkis() {
                 <Mascot size={96} className="mx-auto" />
                 <p className="font-display text-lg font-extrabold">Sonuç bulunamadı</p>
                 <p className="mt-1 text-sm text-ink/70">“{q}” ile eşleşen gönderi yok. Başka bir kelime dene.</p>
+              </>
+            ) : scope === "following" ? (
+              <>
+                <Mascot size={96} className="mx-auto" />
+                <p className="font-display text-lg font-extrabold">Takip akışın boş</p>
+                <p className="mt-1 text-sm text-ink/70">Takip ettiğin kişilerin gönderileri burada görünür. Profillerinden takip etmeye başla.</p>
+                <motion.div whileTap={{ scale: 0.92 }} className="mt-3 inline-block">
+                  <Link href="/topluluk/kesfet" className="block rounded-full bg-sea px-4 py-2 text-sm font-bold text-white">Keşfet&apos;e göz at</Link>
+                </motion.div>
+                <SuggestedPeople enabled={enabled} className="mt-5 text-left" />
               </>
             ) : scope === "saved" ? (
               <>
@@ -154,6 +177,7 @@ function ToplulukAkis() {
         <FontAwesomeIcon icon={faPlus} />
       </Fab>
       <AnimatePresence>
+        {sharingPhoto && <PhotoShareSheet communities={mine.list ?? []} onClose={() => setSharingPhoto(false)} onPosted={feed.refresh} />}
         {composing && <ComposeSheet communities={mine.list ?? []} onClose={() => setComposing(false)} onPosted={feed.refresh} />}
       </AnimatePresence>
     </main>

@@ -1,9 +1,13 @@
 "use client";
 import Mascot from "@/components/Mascot";
 import { SPRING } from "./ui";
+import { formatCount, useUnreadNotifications } from "@/lib/community";
+import { useUser } from "@/lib/useUser";
 import {
   faArrowLeft,
+  faBell,
   faCircleQuestion,
+  faCompass,
   faComments,
   faNewspaper,
   faPeopleGroup,
@@ -14,9 +18,10 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
-export type CommunityTab = "akis" | "topluluklar" | "soru" | "forum";
+export type CommunityTab = "akis" | "kesfet" | "topluluklar" | "soru" | "forum";
 const TABS: { id: CommunityTab; href: string; l: string; i: typeof faNewspaper }[] = [
   { id: "akis", href: "/topluluk", l: "Akış", i: faNewspaper },
+  { id: "kesfet", href: "/topluluk/kesfet", l: "Keşfet", i: faCompass },
   { id: "topluluklar", href: "/topluluk/topluluklar", l: "Topluluklar", i: faPeopleGroup },
   { id: "soru", href: "/topluluk/soru-cevap", l: "Soru-Cevap", i: faCircleQuestion },
   { id: "forum", href: "/topluluk/forum", l: "Forum", i: faComments },
@@ -49,12 +54,34 @@ export function CommunityTabs({ active, className = "" }: { active: CommunityTab
   );
 }
 
+/** Bildirimler bağlantısı: okunmamış sayısı rozetle gösterilir. */
+export function NotificationBell({ className = "" }: { className?: string }) {
+  const { user } = useUser();
+  const { count } = useUnreadNotifications(!!user);
+  const n = formatCount(count);
+  return (
+    <motion.div whileTap={{ scale: 0.88 }} className={`relative ${className}`}>
+      <Link href="/topluluk/bildirimler" aria-label={count > 0 ? `Bildirimler, ${count} okunmamış` : "Bildirimler"} className="grid h-9 w-9 place-items-center rounded-full bg-white/15 text-white">
+        <FontAwesomeIcon icon={faBell} />
+      </Link>
+      {count > 0 && (
+        <span aria-hidden className="pointer-events-none absolute -right-1 -top-1 grid min-w-[1.15rem] place-items-center rounded-full bg-coral px-1 text-[10px] font-extrabold leading-[1.15rem] text-white ring-2 ring-sea">
+          {n}
+        </span>
+      )}
+    </motion.div>
+  );
+}
+
 export default function CommunityHeader({ active, subtitle, children }: { active: CommunityTab; subtitle?: string; children?: ReactNode }) {
   return (
-    <header className="rounded-b-[28px] bg-sea px-5 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))] text-white shadow-lg">
-      <h1 className="font-display text-2xl font-extrabold">Topluluk</h1>
-      <p className="text-sm text-white/75">{subtitle ?? "Gönderi paylaş, soru sor, gruplara katıl, sohbet et."}</p>
-      <CommunityTabs active={active} className="mt-3" />
+    <header className="rounded-b-[24px] bg-sea px-5 pb-3 pt-[max(.75rem,env(safe-area-inset-top))] text-white shadow-lg">
+      <div className="flex items-center gap-3">
+        <h1 className="min-w-0 flex-1 truncate font-display text-xl font-extrabold">Topluluk</h1>
+        <NotificationBell />
+      </div>
+      {subtitle && <p className="mt-0.5 text-xs text-white/75">{subtitle}</p>}
+      <CommunityTabs active={active} className="mt-2" />
       {children}
     </header>
   );
