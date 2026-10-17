@@ -100,6 +100,11 @@ module.exports = {
         source: "/:file(logo\\.png|icon-192\\.png|icon-512\\.png)",
         headers: [{ key: "Cache-Control", value: "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400" }],
       },
+      // PDF okuyucu (kitap görünümü) pdf.js dosyaları: sürüm package.json ile eşleşir; 1 gün tarayıcı, 1 hafta CDN
+      {
+        source: "/pdfjs/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400" }],
+      },
       // Service worker: önbelleğe alınmasın, kapsamı değişmesin
       {
         source: "/sw.js",

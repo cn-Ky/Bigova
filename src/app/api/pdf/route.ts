@@ -7,7 +7,7 @@ const allowedPaths: Record<string, RegExp[]> = {
   ],
   "ybd.dergi.comu.edu.tr": [/^\/dosyalar\/Ybd\/[\w.-]+\.pdf$/i],
   "uueyad.dergi.comu.edu.tr": [/^\/dosyalar\/Uueyad\/[\w.-]+\.pdf$/i],
-  "cdn.comu.edu.tr": [/^\/cms\/(?:biibf|bigamyo)\/files\/[\w.-]+\.pdf$/i],
+  "cdn.comu.edu.tr": [/^\/cms\/(?:biibf|bigamyo|ogrenciisleri)\/files\/[\w.-]+\.pdf$/i],
 };
 
 function isAllowedPdf(value: URL) {

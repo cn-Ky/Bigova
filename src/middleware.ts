@@ -37,6 +37,6 @@ export async function middleware(req: NextRequest) {
 // Oturum gerektirmeyen herkese açık uçlar ve statik dosyalar middleware'den muaf.
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|api/health|api/pdf|api/sample-notes|api/magazines|api/push/send|api/push/notify|api/weather|api/map-places|sw\\.js|manifest.webmanifest|.*\\.(?:png|jpg|jpeg|ico|svg|webp|css|js|woff2?)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/health|api/pdf|api/sample-notes|api/magazines|api/push/send|api/push/notify|api/weather|api/map-places|pdfjs/|sw\\.js|manifest.webmanifest|.*\\.(?:png|jpg|jpeg|ico|svg|webp|css|js|woff2?)$).*)",
   ],
 };

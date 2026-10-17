@@ -1,0 +1,427 @@
+/* ═════════ Bigova kitap okuyucu ═════════
+   PDF'ler düz bir görüntüleyici yerine, sayfaları çevrilebilen bir kitap olarak açılır.
+   Sınıflar fb- önekiyle ayrıdır; sayfa çevirme kütüphanesinin (.stf__*) kendi stilleri ayrıca yüklenir. */
+
+.fb-inline,
+.fb-immersive {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+.fb-inline {
+  min-height: 72dvh;
+}
+.fb-immersive {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  gap: 0.5rem;
+  padding: max(0.5rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-right))
+    max(0.5rem, env(safe-area-inset-bottom)) max(0.5rem, env(safe-area-inset-left));
+  background: #1a110b;
+  color: rgb(var(--ink));
+}
+.fb-root {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.fb-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.25rem 0;
+  color: #fff;
+}
+
+/* ── Masa ve kitap ── */
+.fb-stage {
+  position: relative;
+  display: grid;
+  flex: 1;
+  min-height: 360px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(120% 80% at 50% 30%, rgba(255, 214, 160, 0.16), transparent 60%),
+    repeating-linear-gradient(92deg, rgba(255, 255, 255, 0.022) 0 2px, transparent 2px 9px),
+    linear-gradient(180deg, #5a3b26 0%, #3d2617 55%, #2a1a10 100%);
+  box-shadow:
+    inset 0 0 70px rgba(0, 0, 0, 0.55),
+    0 1px 0 rgba(255, 255, 255, 0.06);
+  -webkit-user-select: none;
+  user-select: none;
+}
+.fb-immersive .fb-stage {
+  border-radius: 1rem;
+}
+.fb-intro {
+  animation: fb-in 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+@keyframes fb-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.93);
+  }
+}
+.fb-book {
+  position: relative;
+  transition: transform 0.55s cubic-bezier(0.3, 0.7, 0.2, 1);
+  will-change: transform;
+}
+.fb-host,
+.fb-flip {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+}
+.fb-static {
+  display: grid;
+  place-items: center;
+}
+.fb-static .fb-page {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Sayfa yığını: kitabın kalınlığı ve masaya düşen gölge */
+.fb-stack {
+  position: absolute;
+  z-index: 1;
+  top: 4px;
+  bottom: -5px;
+  border-radius: 3px;
+  pointer-events: none;
+  background: repeating-linear-gradient(to right, #fffdf8 0 1px, #cfc6b3 1px 2px);
+  box-shadow:
+    0 14px 26px -6px rgba(0, 0, 0, 0.6),
+    0 3px 8px rgba(0, 0, 0, 0.35);
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+.fb-stack-r {
+  left: 52%;
+  right: -7px;
+}
+.fb-stack-l {
+  right: 52%;
+  left: -7px;
+}
+.fb-book[data-open="single"] .fb-stack-l,
+.fb-book[data-open="cover"] .fb-stack-l,
+.fb-book[data-open="back"] .fb-stack-r {
+  opacity: 0;
+}
+.fb-book[data-open="single"] .fb-stack-r {
+  left: 8%;
+}
+
+/* ── Sayfalar ── */
+.fb-page {
+  overflow: hidden;
+  background: #fffdf8;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.fb-paper {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+}
+.fb-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 0.28s ease;
+  pointer-events: none;
+}
+.fb-page.is-loaded .fb-img {
+  opacity: 1;
+}
+.fb-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.5rem;
+  background:
+    repeating-linear-gradient(0deg, rgba(120, 100, 70, 0.045) 0 1px, transparent 1px 22px), #fffdf8;
+  color: #8a7b62;
+  font-family: var(--f-display), sans-serif;
+  font-weight: 800;
+}
+.fb-page.is-loaded .fb-loading {
+  display: none;
+}
+.fb-spin {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 3px solid rgba(138, 123, 98, 0.25);
+  border-top-color: #8a7b62;
+  animation: fb-rotate 0.8s linear infinite;
+}
+.fb-num {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+@keyframes fb-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Cilt kenarı gölgesi: kütüphane sayfaya --left / --right sınıfı verir */
+.fb-gloss {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.stf__item.--left .fb-gloss {
+  background: linear-gradient(to left, rgba(40, 25, 10, 0.3), rgba(40, 25, 10, 0.07) 6%, transparent 15%);
+}
+.stf__item.--right .fb-gloss {
+  background: linear-gradient(to right, rgba(40, 25, 10, 0.3), rgba(40, 25, 10, 0.07) 6%, transparent 15%);
+}
+/* Sert kapak: ince çerçeve ve parlak kenar */
+.stf__item.--hard .fb-paper {
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.28),
+    inset 0 0 14px rgba(0, 0, 0, 0.12);
+}
+.stf__item.--hard .fb-gloss {
+  box-shadow: inset 3px 0 0 rgba(255, 255, 255, 0.35);
+}
+
+/* ── Kenar okları (masaüstü) ── */
+.fb-edge {
+  position: absolute;
+  top: 50%;
+  z-index: 5;
+  display: none;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  opacity: 0.7;
+  transform: translateY(-50%);
+  transition:
+    opacity 0.2s,
+    background 0.2s,
+    transform 0.2s;
+}
+.fb-edge:hover:not(:disabled) {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.6);
+  transform: translateY(-50%) scale(1.08);
+}
+.fb-edge:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+.fb-edge-prev {
+  left: 0.75rem;
+}
+.fb-edge-next {
+  right: 0.75rem;
+}
+@media (min-width: 768px) and (hover: hover) {
+  .fb-edge {
+    display: grid;
+  }
+}
+
+/* ── Alt çubuk ── */
+.fb-bar {
+  border-radius: 1rem;
+  background: rgb(var(--card));
+  padding: 0.6rem 0.75rem 0.55rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+.fb-immersive .fb-bar {
+  background: rgba(255, 255, 255, 0.94);
+  color: #0e3a5b;
+}
+.fb-range {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  cursor: pointer;
+  accent-color: rgb(var(--sea));
+}
+.fb-range:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── Yükleme / hata ── */
+.fb-state {
+  display: grid;
+  min-height: 70dvh;
+  flex: 1;
+  place-content: center;
+  justify-items: center;
+  gap: 0.9rem;
+  border-radius: 1.25rem;
+  background: rgb(var(--card));
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+.fb-closed-book {
+  position: relative;
+  width: 92px;
+  height: 124px;
+  border-radius: 4px 10px 10px 4px;
+  background: linear-gradient(135deg, rgb(var(--sea)), rgb(var(--deep)));
+  box-shadow:
+    inset 6px 0 0 rgba(0, 0, 0, 0.25),
+    0 14px 22px -8px rgba(0, 0, 0, 0.45);
+  transform: perspective(500px) rotateY(-18deg);
+  animation: fb-bob 1.8s ease-in-out infinite;
+}
+.fb-closed-book span {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  right: 14px;
+  height: 36px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.18);
+}
+@keyframes fb-bob {
+  50% {
+    transform: perspective(500px) rotateY(-26deg) translateY(-6px);
+  }
+}
+.fb-progress {
+  width: min(260px, 70vw);
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(var(--ink) / 0.12);
+}
+.fb-progress i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: rgb(var(--tide));
+  transition: width 0.2s ease;
+}
+.fb-progress i[data-indeterminate="1"] {
+  width: 40%;
+  animation: fb-slide 1.2s ease-in-out infinite;
+}
+@keyframes fb-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+.fb-toast {
+  position: absolute;
+  left: 50%;
+  top: 0.75rem;
+  z-index: 6;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.72);
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  animation: fb-toast 4s ease both;
+  pointer-events: none;
+}
+.fb-inline {
+  position: relative;
+}
+@keyframes fb-toast {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  10%,
+  85% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* ── Yakınlaştırma ── */
+.fb-zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  background: #0a0806;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.fb-zoom-top,
+.fb-zoom-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+}
+.fb-zoom-nav {
+  justify-content: space-between;
+}
+.fb-zoom-scroll {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.fb-zoom-scroll[data-grab="1"] {
+  cursor: grab;
+}
+.fb-zoom-sheet {
+  position: relative;
+  flex: none;
+  margin: auto;
+  background: #fff;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+.fb-zoom-busy {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 3px solid rgba(0, 0, 0, 0.15);
+  border-top-color: #0e3a5b;
+  animation: fb-rotate 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-intro,
+  .fb-toast,
+  .fb-closed-book,
+  .fb-progress i[data-indeterminate="1"] {
+    animation: none;
+  }
+  .fb-book {
+    transition: none;
+  }
+}

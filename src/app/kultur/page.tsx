@@ -28,6 +28,7 @@ import {
 } from "@/lib/agendaData";
 import { useAgendaNotes, type AgendaNote } from "@/lib/agendaNotes";
 import { KULTUR_NOTES, noteOfTheDay } from "@/lib/kulturData";
+import { pdfReaderHref } from "@/lib/pdfReader";
 import { useStudentData } from "@/lib/studentHome";
 import {
   faArrowRight,
@@ -567,9 +568,9 @@ export default function Kultur() {
             ders programı
           </Link>{" "}
           sayfasından ya da{" "}
-          <a href={AKADEMIK_TAKVIM_URL} target="_blank" rel="noopener noreferrer" className="font-bold underline">
+          <Link href={pdfReaderHref(AKADEMIK_TAKVIM_URL, `ÇOMÜ ${AKADEMIK_DONEM} Akademik Takvimi`)} className="font-bold underline">
             resmî takvimden
-          </a>{" "}
+          </Link>{" "}
           kontrol et. Dinî bayram tarihleri Diyanet takvimine göredir; idari izinle uzatılan tatiller yansıtılmaz.
         </p>
       </section>

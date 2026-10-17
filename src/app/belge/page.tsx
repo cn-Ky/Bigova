@@ -3,7 +3,7 @@ import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import PdfFrame from "./PdfFrame";
+import FlipBookReader from "./FlipBookReader";
 
 type SearchParams = { url?: string; title?: string };
 
@@ -30,7 +30,7 @@ export default function Belge({
           {title}
         </h1>
       </header>
-      <PdfFrame initialUrl={documentUrl} title={title} />
+      <FlipBookReader initialUrl={documentUrl} title={title} />
     </main>
   );
 }
